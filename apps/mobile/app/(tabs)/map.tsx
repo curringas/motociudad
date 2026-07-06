@@ -3,6 +3,7 @@ import React, {
   useState,
   useCallback,
   useEffect,
+  useMemo,
 } from 'react';
 import {
   View,
@@ -38,11 +39,13 @@ const MADRID_FALLBACK: Region = {
   ...INITIAL_DELTA,
 };
 
-/** Approx. search radius based on map zoom level (latitudeDelta) */
-function radiusFromDelta(latitudeDelta: number): number {
-  // 1° lat ≈ 111 km. Use half the delta as radius, capped between 500 m and 10 km.
-  const rawM = (latitudeDelta / 2) * 111_000;
-  return Math.min(Math.max(rawM, 500), 10_000);
+/** Search radius covering the full visible map area (diagonal), capped between 1 km and 15 km. */
+function radiusFromDelta(latitudeDelta: number, longitudeDelta: number): number {
+  const latM = (latitudeDelta / 2) * 111_000;
+  const lngM = (longitudeDelta / 2) * 111_000;
+  const diagonal = Math.sqrt(latM * latM + lngM * lngM);
+  // 1.5× buffer keeps pins within radius even after a half-screen pan
+  return Math.round(Math.min(Math.max(diagonal * 1.5, 1_000), 15_000));
 }
 
 export default function MapScreen() {
@@ -65,21 +68,35 @@ export default function MapScreen() {
     onlyVerified,
   );
 
-  // Set initial map centre once we have GPS
+  // Stable render order: nearby_parkings returns results sorted by distance (changes on every pan).
+  // react-native-maps reorders native MKMapView annotations when JSX child order changes,
+  // causing markers to briefly disappear. Sorting by ID keeps the native order constant.
+  const sortedParkings = useMemo(
+    () => [...parkings].sort((a, b) => a.id.localeCompare(b.id)),
+    [parkings],
+  );
+
+  // Set initial map centre: from GPS when available, or Madrid fallback when GPS fails/unavailable
   useEffect(() => {
-    if (location && !center) {
+    if (center) return;
+    if (location) {
       const initial = { lat: location.latitude, lng: location.longitude };
       setCenter(initial);
       setMapCenter(initial);
+    } else if (!locationLoading) {
+      // GPS not available (simulator, permission denied, etc.) — use fallback so queries start
+      const fallback = { lat: MADRID_FALLBACK.latitude, lng: MADRID_FALLBACK.longitude };
+      setCenter(fallback);
+      setMapCenter(fallback);
     }
-  }, [location, center, setMapCenter]);
+  }, [location, locationLoading, center, setMapCenter]);
 
   /** Called whenever the user finishes panning or zooming the map. */
   const handleRegionChangeComplete = useCallback((region: Region) => {
     const newCenter = { lat: region.latitude, lng: region.longitude };
     setCenter(newCenter);
     setMapCenter(newCenter);
-    setRadiusM(radiusFromDelta(region.latitudeDelta));
+    setRadiusM(radiusFromDelta(region.latitudeDelta, region.longitudeDelta));
   }, [setMapCenter]);
 
   const handlePinPress = useCallback(
@@ -123,11 +140,12 @@ export default function MapScreen() {
           showsUserLocation
           showsMyLocationButton={false}
           showsCompass={false}
+          showsPointsOfInterest={false}
           customMapStyle={MAP_STYLE_DARK}
           onRegionChangeComplete={handleRegionChangeComplete}
           testID="map-view"
         >
-          {parkings.map((parking) => (
+          {sortedParkings.map((parking) => (
             <ParkingMapPin
               key={parking.id}
               parking={parking}
@@ -184,6 +202,7 @@ export default function MapScreen() {
       {!parkingsLoading && parkings.length === 0 && center !== null && (
         <EmptyMapState />
       )}
+
 
       {/* Parking detail bottom sheet */}
       <ParkingBottomSheet

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,16 +9,21 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import MapView, { Marker, PROVIDER_DEFAULT, PROVIDER_GOOGLE } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useRouter } from 'expo-router';
 
+import * as Location from 'expo-location';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { useUiStore } from '@/stores/uiStore';
-import { useProposeParking, useCheckDuplicates } from '@/features/parkings/hooks';
+import { useSessionStore } from '@/stores/sessionStore';
+import { useProposeParking, useCheckDuplicates, useNearbyParkings } from '@/features/parkings/hooks';
+import { ParkingMapPin } from '@/features/parkings/components/ParkingMapPin';
 import { supabase } from '@/lib/supabase';
 import type { ParkingFeatures } from '@/types/domain';
 
@@ -44,6 +49,7 @@ export default function ContributeScreen() {
   const router = useRouter();
   const { location } = useUserLocation();
   const mapCenter = useUiStore((s) => s.mapCenter);
+  const { session, isLoading: sessionLoading } = useSessionStore();
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
 
   const proposeMutation = useProposeParking();
@@ -53,11 +59,22 @@ export default function ContributeScreen() {
   const [submitted, setSubmitted] = useState(false);
   const [pendingOctanos, setPendingOctanos] = useState(0);
 
-  // Step 1: Location
+  // Step 1: Location — GPS first, mapCenter as fallback (avoids centering on last-viewed parking)
   const [markerCoords, setMarkerCoords] = useState({
-    latitude: mapCenter?.lat ?? location?.latitude ?? 40.4168,
-    longitude: mapCenter?.lng ?? location?.longitude ?? -3.7038,
+    latitude: location?.latitude ?? mapCenter?.lat ?? 40.4168,
+    longitude: location?.longitude ?? mapCenter?.lng ?? -3.7038,
   });
+
+  // Query existing parkings around the draggable marker for context (debounced by hook)
+  const contributeCenter = useMemo(
+    () => ({ lat: markerCoords.latitude, lng: markerCoords.longitude }),
+    [markerCoords.latitude, markerCoords.longitude],
+  );
+  const { data: existingParkings = [] } = useNearbyParkings(contributeCenter, 2000);
+  const sortedExisting = useMemo(
+    () => [...existingParkings].sort((a, b) => a.id.localeCompare(b.id)),
+    [existingParkings],
+  );
 
   // Step 2: Details
   const [name, setName] = useState('');
@@ -134,29 +151,50 @@ export default function ContributeScreen() {
     // Upload photo if provided
     if (photoUri) {
       try {
-        const takenAt = new Date().toISOString();
         const userId = sessionData.session.user.id;
-        const response = await fetch(photoUri);
-        const blob = await response.blob();
         const storagePath = `parkings/pending/${userId}/${Date.now()}.jpg`;
+        const base64 = await FileSystem.readAsStringAsync(photoUri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        const arrayBuffer = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
 
-        await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('parkings-photos')
-          .upload(storagePath, blob, { contentType: 'image/jpeg' });
+          .upload(storagePath, arrayBuffer, { contentType: 'image/jpeg' });
 
-        photoStoragePath = storagePath;
-      } catch {
-        // Photo upload failure is non-blocking — parking can be proposed without photo
+        if (uploadError) {
+          console.error('[photo upload]', uploadError);
+        } else {
+          photoStoragePath = storagePath;
+        }
+      } catch (err) {
+        console.error('[photo upload]', err);
+        // Non-blocking — parking can be proposed without photo
       }
     }
 
     try {
+      let city = 'Desconocida';
+      try {
+        const geocode = await Location.reverseGeocodeAsync({
+          latitude: markerCoords.latitude,
+          longitude: markerCoords.longitude,
+        });
+        city =
+          geocode[0]?.city ??
+          geocode[0]?.subregion ??
+          geocode[0]?.region ??
+          'Desconocida';
+      } catch {
+        // Keep fallback if geocoding fails
+      }
+
       const result = await proposeMutation.mutateAsync({
         name: name.trim(),
         type: parkingType,
         latitude: markerCoords.latitude,
         longitude: markerCoords.longitude,
-        city: 'Madrid', // TODO: reverse geocode from coords
+        city,
         features,
         notes: notes.trim() || undefined,
         photo_storage_path: photoStoragePath,
@@ -180,6 +218,35 @@ export default function ContributeScreen() {
     notes,
     proposeMutation,
   ]);
+
+  // --- Auth gate ---
+  if (sessionLoading) {
+    return (
+      <SafeAreaView className="flex-1 bg-background items-center justify-center">
+        <ActivityIndicator size="large" color="#FFD60A" />
+      </SafeAreaView>
+    );
+  }
+
+  if (!session) {
+    return (
+      <SafeAreaView className="flex-1 bg-background items-center justify-center p-8">
+        <Text className="text-content text-xl font-bold text-center mb-3">
+          Inicia sesión para aportar
+        </Text>
+        <Text className="text-content-muted text-sm text-center mb-6">
+          Necesitas una cuenta para proponer parkings y ganar Octanos.
+        </Text>
+        <TouchableOpacity
+          className="bg-primary rounded-pill px-8 py-3"
+          onPress={() => router.push('/login')}
+          accessibilityRole="button"
+        >
+          <Text className="text-background font-bold">Iniciar sesión</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
 
   // --- Confirmation screen ---
   if (submitted) {
@@ -261,13 +328,23 @@ export default function ContributeScreen() {
               longitudeDelta: 0.005,
             }}
             customMapStyle={MAP_STYLE_DARK}
+            showsPointsOfInterest={false}
+            showsCompass={false}
+            showsUserLocation
+            showsMyLocationButton={false}
+            onLongPress={(e) => setMarkerCoords(e.nativeEvent.coordinate)}
           >
+            {sortedExisting.map((parking) => (
+              <ParkingMapPin
+                key={parking.id}
+                parking={parking}
+                onPress={() => {}}
+              />
+            ))}
             <Marker
               coordinate={markerCoords}
               draggable
-              onDragEnd={(e) =>
-                setMarkerCoords(e.nativeEvent.coordinate)
-              }
+              onDragEnd={(e) => setMarkerCoords(e.nativeEvent.coordinate)}
               pinColor="#FFD60A"
             />
           </MapView>
@@ -436,16 +513,23 @@ export default function ContributeScreen() {
             </View>
           ) : photoUri ? (
             // Photo preview
-            <View className="flex-1 items-center justify-center p-4">
-              <Text className="text-verified text-base font-semibold mb-4">
-                Foto lista
-              </Text>
-              <TouchableOpacity
-                className="border border-border rounded-card py-2 px-4 mb-6"
-                onPress={() => setPhotoUri(null)}
-              >
-                <Text className="text-content-muted text-sm">Repetir foto</Text>
-              </TouchableOpacity>
+            <View className="flex-1">
+              <Image
+                source={{ uri: photoUri }}
+                style={{ flex: 1 }}
+                resizeMode="cover"
+                accessibilityLabel="Foto del parking"
+              />
+              <View className="absolute bottom-3 left-0 right-0 items-center">
+                <TouchableOpacity
+                  className="bg-background/90 rounded-pill py-2 px-5 border border-border"
+                  onPress={() => setPhotoUri(null)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Repetir foto"
+                >
+                  <Text className="text-content text-sm font-medium">Repetir foto</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           ) : (
             <View style={{ flex: 1 }}>

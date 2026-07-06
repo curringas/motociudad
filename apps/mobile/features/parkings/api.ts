@@ -37,8 +37,7 @@ export async function getParkingById(id: string) {
       name,
       type,
       status,
-      lat,
-      lng,
+      location,
       city,
       capacity,
       features,
@@ -53,7 +52,15 @@ export async function getParkingById(id: string) {
     .single();
 
   if (error) throw error;
-  return data;
+  if (!data) return null;
+
+  // PostgREST returns GEOGRAPHY as GeoJSON: { type: 'Point', coordinates: [lng, lat] }
+  const coords = (data.location as { coordinates?: [number, number] } | null)?.coordinates;
+  return {
+    ...data,
+    lat: coords?.[1] ?? null,
+    lng: coords?.[0] ?? null,
+  };
 }
 
 /**
