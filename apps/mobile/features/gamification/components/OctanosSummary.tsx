@@ -35,10 +35,10 @@ export function OctanosSummary({ userId }: { userId: string }) {
 
   return (
     <View className="bg-surface rounded-card p-5 mb-6">
-      <Text className="text-content-muted text-xs uppercase tracking-wide">
+      <Text className="text-content-muted text-sm uppercase tracking-wide">
         {view.levelLabel}
       </Text>
-      <Text className="text-content text-xl font-bold mb-3">{view.levelName}</Text>
+      <Text className="text-content text-2xl font-bold mb-3">{view.levelName}</Text>
 
       <View className="h-2 rounded-pill bg-background overflow-hidden mb-1">
         <View
@@ -46,7 +46,7 @@ export function OctanosSummary({ userId }: { userId: string }) {
           style={{ width: `${view.progressPct}%` }}
         />
       </View>
-      <Text className="text-content-subtle text-xs mb-5">{view.progressLabel}</Text>
+      <Text className="text-content-subtle text-sm mb-5">{view.progressLabel}</Text>
 
       <View className="flex-row justify-around">
         <View className="items-center">
@@ -56,7 +56,7 @@ export function OctanosSummary({ userId }: { userId: string }) {
           >
             {view.confirmed}
           </Text>
-          <Text className="text-content-muted text-xs mt-1">⚡ Conseguidos</Text>
+          <Text className="text-content-muted text-sm mt-1">⚡ Conseguidos</Text>
         </View>
         <View className="items-center">
           <Text
@@ -65,12 +65,12 @@ export function OctanosSummary({ userId }: { userId: string }) {
           >
             {view.pending}
           </Text>
-          <Text className="text-content-muted text-xs mt-1">⏳ Pendientes</Text>
+          <Text className="text-content-muted text-sm mt-1">⏳ Pendientes</Text>
         </View>
       </View>
 
       {view.showPendingNote && (
-        <Text className="text-content-subtle text-xs text-center mt-4">
+        <Text className="text-content-subtle text-sm text-center mt-4">
           Se confirmarán cuando otro usuario valide tus aportaciones.
         </Text>
       )}
