@@ -10,6 +10,7 @@
     "lint": "pnpm --filter mobile lint"
   },
   "devDependencies": {
+    "jsdom": "^29.1.1",
     "typescript": "^5.4.5"
   },
   "engines": {
