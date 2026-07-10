@@ -27,12 +27,20 @@ Esta separación permite que un usuario de nivel medio pueda destacar por insign
 
 | Acción | Octanos | Notas |
 |---|---|---|
-| Proponer un parking nuevo | **+50** | Se acreditan al pasar verificación de la comunidad |
-| Tu parking propuesto queda verificado | **+30** | Bonus diferido. Refuerza retorno a la app |
-| Verificar un parking (con foto in situ) | **+25** | Acción más valiosa para la calidad del dato |
-| Ser el 1er verificador de un parking | **+15** | Bonus encima de los +25. Incentiva rapidez |
+| Proponer un parking nuevo | **+50** | Quedan **pendientes** hasta la 1ª verificación de la comunidad; entonces pasan a fijos |
+| Tu parking propuesto queda verificado | **+30** | Bonus diferido, se otorga al proponente en la 1ª verificación de su parking |
+| Verificar un parking (con foto in situ) | **+40 / +25 / +10** | Según el orden: **1ª verificación +40** (incluye el bonus de 1er verificador), **2ª +25**, **3ª +10** |
+| Ser el 1er verificador de un parking | **+15** | Bonus incluido en los +40 de la 1ª verificación |
 | Reportar parking erróneo (confirmado) | **+20** | Mantiene el dataset limpio |
 | Subir foto a un parking existente | **+10** | Máx. 3 fotos puntuables por parking |
+
+**Verificación de un parking — resumen (§2.2 regla 6):**
+
+- Un parking pasa de `pending` a `verified` con la **1ª verificación** válida.
+- Se admiten como máximo **3 verificaciones** por parking. Tras la 3ª, el parking queda cerrado a nuevas verificaciones.
+- Octanos del verificador según el orden: **1ª = +40** (`verify_parking` +25 y `first_verifier` +15), **2ª = +25** (`verify_parking`), **3ª = +10** (`verify_parking`).
+- En la **1ª verificación**, el **proponente** recibe: sus **+50** de `propose_parking` pasan de `pending` a `confirmed` **y** un bonus **+30** (`parking_verified_bonus`).
+- El número de verificaciones se muestra en la UI como un badge `✓ N` (ver `parkings.verifications_count`).
 | Comentario útil | **+5** | Solo cuenta si recibe ≥2 votos positivos |
 | Proponer taller/POI secundario | **+30** | Feature secundario, peso menor que parking |
 | Racha semanal (abrir app 7 días seguidos) | **+15** | Refuerza hábito |
@@ -47,6 +55,7 @@ Estas reglas son **obligatorias** desde el día 1 para evitar farmeo:
 3. **Acreditación tras moderación**: las acciones solo suman Octanos cuando pasan moderación (ver §6).
 4. **Cooldown por parking**: un usuario no puede verificar dos veces el mismo parking, ni proponer y autoverificar el suyo propio.
 5. **Detección de patrones**: marcar para revisión cuentas con >5 propuestas rechazadas en 7 días.
+6. **Máximo de verificaciones**: un parking admite **3 verificaciones** como máximo. La 1ª/2ª/3ª otorgan **40/25/10** Octanos al verificador; a partir de la 3ª no se admiten más (código de error `VERIFICATION_LIMIT_REACHED`). En la 1ª verificación se confirman los +50 pendientes del proponente y se le añade el bonus +30.
 
 ---
 
