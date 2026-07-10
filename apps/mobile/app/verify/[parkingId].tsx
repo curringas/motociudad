@@ -1,10 +1,11 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator';
@@ -14,8 +15,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { useSubmitVerification, useUploadVerificationPhoto } from '@/features/verifications/hooks';
 import { VERIFICATION_ERROR_CODES } from '@/features/verifications/api';
+import { useParkingDetail } from '@/features/parkings/hooks';
+import { calculateDistance } from '@/lib/geo';
 
 const GPS_ACCURACY_THRESHOLD_M = 50;
+// Radio de geofence — debe coincidir con el servidor (validate-verification).
+const GEOFENCE_RADIUS_M = 100;
 
 const ERROR_MESSAGES: Record<string, string> = {
   [VERIFICATION_ERROR_CODES.GEOFENCE_FAIL]:
@@ -28,16 +33,27 @@ const ERROR_MESSAGES: Record<string, string> = {
     'Ya has verificado este parking anteriormente.',
   [VERIFICATION_ERROR_CODES.DAILY_CAP_REACHED]:
     'Has alcanzado el límite diario de Octanos. Vuelve mañana.',
+  [VERIFICATION_ERROR_CODES.VERIFICATION_LIMIT_REACHED]:
+    'Este parking ya tiene el máximo de 3 verificaciones.',
   [VERIFICATION_ERROR_CODES.UNAUTHENTICATED]:
     'Debes iniciar sesión para verificar un parking.',
 };
 
 type VerifyState =
+  | { phase: 'intro' }
   | { phase: 'camera' }
   | { phase: 'preview'; photoUri: string; takenAt: string }
   | { phase: 'submitting' }
   | { phase: 'success'; octanos: number; isFirstVerifier: boolean }
   | { phase: 'error'; message: string };
+
+/** Estado del pre-check de ubicación en la pantalla de requisitos. */
+type ProximityStatus =
+  | { kind: 'checking' }
+  | { kind: 'ok'; distanceM: number }
+  | { kind: 'too_far'; distanceM: number }
+  | { kind: 'error' }
+  | { kind: 'unknown' }; // parking sin coordenadas: delega el geofence al servidor
 
 export default function VerifyScreen() {
   const { parkingId } = useLocalSearchParams<{ parkingId: string }>();
@@ -45,25 +61,59 @@ export default function VerifyScreen() {
 
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
-  const [state, setState] = useState<VerifyState>({ phase: 'camera' });
+  const [proximity, setProximity] = useState<ProximityStatus>({ kind: 'checking' });
+  const [state, setState] = useState<VerifyState>({ phase: 'intro' });
 
   const cameraRef = useRef<CameraView>(null);
   const submitMutation = useSubmitVerification();
   const uploadMutation = useUploadVerificationPhoto();
+  const { data: parking } = useParkingDetail(parkingId ?? '');
 
   const isLowAccuracy =
     gpsAccuracy !== null && gpsAccuracy > GPS_ACCURACY_THRESHOLD_M;
 
-  const refreshGpsAccuracy = useCallback(async () => {
+  /** Mide la posición GPS y calcula la distancia al parking. */
+  const checkProximity = useCallback(async () => {
+    setProximity({ kind: 'checking' });
     try {
       const pos = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });
       setGpsAccuracy(pos.coords.accuracy);
+
+      if (
+        typeof parking?.lat !== 'number' ||
+        typeof parking?.lng !== 'number'
+      ) {
+        // Sin coordenadas del parking: el servidor validará el geofence.
+        setProximity({ kind: 'unknown' });
+        return;
+      }
+
+      const distanceM = calculateDistance(
+        pos.coords.latitude,
+        pos.coords.longitude,
+        parking.lat,
+        parking.lng,
+      );
+      setProximity(
+        distanceM > GEOFENCE_RADIUS_M
+          ? { kind: 'too_far', distanceM }
+          : { kind: 'ok', distanceM },
+      );
     } catch {
-      setGpsAccuracy(null);
+      setProximity({ kind: 'error' });
     }
-  }, []);
+  }, [parking?.lat, parking?.lng]);
+
+  // Comprueba la ubicación al entrar, en cuanto tengamos las coordenadas del parking.
+  useEffect(() => {
+    if (state.phase === 'intro' && parking) {
+      void checkProximity();
+    }
+    // Solo al montar / cuando llegan las coordenadas del parking.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [parking?.id]);
 
   const handleTakePhoto = useCallback(async () => {
     if (!cameraRef.current) return;
@@ -203,7 +253,10 @@ export default function VerifyScreen() {
         </Text>
         <TouchableOpacity
           className="bg-primary rounded-pill px-8 py-3"
-          onPress={() => setState({ phase: 'camera' })}
+          onPress={() => {
+            setState({ phase: 'intro' });
+            void checkProximity();
+          }}
         >
           <Text className="text-background font-bold">Intentar de nuevo</Text>
         </TouchableOpacity>
@@ -226,14 +279,15 @@ export default function VerifyScreen() {
     return (
       <SafeAreaView className="flex-1 bg-background">
         <View className="flex-1 items-center justify-center p-6">
-          <View className="w-full h-64 rounded-card bg-surface-2 items-center justify-center mb-6">
-            <Text className="text-verified text-base font-semibold">
-              Foto capturada
-            </Text>
-            <Text className="text-content-subtle text-sm mt-1">
-              {new Date(state.takenAt).toLocaleTimeString('es-ES')}
-            </Text>
-          </View>
+          <Image
+            source={{ uri: state.photoUri }}
+            className="w-full h-64 rounded-card mb-2"
+            resizeMode="cover"
+            accessibilityLabel="Foto capturada del parking"
+          />
+          <Text className="text-content-subtle text-sm mb-6">
+            Foto capturada · {new Date(state.takenAt).toLocaleTimeString('es-ES')}
+          </Text>
 
           <TouchableOpacity
             className="border border-border rounded-card py-2 px-4 mb-6"
@@ -257,7 +311,123 @@ export default function VerifyScreen() {
     );
   }
 
-  // --- Camera phase (default) ---
+  // --- Intro / requisitos phase (default) ---
+  if (state.phase === 'intro') {
+    const canContinue = proximity.kind === 'ok' || proximity.kind === 'unknown';
+
+    return (
+      <SafeAreaView className="flex-1 bg-background">
+        <View className="flex-1 p-6">
+          <Text className="text-content text-2xl font-bold mb-2">
+            Verificar parking
+          </Text>
+          <Text className="text-content-muted text-base mb-8">
+            Para verificar este parking necesitas:
+          </Text>
+
+          {/* Requisito 1: ubicación */}
+          <View className="flex-row items-start mb-5">
+            <Text className="text-3xl mr-4">📍</Text>
+            <View className="flex-1">
+              <Text className="text-content text-base font-semibold">
+                Estar en la ubicación del parking
+              </Text>
+              <Text className="text-content-muted text-sm mt-1">
+                Debes encontrarte a menos de {GEOFENCE_RADIUS_M} m del punto.
+              </Text>
+            </View>
+          </View>
+
+          {/* Requisito 2: foto */}
+          <View className="flex-row items-start mb-8">
+            <Text className="text-3xl mr-4">📷</Text>
+            <View className="flex-1">
+              <Text className="text-content text-base font-semibold">
+                Tomar una foto del parking
+              </Text>
+              <Text className="text-content-muted text-sm mt-1">
+                Para confirmar que el aparcamiento existe.
+              </Text>
+            </View>
+          </View>
+
+          {/* Estado del pre-check de ubicación */}
+          {proximity.kind === 'checking' && (
+            <View className="flex-row items-center bg-surface rounded-card p-4">
+              <ActivityIndicator color="#FFD60A" />
+              <Text className="text-content-muted text-sm ml-3">
+                Comprobando tu ubicación…
+              </Text>
+            </View>
+          )}
+
+          {proximity.kind === 'ok' && (
+            <View className="bg-verified/20 rounded-card p-4">
+              <Text className="text-verified text-sm font-semibold">
+                Estás en el sitio ✓ (a {Math.round(proximity.distanceM)} m)
+              </Text>
+            </View>
+          )}
+
+          {proximity.kind === 'too_far' && (
+            <View className="bg-rejected/20 rounded-card p-4">
+              <Text className="text-rejected text-base font-bold mb-1">
+                Estás demasiado lejos
+              </Text>
+              <Text className="text-content-muted text-sm">
+                Estás a {Math.round(proximity.distanceM)} m del parking. Acércate
+                a menos de {GEOFENCE_RADIUS_M} m para poder verificarlo.
+              </Text>
+            </View>
+          )}
+
+          {proximity.kind === 'error' && (
+            <View className="bg-rejected/20 rounded-card p-4">
+              <Text className="text-rejected text-sm font-semibold">
+                No se pudo obtener tu ubicación. Comprueba los permisos de GPS.
+              </Text>
+            </View>
+          )}
+
+          {proximity.kind === 'unknown' && (
+            <View className="bg-surface rounded-card p-4">
+              <Text className="text-content-muted text-sm">
+                Se comprobará tu ubicación al enviar la verificación.
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* Acciones */}
+        <View className="p-4">
+          {canContinue ? (
+            <TouchableOpacity
+              className="bg-primary rounded-pill py-4 items-center"
+              onPress={() => setState({ phase: 'camera' })}
+              accessibilityRole="button"
+            >
+              <Text className="text-background font-bold text-base">
+                Continuar y tomar foto
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              className="border border-border rounded-pill py-4 items-center"
+              onPress={() => void checkProximity()}
+              disabled={proximity.kind === 'checking'}
+              accessibilityRole="button"
+            >
+              <Text className="text-content font-bold text-base">
+                Volver a comprobar mi ubicación
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // --- Camera phase ---
   return (
     <View className="flex-1 bg-background">
       <CameraView ref={cameraRef} style={{ flex: 1 }} facing="back" />
@@ -267,7 +437,7 @@ export default function VerifyScreen() {
           {gpsAccuracy === null ? (
             <TouchableOpacity
               className="bg-background/80 rounded-card px-4 py-2 flex-row items-center"
-              onPress={refreshGpsAccuracy}
+              onPress={checkProximity}
             >
               <Text className="text-content-muted text-xs">
                 Toca para medir precisión GPS

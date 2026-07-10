@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useUserLocation } from '@/hooks/useUserLocation';
@@ -29,7 +29,9 @@ function ParkingListItem({ parking }: { parking: NearbyParking }) {
 
         {parking.status === 'verified' ? (
           <View className="bg-verified/20 rounded-pill px-2 py-1">
-            <Text className="text-verified text-xs font-semibold">Verificado</Text>
+            <Text className="text-verified text-xs font-semibold">
+              ✓ {parking.verifications_count}
+            </Text>
           </View>
         ) : (
           <View className="bg-pending/20 rounded-pill px-2 py-1">
@@ -53,7 +55,8 @@ export default function ListScreen() {
     ? { lat: location.latitude, lng: location.longitude }
     : null;
 
-  const { data: parkings = [], isLoading } = useNearbyParkings(center, 5000);
+  const { data: parkings = [], isLoading, refetch, isRefetching } =
+    useNearbyParkings(center, 5000);
 
   return (
     <SafeAreaView edges={['bottom']} className="flex-1 bg-background">
@@ -78,6 +81,13 @@ export default function ListScreen() {
           renderItem={({ item }) => <ParkingListItem parking={item} />}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 20 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={() => refetch()}
+              tintColor="#FFD60A"
+            />
+          }
         />
       </View>
     </SafeAreaView>

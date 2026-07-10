@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useSessionStore } from '@/stores/sessionStore';
 import { supabase } from '@/lib/supabase';
+import { OctanosSummary } from '@/features/gamification/components/OctanosSummary';
 
 export default function ProfileScreen() {
   const { user } = useSessionStore();
@@ -50,6 +51,8 @@ export default function ProfileScreen() {
             {user.email ?? 'Usuario'}
           </Text>
         </View>
+
+        <OctanosSummary userId={user.id} />
 
         <TouchableOpacity
           className="border border-rejected/50 rounded-card p-4 items-center"
