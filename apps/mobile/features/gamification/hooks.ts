@@ -12,7 +12,10 @@ export const gamificationKeys = {
 export function useOctanosSummary(userId: string | undefined) {
   return useQuery({
     queryKey: gamificationKeys.summary(userId ?? 'anon'),
-    queryFn: () => getOctanosSummary(userId as string),
+    queryFn: () => {
+      if (!userId) throw new Error('userId is required');
+      return getOctanosSummary(userId);
+    },
     enabled: !!userId,
     staleTime: 30_000,
   });
