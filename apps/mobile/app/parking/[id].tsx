@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useParkingDetail } from '@/features/parkings/hooks';
+import { useHasVerified } from '@/features/verifications/hooks';
 import { useSessionStore } from '@/stores/sessionStore';
 import { openInExternalMaps } from '@/lib/deeplinks';
 import { supabase } from '@/lib/supabase';
@@ -30,6 +31,7 @@ export default function ParkingDetailScreen() {
   const { user } = useSessionStore();
 
   const { data: parking, isLoading, error } = useParkingDetail(id ?? '');
+  const { data: hasVerified = false } = useHasVerified(id, user?.id);
 
   if (!id) {
     return (
@@ -65,7 +67,14 @@ export default function ParkingDetailScreen() {
 
   const isProposer = user?.id === parking.proposed_by;
   const isVerified = parking.status === 'verified';
-  const showVerifyCta = !isVerified && !isProposer;
+  const verificationsCount =
+    (parking.parking_verifications as Array<{ count: number }> | undefined)?.[0]
+      ?.count ?? 0;
+  const MAX_VERIFICATIONS = 3;
+  const atMaxVerifications = verificationsCount >= MAX_VERIFICATIONS;
+  // Se puede verificar (hasta 3) si no eres el proponente, no se alcanzó el tope
+  // y no lo has verificado tú ya (un usuario solo verifica un parking una vez).
+  const showVerifyCta = !isProposer && !atMaxVerifications && !hasVerified;
 
   const features = (parking.features ?? {}) as Record<string, boolean>;
   const activeFeatures = Object.entries(features)
@@ -94,7 +103,9 @@ export default function ParkingDetailScreen() {
           </Text>
           {isVerified && (
             <View className="bg-verified/20 rounded-pill px-3 py-1.5 mt-1">
-              <Text className="text-verified text-xs font-bold">Verificado</Text>
+              <Text className="text-verified text-xs font-bold">
+                ✓ Verificado · {verificationsCount}
+              </Text>
             </View>
           )}
         </View>
@@ -111,15 +122,26 @@ export default function ParkingDetailScreen() {
           </View>
         )}
 
-        {/* Photo */}
+        {/* Fotos (propuesta + todas las verificaciones) */}
         {parking.parking_photos && parking.parking_photos.length > 0 ? (
-          <Image
-            source={{
-              uri: supabase.storage.from('parkings-photos').getPublicUrl((parking.parking_photos[0] as { storage_path: string }).storage_path).data.publicUrl,
-            }}
-            className="h-48 rounded-card mb-4"
-            resizeMode="cover"
-          />
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            className="mb-4"
+          >
+            {(parking.parking_photos as Array<{ id: string; storage_path: string }>).map(
+              (photo) => (
+                <ParkingPhoto
+                  key={photo.id}
+                  uri={
+                    supabase.storage
+                      .from('parkings-photos')
+                      .getPublicUrl(photo.storage_path).data.publicUrl
+                  }
+                />
+              ),
+            )}
+          </ScrollView>
         ) : (
           <View className="h-48 rounded-card bg-surface-2 mb-4 items-center justify-center">
             <Text className="text-content-subtle text-sm">Sin foto disponible</Text>
@@ -206,8 +228,51 @@ export default function ParkingDetailScreen() {
             </Text>
           </TouchableOpacity>
         )}
+
+        {hasVerified && !isProposer && (
+          <View className="bg-verified/15 rounded-card p-3 items-center">
+            <Text className="text-verified text-sm font-semibold">
+              ✓ Ya has verificado este parking
+            </Text>
+          </View>
+        )}
+
+        {atMaxVerifications && !isProposer && !hasVerified && (
+          <View className="bg-verified/15 rounded-card p-3 items-center">
+            <Text className="text-verified text-sm font-semibold">
+              ✓ Verificado por la comunidad ({verificationsCount}/{MAX_VERIFICATIONS})
+            </Text>
+          </View>
+        )}
       </View>
     </SafeAreaView>
+  );
+}
+
+/**
+ * Foto de parking con fallback: si la imagen no carga (objeto ausente o de
+ * 0 bytes), muestra un recuadro gris para indicar que la foto existe pero no
+ * se puede mostrar.
+ */
+function ParkingPhoto({ uri }: { uri: string }) {
+  const [failed, setFailed] = useState(false);
+
+  if (failed) {
+    return (
+      <View className="w-72 h-48 rounded-card mr-3 bg-surface-2 items-center justify-center">
+        <Text className="text-3xl mb-1">🖼️</Text>
+        <Text className="text-content-subtle text-xs">Foto no disponible</Text>
+      </View>
+    );
+  }
+
+  return (
+    <Image
+      source={{ uri }}
+      className="w-72 h-48 rounded-card mr-3"
+      resizeMode="cover"
+      onError={() => setFailed(true)}
+    />
   );
 }
 
