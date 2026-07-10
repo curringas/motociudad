@@ -52,6 +52,7 @@
 ### 4.1 Qué testear
 
 - Funciones puras de `lib/` y `utils/`: parseo de coordenadas, cálculo de distancia, formato de Octanos, validación de inputs Zod.
+- Wrappers de APIs nativas: `features/search/api.ts` — `geocodeAddress` (primer resultado, sin resultados → `null`, query vacía, propagación de error) con `expo-location` mockeado.
 - Hooks personalizados (`useNearbyParkings`, `useUserOctanos`, etc.) con TanStack Query mock.
 - Reducers / stores Zustand.
 

@@ -146,6 +146,8 @@
 
 **Pendiente de decidir**: si los mocks requieren clustering avanzado o estilizado muy específico, evaluar migración a `@rnmapbox/maps` (Mapbox GL Native) en v1.1 — implica añadir SDK key y coste por MAU.
 
+**Geocoding (búsqueda de ubicaciones):** el buscador del mapa usa forward geocoding nativo vía `expo-location` (`geocodeAsync`), que delega en el geocoder del sistema operativo. No requiere API key ni billing. Encapsulado en `features/search/`. Si en el futuro se necesita autocompletado en vivo, se migraría a un proveedor con Places API sin rehacer la UI.
+
 ### 3.5 Estilizado: ¿NativeWind?
 
 **Decisión**: NativeWind 4 (Tailwind CSS para React Native con Jit y soporte CSS variables).
