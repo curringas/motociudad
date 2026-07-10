@@ -21,7 +21,7 @@ export function levelForOctanos(
 ): LevelProgress {
   const sorted = [...levels].sort((a, b) => a.min_octanos - b.min_octanos);
   const first = sorted[0];
-  if (!first) throw new Error('Catálogo de niveles vacío');
+  if (!first) throw new Error('Empty level catalog');
 
   let current = first;
   for (const lvl of sorted) {

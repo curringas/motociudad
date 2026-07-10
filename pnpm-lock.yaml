@@ -8,9 +8,6 @@ importers:
 
   .:
     devDependencies:
-      jsdom:
-        specifier: ^29.1.1
-        version: 29.1.1
       typescript:
         specifier: ^5.4.5
         version: 5.9.3
@@ -123,6 +120,9 @@ importers:
       eslint-config-expo:
         specifier: ~10.0.0
         version: 10.0.0(eslint@8.57.1)(typescript@5.9.3)
+      jsdom:
+        specifier: ^29.1.1
+        version: 29.1.1
       react-native-web:
         specifier: ^0.21.2
         version: 0.21.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
