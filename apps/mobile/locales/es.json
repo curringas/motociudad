@@ -1,0 +1,98 @@
+{
+  "map": {
+    "title": "Mapa",
+    "loading": "Obteniendo tu ubicación…",
+    "locationPermissionBanner": "Activa la ubicación para ver parkings cerca de ti.",
+    "recenterButton": "Centrar en mi ubicación",
+    "empty": {
+      "title": "No hay parkings cerca",
+      "subtitle": "¿Conoces algún sitio donde aparcar la moto?",
+      "cta": "Aportar un parking"
+    }
+  },
+  "parking": {
+    "statusVerified": "Verificado",
+    "statusPending": "Pendiente",
+    "statusRejected": "Rechazado",
+    "typePublic": "Público",
+    "typePrivate": "Privado",
+    "capacity": "Capacidad",
+    "motos": "motos",
+    "features": {
+      "covered": "Cubierto",
+      "cameras": "Cámaras",
+      "anchors": "Anclajes",
+      "lit": "Iluminado",
+      "free": "Gratuito",
+      "h24": "24h",
+      "battery_layout": "Batería"
+    },
+    "actions": {
+      "navigate": "Llévame",
+      "details": "Detalles",
+      "verify": "¿Has aparcado aquí?"
+    }
+  },
+  "contribute": {
+    "title": "Aportar parking",
+    "steps": {
+      "location": "Ubicación",
+      "details": "Detalles",
+      "photo": "Foto"
+    },
+    "locationHint": "Mueve el marcador exactamente donde está el parking",
+    "confirmLocation": "Confirmar ubicación",
+    "duplicate": {
+      "title": "Posible duplicado",
+      "message": "Ya existe un parking muy cerca de este punto. ¿Quieres continuar?",
+      "cancel": "Cancelar",
+      "continue": "Continuar"
+    },
+    "name": "Nombre del parking",
+    "namePlaceholder": "Ej. Parking Calle Mayor",
+    "type": "Tipo",
+    "features": "Características",
+    "notes": "Notas adicionales",
+    "notesPlaceholder": "Acceso, restricciones, etc.",
+    "back": "Atrás",
+    "continue": "Continuar",
+    "submit": {
+      "withPhoto": "Enviar con foto",
+      "withoutPhoto": "Enviar sin foto"
+    },
+    "success": {
+      "title": "¡Parking aportado!",
+      "body": "Tu parking está pendiente de verificación.",
+      "octanos": "Has ganado {{count}} Octanos (pendientes de confirmación).",
+      "backToMap": "Volver al mapa"
+    }
+  },
+  "verify": {
+    "title": "Verificar parking",
+    "gpsAccurate": "GPS preciso: ±{{accuracy}} m",
+    "gpsLowAccuracy": "GPS poco preciso: {{accuracy}} m (necesitas < {{threshold}} m)",
+    "captureButton": "Capturar foto",
+    "submitButton": "Enviar verificación",
+    "success": {
+      "title": "¡Verificación enviada!",
+      "firstVerifier": "¡Eres el primer verificador!",
+      "octanos": "Has ganado {{count}} Octanos"
+    },
+    "errors": {
+      "GEOFENCE_FAIL": "Estás demasiado lejos del parking. Acércate más e inténtalo de nuevo.",
+      "STALE_PHOTO": "La foto ha caducado, toma una nueva.",
+      "SELF_VERIFICATION_FORBIDDEN": "No puedes verificar tu propio parking.",
+      "ALREADY_VERIFIED": "Ya has verificado este parking anteriormente.",
+      "DAILY_CAP_REACHED": "Has alcanzado el límite diario de Octanos. Vuelve mañana.",
+      "UNAUTHENTICATED": "Debes iniciar sesión para verificar un parking."
+    }
+  },
+  "common": {
+    "back": "Atrás",
+    "retry": "Intentar de nuevo",
+    "loading": "Cargando…",
+    "error": "Ha ocurrido un error",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar"
+  }
+}

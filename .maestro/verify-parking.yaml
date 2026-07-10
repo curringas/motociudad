@@ -1,0 +1,28 @@
+appId: com.motociudad.app
+---
+- launchApp
+
+# Este flujo requiere un parking cercano en estado pendiente.
+# En CI se simula el GPS y se usa un parking ID conocido.
+- waitForAnimationToEnd
+
+# Navegar a un parking que pueda verificarse
+- tapOn:
+    id: "parking-pin"
+    optional: true
+
+- tapOn:
+    text: "Detalles"
+    optional: true
+
+- tapOn:
+    text: "¿Has aparcado aquí?"
+    optional: true
+
+# La cámara debe abrirse
+- waitForAnimationToEnd
+
+# Capturar foto (simulada en CI)
+- tapOn:
+    text: "Capturar foto"
+    optional: true

@@ -1,0 +1,19 @@
+{
+  "name": "motociudad",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev:mobile": "pnpm --filter mobile dev",
+    "typecheck": "pnpm --filter mobile typecheck",
+    "test": "pnpm --filter mobile test",
+    "gen:types": "supabase gen types typescript --local > apps/mobile/types/database.ts",
+    "lint": "pnpm --filter mobile lint"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  }
+}

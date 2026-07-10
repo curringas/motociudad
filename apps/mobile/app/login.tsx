@@ -10,13 +10,14 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 
 type Mode = 'login' | 'register';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { redirect } = useLocalSearchParams<{ redirect?: string }>();
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,14 +34,25 @@ export default function LoginScreen() {
         const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (error) throw error;
       } else {
-        const { error } = await supabase.auth.signUp({ email: email.trim(), password });
+        const { data: signUpData, error } = await supabase.auth.signUp({ email: email.trim(), password });
         if (error) throw error;
-        Alert.alert(
-          '¡Cuenta creada!',
-          'Revisa tu email para confirmar la cuenta, o inicia sesión directamente si la confirmación está desactivada.',
-        );
+
+        const needsEmailConfirmation = !signUpData.session;
+        if (needsEmailConfirmation) {
+          Alert.alert(
+            '¡Cuenta creada!',
+            'Revisa tu email para confirmar la cuenta antes de continuar.',
+            [{ text: 'OK' }],
+          );
+          setLoading(false);
+          return;
+        }
+
+        // Email confirmation disabled — session already active, continue normally
       }
-      if (router.canGoBack()) {
+      if (redirect) {
+        router.replace(redirect as `/${string}`);
+      } else if (router.canGoBack()) {
         router.back();
       } else {
         router.replace('/(tabs)/map');

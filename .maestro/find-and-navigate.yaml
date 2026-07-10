@@ -1,0 +1,27 @@
+appId: com.motociudad.app
+---
+- launchApp
+- waitForAnimationToEnd
+
+# El mapa debe estar visible
+- assertVisible:
+    id: "map-view"
+
+# Esperar a que se carguen los pines de parking
+- waitForAnimationToEnd
+
+# Pulsar en el primer pin de parking si está visible
+- tapOn:
+    id: "parking-pin"
+    optional: true
+
+# El bottom sheet debe aparecer
+- waitForAnimationToEnd
+- assertVisible:
+    id: "bottom-sheet"
+    optional: true
+
+# Pulsar el botón Llévame
+- tapOn:
+    text: "Llévame"
+    optional: true

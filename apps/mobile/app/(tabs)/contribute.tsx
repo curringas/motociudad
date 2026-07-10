@@ -256,10 +256,15 @@ export default function ContributeScreen() {
         <Text className="text-content text-2xl font-bold text-center">
           ¡Parking aportado!
         </Text>
-        <Text className="text-content-muted text-sm text-center mt-3 mb-6">
-          Tu parking está pendiente de verificación.{'\n'}
-          Has ganado <Text className="text-primary font-bold">{pendingOctanos} Octanos</Text> (pendientes de confirmación).
+        <Text className="text-content text-base font-semibold text-center mt-4">
+          Has ganado{' '}
+          <Text className="text-primary">{pendingOctanos} Octanos</Text>
         </Text>
+        <View className="bg-surface border border-border rounded-card p-4 mt-3 mb-6">
+          <Text className="text-content-muted text-sm text-center leading-5">
+            Tu parking está pendiente de verificación. En cuanto otro usuario compruebe que el aparcamiento existe, tus Octanos quedarán confirmados y se sumarán a tu cuenta.
+          </Text>
+        </View>
         <TouchableOpacity
           className="bg-primary rounded-pill px-8 py-3"
           onPress={() => {

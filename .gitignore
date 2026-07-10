@@ -1,0 +1,14 @@
+node_modules/
+.env
+.env.local
+*.env
+dist/
+build/
+.expo/
+ios/
+android/
+*.ipa
+*.apk
+.supabase/
+supabase/.temp/
+.playwright*/

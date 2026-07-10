@@ -1,6 +1,9 @@
 import { supabase } from '@/lib/supabase';
+import type { Database } from '@/types/database';
 import type { NearbyParking } from '@/types/domain';
 import type { ProposeParkingInput } from './schemas';
+
+type ParkingType = Database['public']['Enums']['parking_type'];
 
 /**
  * Fetches parkings within `radiusM` metres of the given centre point.
@@ -16,50 +19,43 @@ export async function getNearbyParkings(
     in_lat: center.lat,
     in_lng: center.lng,
     in_radius_m: radiusM,
-    in_filter: filter ?? null,
+    in_filter: filter as ParkingType | undefined,
     in_only_verified: onlyVerified,
     in_limit: 200,
   });
 
   if (error) throw error;
-  return (data ?? []) as NearbyParking[];
+  return (data ?? []) as unknown as NearbyParking[];
 }
 
 /**
  * Fetches the full detail of a single parking by id.
  */
 export async function getParkingById(id: string) {
-  const { data, error } = await supabase
-    .from('parkings')
-    .select(
-      `
-      id,
-      name,
-      type,
-      status,
-      location,
-      city,
-      capacity,
-      features,
-      notes,
-      proposed_by,
-      created_at,
-      parking_verifications(count),
-      parking_photos(id, storage_path)
-    `,
-    )
-    .eq('id', id)
-    .single();
+  const [parkingRes, coordsRes] = await Promise.all([
+    supabase
+      .from('parkings')
+      .select(
+        `id, name, type, status, city, capacity, features, notes, proposed_by, created_at,
+         parking_verifications(count),
+         parking_photos(id, storage_path)`,
+      )
+      .eq('id', id)
+      .single(),
+    supabase
+      .from('parkings_with_stats')
+      .select('lat, lng')
+      .eq('id', id)
+      .single(),
+  ]);
 
-  if (error) throw error;
-  if (!data) return null;
+  if (parkingRes.error) throw parkingRes.error;
+  if (!parkingRes.data) return null;
 
-  // PostgREST returns GEOGRAPHY as GeoJSON: { type: 'Point', coordinates: [lng, lat] }
-  const coords = (data.location as { coordinates?: [number, number] } | null)?.coordinates;
   return {
-    ...data,
-    lat: coords?.[1] ?? null,
-    lng: coords?.[0] ?? null,
+    ...parkingRes.data,
+    lat: coordsRes.data?.lat ?? null,
+    lng: coordsRes.data?.lng ?? null,
   };
 }
 
@@ -105,7 +101,6 @@ export async function checkForNearbyDuplicates(
     in_lat: lat,
     in_lng: lng,
     in_radius_m: radiusM,
-    in_filter: null,
     in_only_verified: false,
     in_limit: 1,
   });

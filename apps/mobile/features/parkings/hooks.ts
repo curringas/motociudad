@@ -52,6 +52,7 @@ export function useParkingDetail(id: string) {
     queryKey: parkingKeys.detail(id),
     queryFn: () => getParkingById(id),
     staleTime: 60_000,
+    enabled: !!id,
   });
 }
 

@@ -1,0 +1,32 @@
+import { create } from 'zustand';
+import type { Session, User } from '@supabase/supabase-js';
+
+type SessionStore = {
+  session: Session | null;
+  user: User | null;
+  isLoading: boolean;
+  setSession: (session: Session | null) => void;
+  setLoading: (loading: boolean) => void;
+  clearSession: () => void;
+};
+
+export const useSessionStore = create<SessionStore>((set) => ({
+  session: null,
+  user: null,
+  isLoading: true,
+
+  setSession: (session) =>
+    set({
+      session,
+      user: session?.user ?? null,
+    }),
+
+  setLoading: (isLoading) => set({ isLoading }),
+
+  clearSession: () =>
+    set({
+      session: null,
+      user: null,
+      isLoading: false,
+    }),
+}));

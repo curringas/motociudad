@@ -1,0 +1,44 @@
+name: Supabase CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - supabase/**
+  pull_request:
+    branches:
+      - main
+    paths:
+      - supabase/**
+
+jobs:
+  ci:
+    name: DB Tests & Edge Function Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start local Supabase
+        run: supabase start --debug
+
+      - name: Reset database
+        run: supabase db reset
+
+      - name: Run pgTAP tests
+        run: supabase test db
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Run Edge Function tests
+        run: deno test --allow-env --allow-net supabase/functions/validate-verification/__tests__/

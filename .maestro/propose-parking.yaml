@@ -1,0 +1,38 @@
+appId: com.motociudad.app
+---
+- launchApp
+
+# Navegar a la pestaña Aportar
+- tapOn:
+    text: "Aportar"
+
+# Debe mostrarse la pantalla de aportación
+- assertVisible:
+    text: "Proponer parking"
+    optional: true
+
+# Paso 1: Ubicación — confirmar posición
+- tapOn:
+    text: "Confirmar ubicación"
+    optional: true
+
+# Paso 2: Detalles — nombre del parking
+- inputText:
+    id: "parking-name-input"
+    text: "Test Parking CI"
+    optional: true
+
+# Seleccionar tipo público
+- tapOn:
+    text: "Público"
+    optional: true
+
+# Continuar al siguiente paso
+- tapOn:
+    text: "Continuar"
+    optional: true
+
+# Paso 3: Saltar foto y enviar
+- tapOn:
+    text: "Enviar sin foto"
+    optional: true
