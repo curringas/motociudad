@@ -25,6 +25,8 @@ import { useNearbyParkings } from '@/features/parkings/hooks';
 import { ParkingMapPin } from '@/features/parkings/components/ParkingMapPin';
 import { ParkingBottomSheet } from '@/components/ParkingBottomSheet';
 import { EmptyMapState } from '@/components/EmptyMapState';
+import { MapSearchBar } from '@/features/search/components/MapSearchBar';
+import type { GeocodeResult } from '@/features/search/api';
 import { useFiltersStore } from '@/stores/filtersStore';
 import { useUiStore } from '@/stores/uiStore';
 import type { NearbyParking } from '@/types/domain';
@@ -120,6 +122,15 @@ export default function MapScreen() {
     });
   }, [location]);
 
+  const handleLocationFound = useCallback((coords: GeocodeResult) => {
+    mapRef.current?.animateToRegion({
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+      latitudeDelta: 0.03,
+      longitudeDelta: 0.03,
+    });
+  }, []);
+
   const permissionDenied =
     permission === Location.PermissionStatus.DENIED ||
     permission === Location.PermissionStatus.UNDETERMINED;
@@ -131,6 +142,8 @@ export default function MapScreen() {
 
   return (
     <View className="flex-1 bg-background">
+      <MapSearchBar onLocationFound={handleLocationFound} />
+
       {/* Map */}
       {!locationLoading && (
         <MapView
@@ -172,7 +185,7 @@ export default function MapScreen() {
           edges={['top']}
           className="absolute top-0 left-0 right-0 z-10"
         >
-          <View className="mx-4 mt-2 bg-pending/90 rounded-card p-3 flex-row items-center">
+          <View className="mx-4 mt-16 bg-pending/90 rounded-card p-3 flex-row items-center">
             <Text className="text-background text-xs font-semibold flex-1">
               Activa la ubicación para ver parkings cerca de ti.
             </Text>
@@ -182,7 +195,7 @@ export default function MapScreen() {
 
       {/* Parkings loading indicator */}
       {parkingsLoading && !locationLoading && (
-        <View className="absolute top-16 self-center bg-surface/90 rounded-pill px-4 py-2">
+        <View className="absolute top-28 self-center bg-surface/90 rounded-pill px-4 py-2">
           <ActivityIndicator size="small" color="#FFD60A" />
         </View>
       )}
