@@ -14,7 +14,7 @@ Los usuarios pueden **encontrar, proponer y verificar parkings de moto** en su c
 
 | Mapa | Aportar | Verificar |
 |---|---|---|
-| ![Mapa con parkings](map-v2.png) | ![Flujo aportar](contribute-step1.png) | ![Verificar parking](contribute-render.png) |
+| ![Mapa con parkings](docs/screenshots/map-v2.png) | ![Flujo aportar](docs/screenshots/contribute-step1.png) | ![Verificar parking](docs/screenshots/contribute-render.png) |
 
 ---
 
