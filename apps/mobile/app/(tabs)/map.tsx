@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import MapView, {
   type Region,
+  type MapStyleElement,
   PROVIDER_DEFAULT,
   PROVIDER_GOOGLE,
 } from 'react-native-maps';
@@ -30,7 +31,7 @@ import type { NearbyParking } from '@/types/domain';
 
 // Import dark map style — bundled JSON array of Google Maps style rules
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const MAP_STYLE_DARK = require('@/assets/map-style-dark.json') as object[];
+const MAP_STYLE_DARK = require('@/assets/map-style-dark.json') as MapStyleElement[];
 
 const INITIAL_DELTA = { latitudeDelta: 0.01, longitudeDelta: 0.01 };
 const MADRID_FALLBACK: Region = {

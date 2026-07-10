@@ -11,7 +11,12 @@ import {
   Platform,
   Image,
 } from 'react-native';
-import MapView, { Marker, PROVIDER_DEFAULT, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, {
+  Marker,
+  type MapStyleElement,
+  PROVIDER_DEFAULT,
+  PROVIDER_GOOGLE,
+} from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator';
@@ -28,7 +33,7 @@ import { supabase } from '@/lib/supabase';
 import type { ParkingFeatures } from '@/types/domain';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const MAP_STYLE_DARK = require('@/assets/map-style-dark.json') as object[];
+const MAP_STYLE_DARK = require('@/assets/map-style-dark.json') as MapStyleElement[];
 
 const STEPS = ['Ubicación', 'Detalles', 'Foto'] as const;
 type Step = 0 | 1 | 2;
