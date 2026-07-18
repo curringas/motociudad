@@ -53,12 +53,22 @@ usa `service_role`. No hay `UPDATE` de `users.role`/`suspended` desde el cliente
   en una función auditable es más seguro.
 - *Alternativa:* policy RLS + trigger anti-escalada — más difícil de razonar y probar.
 
-### D4. Protección de `parkings.status` por trigger `BEFORE UPDATE`
-El contributor tiene `UPDATE` sobre sus filas, pero **no** puede tocar `status`
-(verificar). Un trigger rechaza cambios de `status` si `NOT is_admin()`.
-- *Por qué:* RLS es por fila, no por columna; el trigger da control a nivel de columna.
-- *Alternativa:* RPC/Edge Function `admin-verify-parking` dedicada — válida, pero
-  el trigger cubre el caso con menos superficie (verificar no genera Octanos).
+### D4. Protección de `parkings.status` por trigger con guardia de contexto
+**(revisado durante apply)** El contributor tiene `UPDATE` sobre sus filas, pero
+**no** puede tocar `status` (verificar). Un trigger `BEFORE UPDATE` rechaza el
+cambio de `status` salvo que `public.is_admin()` **o** `auth.uid() IS NULL`
+(contexto backend/`service_role`). Casos:
+- Verificación comunitaria: la Edge Function `validate-verification` usa
+  `service_role` (`auth.uid()` null) → permitida, no se rompe.
+- Verificar desde el panel: el admin hace `UPDATE` directo (`is_admin()`) → permitida.
+- Contributor / user: `auth.uid()` no nulo y no admin → rechazada.
+- *Por qué así:* RLS es por fila, no por columna. El privilegio de columna
+  (`REVOKE UPDATE(status)`) obliga a enumerar y mantener el `GRANT` del resto de
+  columnas (Postgres no resta un `UPDATE(col)` de un `UPDATE` a nivel de tabla),
+  y forzaría una RPC para el admin. El trigger es autocontenido y mantiene el
+  verificar del admin como `UPDATE` directo.
+- *Nota:* `auth.uid() IS NULL` para `service_role` es un invariante estable de
+  Supabase (las conexiones service_role no llevan JWT de usuario).
 
 ### D5. Permisos de parkings por propiedad
 `USING (is_admin() OR (can_manage_parkings() AND proposed_by = auth.uid()))` para
@@ -66,9 +76,9 @@ UPDATE de `parkings` y para INSERT/UPDATE/DELETE de `parking_photos`. Borrar/
 archivar parkings: solo `is_admin()`.
 
 ### D6. Verificación admin sin Octanos
-Verificar desde el panel = `UPDATE parkings.status = 'verified'` (admin, vía D4).
-No inserta en `octano_events` ni usa `parking_verifications`. El panel jamás toca
-Octanos.
+Verificar desde el panel = `UPDATE parkings.status = 'verified'` por el admin
+(permitido por el trigger de D4). No inserta en `octano_events` ni usa
+`parking_verifications`. El panel jamás toca Octanos.
 
 ### D7. Panel solo web, en slice `features/admin/`
 Rutas/pantallas `.web.tsx` gateadas por rol, reutilizando patrones web existentes

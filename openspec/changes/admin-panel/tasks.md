@@ -1,17 +1,17 @@
 ## 1. Base de datos — roles y suspensión
 
-- [ ] 1.1 Migración: enum `user_role` (`user`,`contributor`,`admin`) + columnas `users.role` (default `user`), `users.suspended` (default false), `users.suspended_at`, `users.suspended_reason`
-- [ ] 1.2 Migración: funciones `is_admin()` y `can_manage_parkings()` (`SECURITY DEFINER`, leen rol/`suspended` de `auth.uid()`, exigen `NOT suspended`)
-- [ ] 1.3 Migración: trigger `BEFORE UPDATE` en `parkings` que rechaza cambios de `status` si `NOT is_admin()`
+- [x] 1.1 Migración: enum `user_role` (`user`,`contributor`,`admin`) + columnas `users.role` (default `user`), `users.suspended` (default false), `users.suspended_at`, `users.suspended_reason`
+- [x] 1.2 Migración: funciones `is_admin()` y `can_manage_parkings()` (`SECURITY DEFINER`, leen rol/`suspended` de `auth.uid()`, exigen `NOT suspended`)
+- [x] 1.3 Migración: trigger `BEFORE UPDATE OF status` en `parkings` que rechaza el cambio de `status` salvo `is_admin()` o `auth.uid() IS NULL` (service_role); preserva la verificación comunitaria
 - [ ] 1.4 pgTAP: `is_admin()`/`can_manage_parkings()` (admin activo→true, admin suspendido→false, contributor activo→true, user→false)
 - [ ] 1.5 Probar local: `supabase db reset` sin errores
 
 ## 2. Base de datos — policies RLS
 
-- [ ] 2.1 Policy `SELECT` en `users` para admin (ver todos los usuarios)
-- [ ] 2.2 Policies en `parkings`: `UPDATE` (admin todos; contributor solo `proposed_by = auth.uid()`), `DELETE` solo admin
-- [ ] 2.3 Policies en `parking_photos`: `INSERT`/`UPDATE`/`DELETE` (admin cualquiera; contributor solo de sus parkings)
-- [ ] 2.4 Actualizar policies de escritura existentes (proponer / verificar) para exigir `NOT suspended`
+- [x] 2.1 Policy `SELECT` en `users` para admin → **ya cubierto** por `users_public_read` (SELECT público). Añadido en su lugar el guard `trg_users_privileged_fields` que cierra la escalada de privilegios en `users_self_update`.
+- [x] 2.2 Policies en `parkings`: `parkings_update_admin` (admin) y `parkings_update_contributor_own` (contributor, sus filas); borrado (`deleted_at`) restringido a admin vía `trg_parkings_delete_admin_only`
+- [x] 2.3 Policies en `parking_photos`: `parking_photos_insert/update/delete_admin` (admin cualquiera); contributor añade a los suyos vía policy existente
+- [x] 2.4 `NOT suspended` aplicado a `parkings_insert`, `parkings_update_own_pending` y `parking_photos_insert` (helper `is_suspended()`). Falta el chequeo `suspended` dentro de las Edge Functions propose/verify (service_role salta RLS) → grupo 3
 - [ ] 2.5 pgTAP: cada policy nueva/modificada (admin, contributor propio, contributor ajeno→deniega, user→deniega, suspendido→deniega)
 - [ ] 2.6 Ejecutar `supabase test db` y verificar 100% pass
 
