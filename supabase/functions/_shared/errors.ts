@@ -7,6 +7,9 @@ export type ErrorCode =
   // Errores de autenticación
   | "UNAUTHORIZED"
   | "INVALID_TOKEN"
+  | "FORBIDDEN"            // autenticado pero sin permisos (p. ej. no es admin)
+  | "USER_NOT_FOUND"       // el usuario objetivo no existe
+  | "USER_SUSPENDED"       // la cuenta está suspendida (solo lectura)
   // Errores de validación de input
   | "VALIDATION_ERROR"
   | "MISSING_FIELDS"
@@ -80,6 +83,18 @@ export const ERRORS = {
   UNAUTHORIZED: makeError(
     "UNAUTHORIZED",
     "Autenticación requerida",
+  ),
+  FORBIDDEN: makeError(
+    "FORBIDDEN",
+    "No tienes permisos para realizar esta acción",
+  ),
+  USER_NOT_FOUND: makeError(
+    "USER_NOT_FOUND",
+    "Usuario no encontrado",
+  ),
+  USER_SUSPENDED: makeError(
+    "USER_SUSPENDED",
+    "Tu cuenta está suspendida: no puedes contribuir.",
   ),
   GEOFENCE_FAIL: makeError(
     "GEOFENCE_FAIL",

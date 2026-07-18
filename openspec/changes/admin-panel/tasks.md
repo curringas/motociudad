@@ -17,11 +17,11 @@
 
 ## 3. Backend — Edge Function `admin-set-role`
 
-- [ ] 3.1 Scaffold `supabase/functions/admin-set-role/` (Deno + TypeScript) con auth check `is_admin()` del llamante y uso de `service_role`
-- [ ] 3.2 Validación de input con Zod (`userId`, y `role` y/o `suspended`)
-- [ ] 3.3 Lógica: actualizar `role`/`suspended` (+ `suspended_at`/`suspended_reason`); rechazar si el llamante no es admin
-- [ ] 3.4 Deno test: admin cambia rol/suspende OK; no-admin rechazado (403); input inválido rechazado (400)
-- [ ] 3.5 Deploy a entorno preview: `supabase functions deploy admin-set-role`
+- [x] 3.1 Scaffold `supabase/functions/admin-set-role/` (Deno + TypeScript) con auth check del llamante (admin activo) y uso de `service_role`
+- [x] 3.2 Validación de input con Zod (`userId`, y `role` y/o `suspended`)
+- [x] 3.3 Lógica: actualizar `role`/`suspended` (+ `suspended_at`/`suspended_reason`); rechazar si el llamante no es admin; impedir auto-modificación
+- [ ] 3.4 Deno test: admin cambia rol/suspende OK; no-admin rechazado (403); input inválido rechazado (400) — PENDIENTE
+- [x] 3.5 Deploy `admin-set-role` a Cloud (vía MCP, v1 ACTIVE). Chequeo `suspended` añadido a propose-parking/validate-verification — **pendiente redeploy** de esas dos (multi-fichero; falta SUPABASE_ACCESS_TOKEN para CLI)
 
 ## 4. Tipos y capa de datos (cliente)
 

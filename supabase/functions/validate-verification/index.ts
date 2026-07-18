@@ -74,6 +74,16 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const userId = user.id;
 
+  // ── 1b. La cuenta no debe estar suspendida ──────────────────
+  const { data: verifier } = await supabaseAdmin
+    .from("users")
+    .select("suspended")
+    .eq("id", userId)
+    .single();
+  if (verifier?.suspended) {
+    return errorResponse(ERRORS.USER_SUSPENDED, 403);
+  }
+
   // ── 2. Validación del body ──────────────────────────────────
   let body: unknown;
   try {
