@@ -69,6 +69,21 @@ No hay competencia directa consolidada en España. Las apps de parking generalis
 | CI/CD con GitHub Actions (typecheck, tests, build EAS) | ✅ |
 | Tests unitarios (Vitest), E2E (Maestro) y de base de datos (pgTAP) | ✅ |
 
+### Panel de administración web (v1.3)
+
+Panel **solo web** con autorización real por RLS + Edge Function (el guard de UI es solo UX).
+
+| Funcionalidad | Estado |
+|---|---|
+| Roles (`user` / `contributor` / `admin`) y suspensión global de cuenta | ✅ |
+| Primitivas de autorización SQL (`is_admin()`, `can_manage_parkings()`) usadas por las policies | ✅ |
+| Sección Usuarios (solo admin): listar, buscar, filtrar por rol, detalle, cambiar rol, suspender/reactivar | ✅ |
+| Sección Parkings (contributor/admin): listar/filtrar, crear (sin Octanos), editar por propiedad, imágenes | ✅ |
+| Verificar y borrar/archivar parkings (solo admin) | ✅ |
+| Edge Function `admin-set-role` (cambio de rol/suspensión, anti-escalada de privilegios) | ✅ |
+
+> Desarrollado con Spec Driven Development (OpenSpec, change `admin-panel`), desplegado a Supabase Cloud y verificado end-to-end en navegador. El panel **nunca** genera Octanos.
+
 ### Pendiente para v1.1
 
 | Funcionalidad | Notas |
@@ -249,8 +264,9 @@ deno test supabase/functions/**/*.test.ts
 
 **Cobertura objetivo por área crítica:**
 - Lógica anti-abuso (geofencing, cap diario, cooldown): **90%**
-- RLS policies: **100% de las políticas escritas**
+- RLS policies: **100% de las políticas escritas** (incluye las del panel admin: `supabase test db` = 51 asserts en verde)
 - Reglas de subida de nivel: **100%**
+- Autorización del panel admin: permisos derivados en cliente (16 tests Vitest) + Edge Function `admin-set-role` (8 tests Deno)
 
 Los tests de CI bloquean el merge si fallan typecheck, lint o cualquier test unitario.
 

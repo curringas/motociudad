@@ -74,6 +74,41 @@ garantizar la integridad de foto y GPS.
   `prd.md`, `infraestructura.md`, `testing.md`.
 - **Commits:** `745bdbe` (feat web) + `352bbad` (merge con `main`).
 
+### 3. Panel de administración web (roles + gestión)
+
+Panel de administración **solo web** para gestionar la comunidad y el dataset, con
+autorización real en servidor (RLS + Edge Function), no solo en la UI. Desarrollado
+con Spec Driven Development vía OpenSpec (change `admin-panel`, 36 tareas).
+
+- **Modelo de roles y suspensión:** enum `user_role` (`user`/`contributor`/`admin`)
+  y suspensión global de cuenta (solo lectura). Primitivas SQL `is_admin()` /
+  `can_manage_parkings()` / `is_suspended()` reutilizadas en las policies RLS.
+- **Sección Usuarios (solo admin):** listar, buscar (username/display_name) y filtrar
+  por rol; detalle (perfil, rol, estado, nivel, Octanos); cambiar rol y
+  suspender/reactivar. Toda mutación de rol/suspensión pasa por la Edge Function
+  privilegiada `admin-set-role` (un trigger bloquea el `UPDATE` directo → anti-escalada).
+- **Sección Parkings (contributor + admin):** listar y filtrar (ciudad/estado); crear
+  (sin otorgar Octanos); editar según propiedad (contributor solo los suyos); gestionar
+  imágenes; y —solo admin— verificar y borrar/archivar. Un trigger restringe el cambio
+  de `status`/`deleted_at` a admin o contexto `service_role` (preserva la verificación
+  comunitaria).
+- **El panel nunca genera Octanos** (invariante explícito).
+- **Estado:** implementado, **desplegado a Supabase Cloud** y **verificado E2E en
+  navegador** (Playwright, cuenta admin, 2026-07-18): deny sin sesión → login →
+  crear/verificar/borrar parking y cambiar rol de usuario, todo OK, 0 errores de consola.
+  Capturas: `docs/screenshots/admin-panel-deny.png`, `docs/screenshots/admin-panel-parkings.png`.
+- **Slice:** `apps/mobile/features/admin/` (`api.ts`, `hooks.ts`, `schemas.ts`,
+  `permissions.ts` [lógica pura], `ui.tsx`) + rutas `apps/mobile/app/admin/*.web.tsx`
+  (guard por rol + secciones) + entrada "Panel" en `NavRail`.
+- **Backend:** 7 migraciones (`20260718000001..7`), Edge Function `admin-set-role`.
+- **Tests:** **51 asserts pgTAP** (`authz_functions`, `admin_policies` + saneado de
+  `parkings`/`nearby_parkings`), **16 tests Vitest** de permisos y **8 tests Deno** de
+  `admin-set-role`. Suite completa en verde; `pnpm typecheck` limpio.
+- **Specs:** OpenSpec `openspec/changes/archive/2026-07-18-admin-panel/` (archivado) +
+  specs canónicas sincronizadas a `openspec/specs/{user-roles,admin-user-management,admin-parking-management}/`.
+- **Docs actualizados:** `prd.md` (v1.3 → implementado), `modelo-datos.md` (§21
+  autorización), `arquitectura.md` (§6.2 + §11.3), `testing.md` (§8.3), `README.md`.
+
 ---
 
 ## Correcciones
@@ -94,6 +129,26 @@ de 21/26 a **34/34 tests en verde** (7 ficheros).
   renderizando como web sobre jsdom. Añadidas devDeps `@testing-library/react` y
   `@testing-library/dom`; `docs/testing.md` §2/§5/§15 actualizado. 6 tests.
   Commit `8a7c033`.
+
+### 2. Bug de RLS: el admin no podía borrar/archivar parkings
+
+Detectado al escribir los tests pgTAP del panel: al fijar `deleted_at`, la fila
+resultante dejaba de ser visible bajo las policies `SELECT` existentes
+(`deleted_at IS NULL`), por lo que PostgreSQL rechazaba el propio `UPDATE`
+("new row violates row-level security policy"). El admin no podía borrar/archivar
+pese al trigger que ya lo autorizaba.
+
+- **Fix:** nueva policy `parkings_read_admin` (`USING is_admin()`) en la migración
+  `20260718000007_parkings_admin_read.sql`. Como efecto útil, el admin también ve
+  los parkings archivados/borrados para poder gestionarlos.
+- **Verificado:** los 51 asserts pgTAP pasan; en Cloud el borrado funciona (E2E).
+
+### 3. Saneado de los tests pgTAP preexistentes
+
+`parkings.test.sql` y `nearby_parkings.test.sql` estaban rotos (nunca habían pasado):
+UUIDs con caracteres no hexadecimales, aserciones obsoletas tras el cambio a lectura
+pública de parkings, y CTEs que modifican datos usados como subconsulta. Corregidos
+para dejar `supabase test db` 100% verde (4 ficheros, 51 asserts).
 
 ---
 

@@ -60,6 +60,8 @@ inspeccionar/validar (`openspec list|show|validate|status|view|archive`).
 | 2026-07-18 | Saneamiento de tests | deeplinks reescrito, `vitest run`, migración de ParkingMapPin a `@testing-library/react` | `6db9f54`, `d197d55`, `8a7c033` |
 | 2026-07-18 | **Versión web (entrega final)** | Web de consulta (Leaflet+OSM, buscador Nominatim, responsive, shims web) e integración en main | `745bdbe`, `352bbad` |
 | 2026-07-18 | Cierre entrega final | Bitácora `entrega-final-CMH.md`, verificación del buscador en simulador | `c47f8fe`, `d71f7d8`, `75abf57` |
+| 2026-07-18 | **Panel admin — backend (entrega final)** | Change OpenSpec `admin-panel`: roles/suspensión, funciones/triggers RLS, policies, Edge Function `admin-set-role` | `92f4588`, `5c15807`, `f9b5d90`, `35a3eb1` |
+| 2026-07-18 | **Panel admin — panel web + cierre (entrega final)** | `/opsx:apply`: pgTAP+Deno+Vitest, slice `features/admin`, rutas `app/admin`, fix RLS de borrado (mig. 000007), despliegue a Cloud, E2E Playwright y archivado del change | rama `feature-admin-panel-CMH` |
 
 **Artefactos SDD generados:**
 - **Skills superpowers** (`docs/superpowers/`):
@@ -67,6 +69,7 @@ inspeccionar/validar (`openspec list|show|validate|status|view|archive`).
   - Planes: `propose-parking-edge-function-y-fix-mapa`, `octanos-perfil`, `version-web`, `buscador-mapa`.
 - **OpenSpec** (`openspec/changes/`):
   - `motociudad-mvp` — change del MVP (`proposal.md` + `design.md` + `tasks.md`), 71/83 tareas.
+  - `admin-panel` — change del panel de administración (proposal + design + 3 specs + tasks), **36/36 tareas, archivado** en `openspec/changes/archive/2026-07-18-admin-panel/`. Specs canónicas sincronizadas a `openspec/specs/{user-roles,admin-user-management,admin-parking-management}/`.
 
 ---
 
@@ -104,6 +107,24 @@ inspeccionar/validar (`openspec list|show|validate|status|view|archive`).
 - `recuérdame cómo vamos en el proyecto` → resumen de estado (features, tareas OpenSpec, pendientes).
 - `se supone que tengo que llevar un archivo prompts.md … ¿podríamos recopilar cosas para rellenarlo?` → este documento.
 
+### 3.6 Panel de administración (entrega final)
+- `/opsx:apply admin-panel` → implementación de las tareas del change OpenSpec `admin-panel`
+  (grupos 4–8): al aplicar se descubrió y corrigió un **bug real de RLS** (el admin no podía
+  borrar/archivar) → nueva migración `parkings_read_admin`; se escribieron pgTAP/Deno/Vitest,
+  el slice `features/admin`, las rutas `app/admin/*.web.tsx` y se saneó la suite pgTAP.
+- `si` (¿desplegar a Cloud?) → aplicar la migración 000007 a Supabase Cloud (MCP) y redeploy
+  de `propose-parking`/`validate-verification` (CLI).
+- `Puedes usar el usuario administrador … guárdalo en .env para cada vez que pruebes E2E con mcps`
+  → credenciales de admin para E2E guardadas en `apps/mobile/.env` (gitignored) como
+  `E2E_ADMIN_EMAIL`/`E2E_ADMIN_PASSWORD` (contraseña nunca en git ni en memoria).
+- `si` (¿verificación manual?) → **E2E con Playwright MCP**: deny sin sesión, login como admin,
+  crear/verificar/borrar parking y cambio de rol de usuario; verificado en BD; datos limpiados.
+- `/opsx:archive admin-panel` + `Sincronizar y archivar` → sync de las 3 delta specs a
+  `openspec/specs/` y archivado del change.
+- `prepara los commits pero revisa que quede documentado todo … recuerda que esto es la entrega
+  de un proyecto final de máster de AI4DEVS` → esta tanda de commits + actualización de
+  `README.md`, `entrega-final-CMH.md` y este `prompts.md`.
+
 ---
 
 ## 4. Operaciones (ops) realizadas con IA
@@ -113,27 +134,38 @@ inspeccionar/validar (`openspec list|show|validate|status|view|archive`).
 - **Verificación previa a integrar:** siempre `pnpm typecheck` + suite de tests antes de merge/push.
 - **Diagnóstico de runtime:** redbox de Expo Router causado por un **Metro obsoleto** de un worktree borrado → arranque de Metro limpio (`expo start --clear`).
 - **CI/CD:** GitHub Actions + EAS (definido en el MVP; ver `docs/infraestructura.md`).
+- **Despliegue del panel admin a Supabase Cloud:** migración `parkings_read_admin` aplicada
+  vía Supabase MCP (`apply_migration`) y verificada por `execute_sql`; redeploy de las Edge
+  Functions `propose-parking`/`validate-verification` vía Supabase CLI. Local: `supabase start` +
+  `supabase db reset` + `supabase test db` para la suite pgTAP.
+- **Archivado OpenSpec:** `/opsx:archive` con sync de specs canónicas a `openspec/specs/`
+  (primer change archivado del repo).
 
 ---
 
 ## 5. Tests
 
 - **Runner:** Vitest (app) + suite web separada (`vitest.web.config.ts`).
-- **Estado final:** app **39/39** (9 ficheros) + web **5/5** (2 ficheros); typecheck limpio.
+- **Estado final:** app **55/55** (10 ficheros) + web **5/5** (2 ficheros); typecheck limpio.
 - **Trabajo de tests asistido por IA:**
   - `features/search/api.ts` (`geocodeAddress`) con `expo-location` mockeado (TDD).
   - `deeplinks.test.ts` reescrito para la implementación real (ActionSheetIOS / comgooglemaps / web).
   - Script `test` cambiado a `vitest run` (antes colgaba en modo watch); `test:watch` añadido.
   - **Decisión de arquitectura de tests:** los tests de componentes usan `@testing-library/react` + react-native-web (RNTL es incompatible con Vitest — carga el `react-native` real con sintaxis Flow). Documentado en `docs/testing.md` §5.0.
-- **E2E:** Maestro (flows definidos en `docs/testing.md`); **RLS:** pgTAP.
+  - **Panel admin:** `features/admin/permissions.ts` (lógica pura de autorización por rol/propiedad y filtros) con **16 tests Vitest**; `admin-set-role` con **8 tests Deno** (gate de validación 400).
+- **RLS (pgTAP):** `supabase test db` = **51 asserts en verde** (4 ficheros). Nuevos del panel:
+  `authz_functions.test.sql` (funciones `is_admin`/`can_manage_parkings`/`is_suspended`) y
+  `admin_policies.test.sql` (edición por rol/propiedad, verificar/borrar solo admin, gate de
+  suspensión, recuento de policies). Además se sanearon `parkings.test.sql` y `nearby_parkings.test.sql`.
+- **E2E:** Maestro (móvil, flows en `docs/testing.md`); **Playwright** (web: consulta y **panel admin**).
 
 ---
 
 ## 6. MCPs (uso concreto)
 
-- **Supabase MCP:** consulta de esquema/tablas, migraciones, logs y advisors, generación de tipos TypeScript; configuración del cliente (URL + publishable key).
+- **Supabase MCP:** consulta de esquema/tablas, migraciones, logs y advisors, generación de tipos TypeScript; configuración del cliente (URL + publishable key). En el panel admin: `list_projects`/`list_migrations`, **`apply_migration`** (policy `parkings_read_admin` a Cloud) y **`execute_sql`** para verificar el estado en producción (recuento de policies, rol de usuarios, borrado del parking de prueba).
 - **XcodeBuildMCP:** `discover_projs`, `list_schemes`, `list_sims`, `session_set_defaults`, `build_run_sim`, `launch_app_sim`, `screenshot`, `snapshot_ui` — para compilar y ejecutar la app en el simulador iOS y verificar la UI (p. ej. el buscador). Limitación encontrada: la automatización de UI (tap/tecleo) no está habilitada en esta instalación, por lo que el tecleo end-to-end lo hizo el usuario y la IA verificó por captura.
-- **Playwright MCP:** automatización de navegador para la **versión web** — navegar la app en el browser, tomar snapshots/capturas y ejercitar la UI (mapa Leaflet, buscador Nominatim, fichas) para verificar el port web fuera del simulador nativo.
+- **Playwright MCP:** automatización de navegador para la **versión web** — navegar la app en el browser, tomar snapshots/capturas y ejercitar la UI (mapa Leaflet, buscador Nominatim, fichas) para verificar el port web fuera del simulador nativo. También para la **verificación E2E del panel de administración** (2026-07-18): deny sin sesión, login como admin, y flujo completo de gestión de parkings (crear/verificar/borrar) y de usuarios (cambio de rol vía `admin-set-role`), con capturas en `docs/screenshots/admin-panel-*.png`.
 
 ---
 

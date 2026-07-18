@@ -12,3 +12,8 @@ android/
 .supabase/
 supabase/.temp/
 .playwright*/
+
+# Artefactos locales (no versionar)
+supabase/.branches/
+.claude/worktrees/
+supabase/functions/*/deno.lock
