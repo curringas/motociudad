@@ -334,6 +334,26 @@ ROLLBACK;
 
 `supabase test db` corre todos los tests pgTAP en un Postgres efímero.
 
+### 8.3 Cobertura de autorización — panel de administración (v1.3)
+
+El change `admin-panel` añade dos ficheros pgTAP (`supabase test db` → 51 asserts, verde):
+
+- `supabase/tests/rls/authz_functions.test.sql` (11): `is_admin()`, `can_manage_parkings()`,
+  `is_suspended()` para admin activo/suspendido, contributor activo/suspendido y user.
+- `supabase/tests/rls/admin_policies.test.sql` (14): editar por rol/propiedad (admin cualquiera,
+  contributor solo los suyos, user/suspendido→deniega), verificar/borrar solo admin, gestión de
+  fotos y recuento de policies (`parkings`=7, `parking_photos`=6).
+
+Convención de los helpers de rol (reutilizada en los tres ficheros RLS): `tests.set_auth_user(uuid)`
+(SECURITY INVOKER, con `GRANT EXECUTE` a `authenticated`) fija `request.jwt.claims`+`role`; para
+volver al rol de sesión (limpieza/metadatos) se usa `RESET ROLE`. Los UUID de prueba deben ser
+**hexadecimales válidos**. Los CTE que modifican datos van a nivel superior del `SELECT is(...)`.
+
+> El gate 400 de la Edge Function `admin-set-role` se cubre con Deno
+> (`supabase/functions/admin-set-role/__tests__/schemas.test.ts`, 8 tests). La lógica de
+> permisos derivados del cliente se cubre con Vitest (`features/admin/__tests__/permissions.test.ts`,
+> 16 tests).
+
 ---
 
 ## 9. Tests de funciones SQL

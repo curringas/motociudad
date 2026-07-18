@@ -175,12 +175,16 @@ build local para evaluación; el hosting público queda fuera de alcance.
 
 - **v1.1**: Multi-idioma (EN), insignias temáticas estacionales.
 - **v1.2**: Sistema de amigos completo (invitaciones, ranking entre amigos).
-- **v1.3**: **Panel de administración web** (sobre la versión web actual):
-  - **Gestión de usuarios con roles**: `user`, `contributor`, `admin`. Visualizar usuarios,
-    su rol y actividad; permitir cambiar roles desde el panel.
-  - **Listado de todos los parkings** en una tabla de datos (datatable) con paginación,
-    orden y **filtros** (por ciudad, por estado —pendiente/verificado—, por tipo), para
-    moderar la cola y buscar rápidamente.
+- **v1.3** ✅ **Implementado** (change OpenSpec `admin-panel`): **Panel de administración web**
+  (solo web, sobre la versión web actual):
+  - **Roles y suspensión**: enum `user`/`contributor`/`admin` + suspensión global (solo lectura).
+    Cambio de rol/suspensión vía Edge Function `admin-set-role`; autorización real en RLS.
+  - **Sección Usuarios** (solo admin): listar, buscar (username/display_name) y filtrar por rol;
+    detalle (perfil, rol, estado, nivel, Octanos); cambiar rol y suspender/reactivar.
+  - **Sección Parkings** (contributor + admin): listar y filtrar (ciudad, estado); crear
+    (sin Octanos); editar (contributor solo los suyos); añadir imágenes; verificar y borrar/archivar
+    (solo admin).
+  - El panel **nunca** genera Octanos. Detalle de autorización en `modelo-datos.md` §21.
 - **v1.4**: **Sistema de feedback y reportes de parkings** (amplía F13 y el enum
   `report_status` existente):
   - **Feedback de la app**: cualquier usuario puede enviar feedback general sobre la app.
@@ -197,6 +201,36 @@ build local para evaluación; el hosting público queda fuera de alcance.
     pending → confirmed).
   - Para **administradores y colaboradores**: replicar in-app las mismas notificaciones
     que reciben por email (feedback y reportes de la v1.4).
+- **v1.6**: **Otto — agente scout de parkings con IA** (solo admins, en el panel):
+  - **Botón "Buscar parkings con IA"** que lanza a **Otto** a descubrir posibles parkings
+    de motos en una zona y proponerlos; el admin revisa y **acepta uno o varios**.
+  - **Pipeline agéntico**: (1) buscar lugares candidatos, (2) Otto **clasifica** si es de
+    verdad un parking de motos (descarta garajes de coches, gasolineras, etc.), (3) **dedup**
+    contra los parkings ya insertados vía **PostGIS `ST_DWithin`** (mismo punto ± radio /
+    nombre similar), (4) **extrae características** y las mapea al `features` JSONB
+    (`covered`, `cameras`, `lit`, `h24`, `free`, …) + `city`/`district`/`location`.
+  - **Lista de "propuestos por IA"**: no es tabla nueva — son parkings con `status=pending`
+    y origen marcado (campo `source` o usuario-agente dedicado). Aceptar → flujo normal;
+    rechazar → `rejected`. **Nunca** genera Octanos.
+  - ⚠️ **Nota legal**: scrapear Google Maps directamente viola sus ToS; el modo producción
+    real es la **Google Places API** (de pago). Decisión a fijar en el `design.md`.
+  - Coste acotado: solo admins, disparado a demanda por botón.
+- **v1.7**: **Otto — asistente RAG en el panel de administración** (solo admins/colaboradores):
+  - Chat conversacional **solo dentro del panel** — nunca para usuarios finales. Acota el coste
+    (pocos usuarios) y el alcance.
+  - **Propósito analítico/estratégico**, no búsqueda: consultar estadísticas, detectar zonas
+    con menos parkings y **cómo mejorar la cobertura**, revisar comentarios de parkings,
+    analizar reportes y usuarios, y proponer mejoras de la app a partir del **feedback** de
+    la comunidad.
+  - **Arquitectura RAG híbrida**: recuperación por filtros/estadísticas SQL (datos
+    estructurados) **+** búsqueda vectorial (`pgvector`) sobre **texto libre**: `comments`,
+    reportes y feedback. La generación de respuestas usa la **API de Claude** (`messages` +
+    tool-calling); el historial vive en la sesión del chat.
+  - ⚠️ **Nota de arquitectura**: la API de Claude **no genera embeddings**. Requiere un
+    proveedor de embeddings aparte (p. ej. **Voyage AI** —recomendado por Anthropic— u OpenAI),
+    con su propio token/secret. Decisión a fijar en el `design.md` del change.
+  - **Dependencias**: requiere que existan primero los reportes y el feedback (**v1.4**);
+    los `comments` ya están en el modelo de datos. Sin ese corpus, el RAG no aporta sobre SQL.
 - **v2.0**: Monetización — destacados de talleres, plan premium con notificaciones avanzadas.
 
 ---

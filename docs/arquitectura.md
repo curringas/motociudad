@@ -289,6 +289,14 @@ Reglas declaradas en SQL. Ejemplos:
 
 Detalles en `modelo-datos.md` §7.
 
+**Roles y panel de administración (v1.3)**: la autorización por rol también es RLS.
+Funciones `SECURITY DEFINER` `is_admin()` / `can_manage_parkings()` / `is_suspended()`
+(exigen `NOT suspended`) se reutilizan en las policies de `parkings` y `parking_photos`.
+El cambio de `role`/`suspended` solo es posible vía la Edge Function `admin-set-role`
+(un trigger bloquea el `UPDATE` directo → anti-escalada). Verificar/borrar parkings se
+protege con triggers que exigen `is_admin()` o contexto `service_role`. El guard del panel
+web es solo UX; la seguridad real es RLS + Edge Function. Detalle en `modelo-datos.md` §21.
+
 ### 6.3 Anti-abuso
 
 Toda confirmación de Octanos pasa por la edge function `validate-verification`, que aplica las reglas del §2.2 de `gamificacion.md`:
@@ -406,6 +414,20 @@ Dos mecanismos, ambos condicionados a la plataforma web y transparentes para nat
 Pantallas web: `app/(tabs)/_layout.web.tsx`, `app/(tabs)/map.web.tsx`,
 `app/parking/[id].web.tsx`, `app/verify/[parkingId].web.tsx`. El buscador de
 direcciones usa **Nominatim** (geocoder de OSM, sin key) en `components/web/MapSearch`.
+
+### 11.3 Panel de administración (solo web, v1.3)
+
+Slice `features/admin/` (`api.ts`, `hooks.ts`, `schemas.ts`, `permissions.ts` [lógica pura
+testeable], `ui.tsx` [primitivas]) y rutas `app/admin/*.web.tsx`:
+
+- `app/admin/_layout.web.tsx`: **guard** de acceso por rol (permite admin/contributor no
+  suspendidos; deniega al resto) + sidebar de secciones. En nativo, `app/admin/_layout.tsx`
+  muestra un aviso "solo web".
+- `app/admin/parkings.web.tsx` (contributor + admin) y `app/admin/users.web.tsx` (solo admin).
+- La entrada "Panel" del `NavRail` aparece solo para admin/contributor (`canAccessPanel`).
+
+El guard cliente es **solo UX**: la autorización real es RLS + Edge Function (§6.2,
+`modelo-datos.md` §21). El panel nunca genera Octanos.
 
 ### 11.3 Decisión de producto: aportar y verificar solo en móvil
 

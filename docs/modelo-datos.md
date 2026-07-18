@@ -100,6 +100,7 @@ CREATE TYPE octano_action     AS ENUM (
 CREATE TYPE octano_status     AS ENUM ('pending', 'confirmed', 'reverted');
 CREATE TYPE badge_family      AS ENUM ('discovery', 'verification', 'community', 'thematic');
 CREATE TYPE friendship_status AS ENUM ('pending', 'accepted', 'blocked');
+CREATE TYPE user_role         AS ENUM ('user', 'contributor', 'admin');  -- panel admin (v1.3)
 ```
 
 ---
@@ -166,17 +167,28 @@ CREATE TABLE public.users (
   octanos_this_month  INTEGER NOT NULL DEFAULT 0,        -- caché para ranking
   ranking_visible     BOOLEAN NOT NULL DEFAULT TRUE,
   flagged_for_review  BOOLEAN NOT NULL DEFAULT FALSE,    -- cuenta sospechosa de farmeo
+  role                user_role NOT NULL DEFAULT 'user', -- v1.3 panel admin
+  suspended           BOOLEAN NOT NULL DEFAULT FALSE,    -- v1.3 solo-lectura global
+  suspended_at        TIMESTAMPTZ,
+  suspended_reason    TEXT,
   created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at          TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE INDEX idx_users_city ON public.users(city_primary) WHERE ranking_visible = TRUE;
 CREATE INDEX idx_users_total_octanos ON public.users(total_octanos DESC) WHERE ranking_visible = TRUE;
+CREATE INDEX idx_users_role ON public.users(role);
 ```
 
 **Notas**:
 - `total_octanos` y `octanos_this_month` son cachés. Fuente de verdad: `octano_events`.
 - `username` es único, inmutable post-registro.
+- `role` (`user`/`contributor`/`admin`) y `suspended` (+ `suspended_at`/`suspended_reason`) los
+  gestiona el **panel de administración** (v1.3). Solo se cambian vía la Edge Function
+  `admin-set-role` (service_role): un trigger (`trg_users_privileged_fields`) rechaza cualquier
+  `UPDATE` de estos campos desde contexto de usuario (anti-escalada de privilegios).
+  Migraciones: `20260718000001_user_roles` … `20260718000007_parkings_admin_read`.
+  Detalle completo en §16.
 - `display_name` editable libremente.
 
 ### 5.3 `user_levels` (catálogo)
@@ -1101,3 +1113,67 @@ flowchart TD
 ## 20. Documentos relacionados
 
 - `prd.md`, `arquitectura.md`, `gamificacion.md`, `testing.md`.
+
+---
+
+## 21. Autorización — roles y panel de administración (v1.3)
+
+> Implementado por el change OpenSpec `admin-panel`. Migraciones
+> `20260718000001` … `20260718000007`. La autorización vive **exclusivamente** en
+> BD (RLS + funciones + triggers) y en la Edge Function `admin-set-role`; el guard
+> del panel web es solo UX.
+
+### 21.1 Modelo de roles y suspensión
+
+- `users.role user_role` (`user` por defecto). Roles mutuamente excluyentes.
+- `users.suspended` (+ `suspended_at`, `suspended_reason`): *gate* global. Un usuario
+  suspendido, sea cual sea su rol, queda en **solo lectura** (sin panel ni contribuciones),
+  conservando la lectura del mapa/lista.
+
+### 21.2 Primitivas de autorización (`SECURITY DEFINER`, `search_path=public`)
+
+```sql
+public.is_admin()             -- role = 'admin'                 AND NOT suspended
+public.can_manage_parkings()  -- role IN ('contributor','admin') AND NOT suspended
+public.is_suspended()         -- suspended = TRUE
+```
+
+`SECURITY DEFINER` evita la recursión de RLS al consultar `users` desde una policy de `users`.
+
+### 21.3 Triggers de integridad
+
+- `trg_users_privileged_fields` (BEFORE UPDATE de `role`/`suspended`/`suspended_*` en `users`):
+  rechaza el cambio salvo contexto `service_role` (`auth.uid() IS NULL`). Cierra la
+  auto-escalada de privilegios; obliga a pasar por `admin-set-role`.
+- `trg_parkings_status_admin_only` (BEFORE UPDATE de `status`) y
+  `trg_parkings_delete_admin_only` (BEFORE UPDATE de `deleted_at`): mediante
+  `enforce_admin_status_change()`, rechazan el cambio salvo `is_admin()` **o**
+  `auth.uid() IS NULL` (service_role). Así el verificar del admin es un `UPDATE` directo y
+  la verificación comunitaria (Edge Function con service_role) sigue funcionando.
+
+### 21.4 Policies (estado actual)
+
+`users`: `users_public_read` (SELECT público) · `users_self_update` (UPDATE de la propia fila,
+acotado por el trigger 21.3).
+
+`parkings` (7 policies): `parkings_read` / `parkings_read_anon` (lectura pública de no borrados) ·
+`parkings_read_admin` (**el admin ve también borrados/archivados** — necesario para poder
+borrar: al fijar `deleted_at` la fila dejaría de ser visible y PostgreSQL rechazaría el propio
+`UPDATE`) · `parkings_insert` (proponer, `NOT is_suspended()`) · `parkings_update_own_pending`
+(editar el propio pendiente, móvil) · `parkings_update_admin` (admin edita cualquiera) ·
+`parkings_update_contributor_own` (contributor edita los suyos por `proposed_by`).
+
+`parking_photos` (6 policies): `parking_photos_read` / `_read_anon` · `parking_photos_insert`
+(subir a verificados o propios, `NOT is_suspended()`) · `parking_photos_insert_admin` /
+`_update_admin` / `_delete_admin` (admin gestiona fotos de cualquiera).
+
+### 21.5 Cambio de rol/suspensión — Edge Function `admin-set-role`
+
+Única vía para modificar `role`/`suspended`. Valida `is_admin()` del llamante, usa
+`service_role`, impide la auto-modificación y valida el input con Zod
+(`userId` + `role` y/o `suspended` [+ `suspendedReason`]).
+
+### 21.6 El panel nunca genera Octanos
+
+Crear/verificar desde el panel son `INSERT`/`UPDATE` directos sobre `parkings`; no tocan
+`octano_events` ni `parking_verifications`. Los Octanos solo se acreditan desde la app móvil.
