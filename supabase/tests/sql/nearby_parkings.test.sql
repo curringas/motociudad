@@ -16,7 +16,7 @@ INSERT INTO auth.users (
   id, email, encrypted_password, email_confirmed_at,
   created_at, updated_at, raw_app_meta_data, raw_user_meta_data, aud, role
 ) VALUES (
-  'f0000000-test-0000-0000-000000000001'::uuid,
+  'f0000000-7e57-0000-0000-000000000001'::uuid,
   'test-nearby@motociudad.test',
   'not-a-real-hash', now(), now(), now(),
   '{"provider":"email","providers":["email"]}'::jsonb,
@@ -24,7 +24,7 @@ INSERT INTO auth.users (
 ) ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public.users (id, username, display_name) VALUES (
-  'f0000000-test-0000-0000-000000000001'::uuid,
+  'f0000000-7e57-0000-0000-000000000001'::uuid,
   'test_nearby_user', 'Test Nearby User'
 ) ON CONFLICT (id) DO NOTHING;
 
@@ -33,8 +33,8 @@ INSERT INTO public.users (id, username, display_name) VALUES (
 INSERT INTO public.parkings (
   id, proposed_by, name, type, status, location, city
 ) VALUES (
-  'e0000000-test-0001-0000-000000000001'::uuid,
-  'f0000000-test-0000-0000-000000000001'::uuid,
+  'e0000000-7e57-0001-0000-000000000001'::uuid,
+  'f0000000-7e57-0000-0000-000000000001'::uuid,
   'Test Parking Cercano Verificado',
   'public', 'verified',
   ST_SetSRID(ST_MakePoint(-3.7033, 40.4172), 4326)::geography,
@@ -45,8 +45,8 @@ INSERT INTO public.parkings (
 INSERT INTO public.parkings (
   id, proposed_by, name, type, status, location, city
 ) VALUES (
-  'e0000000-test-0001-0000-000000000002'::uuid,
-  'f0000000-test-0000-0000-000000000001'::uuid,
+  'e0000000-7e57-0001-0000-000000000002'::uuid,
+  'f0000000-7e57-0000-0000-000000000001'::uuid,
   'Test Parking Lejano Verificado',
   'public', 'verified',
   ST_SetSRID(ST_MakePoint(-3.7033, 40.4437), 4326)::geography,
@@ -57,8 +57,8 @@ INSERT INTO public.parkings (
 INSERT INTO public.parkings (
   id, proposed_by, name, type, status, location, city
 ) VALUES (
-  'e0000000-test-0001-0000-000000000003'::uuid,
-  'f0000000-test-0000-0000-000000000001'::uuid,
+  'e0000000-7e57-0001-0000-000000000003'::uuid,
+  'f0000000-7e57-0000-0000-000000000001'::uuid,
   'Test Parking Privado Verificado',
   'private', 'verified',
   ST_SetSRID(ST_MakePoint(-3.7033, 40.4158), 4326)::geography,
@@ -69,8 +69,8 @@ INSERT INTO public.parkings (
 INSERT INTO public.parkings (
   id, proposed_by, name, type, status, location, city
 ) VALUES (
-  'e0000000-test-0001-0000-000000000004'::uuid,
-  'f0000000-test-0000-0000-000000000001'::uuid,
+  'e0000000-7e57-0001-0000-000000000004'::uuid,
+  'f0000000-7e57-0000-0000-000000000001'::uuid,
   'Test Parking Pendiente',
   'public', 'pending',
   ST_SetSRID(ST_MakePoint(-3.6996, 40.4167), 4326)::geography,
@@ -81,8 +81,8 @@ INSERT INTO public.parkings (
 INSERT INTO public.parkings (
   id, proposed_by, name, type, status, location, city, deleted_at
 ) VALUES (
-  'e0000000-test-0001-0000-000000000005'::uuid,
-  'f0000000-test-0000-0000-000000000001'::uuid,
+  'e0000000-7e57-0001-0000-000000000005'::uuid,
+  'f0000000-7e57-0000-0000-000000000001'::uuid,
   'Test Parking Borrado',
   'public', 'verified',
   ST_SetSRID(ST_MakePoint(-3.7069, 40.4167), 4326)::geography,
@@ -113,7 +113,7 @@ SELECT is(
       FALSE,             -- incluir no verificados
       100
     )
-    WHERE id = 'e0000000-test-0001-0000-000000000002'::uuid  -- el lejano (3000m)
+    WHERE id = 'e0000000-7e57-0001-0000-000000000002'::uuid  -- el lejano (3000m)
   ),
   0,
   'Parking a 3000m no aparece con radio de 2000m'
@@ -126,7 +126,7 @@ SELECT is(
   (
     SELECT COUNT(*)::integer
     FROM public.nearby_parkings(40.4167, -3.7033, 2000, NULL, FALSE, 100)
-    WHERE id = 'e0000000-test-0001-0000-000000000001'::uuid
+    WHERE id = 'e0000000-7e57-0001-0000-000000000001'::uuid
   ),
   1,
   'Parking cercano (~55m) aparece con radio de 2000m'
@@ -139,7 +139,7 @@ SELECT is(
   (
     SELECT COUNT(*)::integer
     FROM public.nearby_parkings(40.4167, -3.7033, 2000, 'public'::parking_type, FALSE, 100)
-    WHERE id = 'e0000000-test-0001-0000-000000000003'::uuid  -- el privado
+    WHERE id = 'e0000000-7e57-0001-0000-000000000003'::uuid  -- el privado
   ),
   0,
   'Filtro type=public excluye parkings privados'
@@ -152,7 +152,7 @@ SELECT is(
   (
     SELECT COUNT(*)::integer
     FROM public.nearby_parkings(40.4167, -3.7033, 2000, 'private'::parking_type, FALSE, 100)
-    WHERE id = 'e0000000-test-0001-0000-000000000003'::uuid
+    WHERE id = 'e0000000-7e57-0001-0000-000000000003'::uuid
   ),
   1,
   'Filtro type=private incluye el parking privado cercano'
@@ -165,7 +165,7 @@ SELECT is(
   (
     SELECT COUNT(*)::integer
     FROM public.nearby_parkings(40.4167, -3.7033, 2000, NULL, TRUE, 100)
-    WHERE id = 'e0000000-test-0001-0000-000000000004'::uuid  -- el pending
+    WHERE id = 'e0000000-7e57-0001-0000-000000000004'::uuid  -- el pending
   ),
   0,
   'only_verified=TRUE excluye parkings en estado pending'
@@ -178,7 +178,7 @@ SELECT is(
   (
     SELECT COUNT(*)::integer
     FROM public.nearby_parkings(40.4167, -3.7033, 2000, NULL, FALSE, 100)
-    WHERE id = 'e0000000-test-0001-0000-000000000004'::uuid
+    WHERE id = 'e0000000-7e57-0001-0000-000000000004'::uuid
   ),
   1,
   'only_verified=FALSE incluye parkings en estado pending'
@@ -191,7 +191,7 @@ SELECT is(
   (
     SELECT COUNT(*)::integer
     FROM public.nearby_parkings(40.4167, -3.7033, 2000, NULL, FALSE, 100)
-    WHERE id = 'e0000000-test-0001-0000-000000000005'::uuid  -- el borrado
+    WHERE id = 'e0000000-7e57-0001-0000-000000000005'::uuid  -- el borrado
   ),
   0,
   'Parkings con deleted_at no aparecen aunque estén dentro del radio'
@@ -204,10 +204,10 @@ SELECT ok(
   (
     SELECT (
       SELECT distance_meters FROM public.nearby_parkings(40.4167, -3.7033, 2000, NULL, FALSE, 100)
-      WHERE id = 'e0000000-test-0001-0000-000000000001'::uuid
+      WHERE id = 'e0000000-7e57-0001-0000-000000000001'::uuid
     ) < (
       SELECT distance_meters FROM public.nearby_parkings(40.4167, -3.7033, 2000, NULL, FALSE, 100)
-      WHERE id = 'e0000000-test-0001-0000-000000000004'::uuid
+      WHERE id = 'e0000000-7e57-0001-0000-000000000004'::uuid
     )
   ),
   'Resultados ordenados por distancia ascendente'
@@ -221,7 +221,7 @@ SELECT ok(
   (
     SELECT distance_meters < 200 AND distance_meters > 0
     FROM public.nearby_parkings(40.4167, -3.7033, 2000, NULL, FALSE, 100)
-    WHERE id = 'e0000000-test-0001-0000-000000000001'::uuid
+    WHERE id = 'e0000000-7e57-0001-0000-000000000001'::uuid
   ),
   'distance_meters para parking cercano es un valor razonable (<200m)'
 );
@@ -251,9 +251,9 @@ SELECT is(
 );
 
 -- Limpiar datos de prueba
-DELETE FROM public.parkings WHERE id LIKE 'e0000000-test-0001%';
-DELETE FROM public.users WHERE id = 'f0000000-test-0000-0000-000000000001'::uuid;
-DELETE FROM auth.users WHERE id = 'f0000000-test-0000-0000-000000000001'::uuid;
+DELETE FROM public.parkings WHERE id::text LIKE 'e0000000-7e57-0001%';
+DELETE FROM public.users WHERE id = 'f0000000-7e57-0000-0000-000000000001'::uuid;
+DELETE FROM auth.users WHERE id = 'f0000000-7e57-0000-0000-000000000001'::uuid;
 
 SELECT * FROM finish();
 

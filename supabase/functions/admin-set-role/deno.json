@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "lib": ["deno.window"]
+  },
+  "nodeModulesDir": "auto",
+  "imports": {
+    "npm:@supabase/supabase-js@2": "npm:@supabase/supabase-js@2",
+    "npm:zod@3": "npm:zod@3"
+  },
+  "tasks": {
+    "test": "deno test --allow-env --allow-net --allow-read __tests__/"
+  }
+}
