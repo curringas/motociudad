@@ -50,21 +50,27 @@ pins reutiliza el ciclo por región ya existente.
 
 ## Correcciones
 
-_(Sin entradas todavía. Se irán añadiendo aquí los fixes posteriores a la
-entrega 2.)_
+### 1. Saneada la infraestructura de tests (Vitest) — suite 100% verde
+
+Se resolvió la deuda de tests que arrastraba la entrega 2. La suite pasa ahora
+de 21/26 a **34/34 tests en verde** (7 ficheros).
+
+- **`deeplinks.test.ts`** reescrito: comprobaba una implementación antigua
+  (`geo:`/`maps://`). Ahora cubre el comportamiento real (ActionSheetIOS en iOS;
+  `comgooglemaps://` + fallback web en Android; caso sin coordenadas). 7 tests.
+  Commit `6db9f54`.
+- **Script `test`** de `apps/mobile` cambiado de `vitest` (modo watch, cuelga en
+  CI) a `vitest run`; añadido `test:watch`. Commit `d197d55`.
+- **`ParkingMapPin.test.tsx`** migrado de RNTL (incompatible con Vitest — cargaba
+  el `react-native` real flow-typed) a `@testing-library/react` + react-native-web
+  renderizando como web sobre jsdom. Añadidas devDeps `@testing-library/react` y
+  `@testing-library/dom`; `docs/testing.md` §2/§5/§15 actualizado. 6 tests.
+  Commit `8a7c033`.
 
 ---
 
 ## Deuda técnica pendiente
 
-- **Infra de tests (Vitest):** 2 suites fallan por configuración, no por bugs de
-  producto (todo el código nuevo pasa):
-  - `lib/__tests__/deeplinks.test.ts` — asserts obsoletos respecto a la
-    implementación actual de `deeplinks.ts`.
-  - `features/parkings/components/__tests__/ParkingMapPin.test.tsx` — RNTL es
-    incompatible con Vitest (carga el `react-native` real flow-typed).
-  - Además, el script `test` de `apps/mobile` corre en modo watch; para CI usar
-    `vitest run`.
 - **Verificación manual del buscador:** teclear "Barcelona" en el simulador y
   confirmar el centrado end-to-end.
 
