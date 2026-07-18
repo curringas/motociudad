@@ -56,4 +56,4 @@
 - [ ] 8.2 `pnpm test` (app) y suite web (`vitest.web.config.ts`) en verde
 - [ ] 8.3 Actualizar docs canónicos: `prd.md` (v1.3 → implementado), `modelo-datos.md` (rol/suspensión, funciones, trigger, policies), `arquitectura.md` (panel admin + modelo de autorización), `testing.md` (pgTAP de las nuevas policies)
 - [ ] 8.4 Verificación manual en web: admin gestiona usuarios y parkings; contributor limitado a los suyos y sin sección Usuarios; `user` y suspendidos sin acceso al panel
-- [ ] 8.5 Bootstrap: asignar `role='admin'` a un usuario (seed/SQL) para poder entrar al panel
+- [x] 8.5 Bootstrap: `role='admin'` asignado a curro@martinezhidalgo.com (username `curro`, id 8dac2082…) vía SQL con service_role en Cloud
