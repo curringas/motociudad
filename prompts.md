@@ -14,12 +14,19 @@ Opus 4.8**, contexto 1M) siguiendo **Spec Driven Development (SDD)**: antes de t
 código se escribe/actualiza el spec, luego un plan de implementación tarea a tarea, y
 después se implementa con TDD y commits frecuentes.
 
-**Flujo de trabajo asistido (skills "superpowers"):**
+El proyecto usa **dos sistemas SDD en paralelo**:
+
+**a) Skills "superpowers" (flujo asistido por IA):**
 - `brainstorming` → convierte una idea en diseño validado (preguntas 1 a 1, alternativas, aprobación).
 - `writing-plans` → plan de implementación tarea a tarea, con código y comandos exactos.
 - `executing-plans` → ejecución del plan con verificación (typecheck + tests) y commits por tarea.
 - `systematic-debugging` → causa raíz antes de arreglar (usado con la deuda de tests).
 - Memoria persistente del proyecto (decisiones, deuda, convenciones).
+
+**b) OpenSpec (CLI v1.3.1 + skills `openspec-*` / `opsx:*`):**
+Sistema spec-driven basado en *changes* (`openspec/changes/<id>/` con `proposal.md`,
+spec deltas y `tasks.md`). Ciclo: `explore → propose → apply → archive`. CLI para
+inspeccionar/validar (`openspec list|show|validate|status|view|archive`).
 
 **MCPs (Model Context Protocol) conectados:**
 - **Supabase** (HTTP, `https://mcp.supabase.com/mcp`): esquema, migraciones, logs, advisors, tipos.
@@ -54,9 +61,12 @@ después se implementa con TDD y commits frecuentes.
 | 2026-07-18 | **Versión web (entrega final)** | Web de consulta (Leaflet+OSM, buscador Nominatim, responsive, shims web) e integración en main | `745bdbe`, `352bbad` |
 | 2026-07-18 | Cierre entrega final | Bitácora `entrega-final-CMH.md`, verificación del buscador en simulador | `c47f8fe`, `d71f7d8`, `75abf57` |
 
-**Artefactos SDD generados** (`docs/superpowers/`):
-- Specs: `octanos-perfil-design`, `version-web-design`, `buscador-mapa-design`.
-- Planes: `propose-parking-edge-function-y-fix-mapa`, `octanos-perfil`, `version-web`, `buscador-mapa`.
+**Artefactos SDD generados:**
+- **Skills superpowers** (`docs/superpowers/`):
+  - Specs: `octanos-perfil-design`, `version-web-design`, `buscador-mapa-design`.
+  - Planes: `propose-parking-edge-function-y-fix-mapa`, `octanos-perfil`, `version-web`, `buscador-mapa`.
+- **OpenSpec** (`openspec/changes/`):
+  - `motociudad-mvp` — change del MVP (`proposal.md` + `design.md` + `tasks.md`), 71/83 tareas.
 
 ---
 
