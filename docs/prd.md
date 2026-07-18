@@ -181,6 +181,16 @@ build local para evaluación; el hosting público queda fuera de alcance.
   - **Listado de todos los parkings** en una tabla de datos (datatable) con paginación,
     orden y **filtros** (por ciudad, por estado —pendiente/verificado—, por tipo), para
     moderar la cola y buscar rápidamente.
+- **v1.4**: **Sistema de feedback y reportes de parkings** (amplía F13 y el enum
+  `report_status` existente):
+  - **Feedback de la app**: cualquier usuario puede enviar feedback general sobre la app.
+  - **Reportes sobre parkings**: un usuario solicita un cambio en un parking (dato erróneo,
+    cerrado, movido, etc.), con **demostración opcional** (foto/evidencia que justifique el
+    cambio).
+  - **Accesibles en el panel de control** (v1.3): admin (y colaboradores para sus parkings)
+    revisan feedback y reportes desde el panel.
+  - **Notificaciones por email**: al **administrador** siempre, y también al **colaborador**
+    si el parking reportado lo creó dicho colaborador.
 - **v2.0**: Monetización — destacados de talleres, plan premium con notificaciones avanzadas.
 
 ---
