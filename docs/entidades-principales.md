@@ -78,30 +78,14 @@ Estos tipos limitan los valores permitidos en sus columnas:
 
 ## 2. Vista global del modelo
 
-```mermaid
-erDiagram
-    user_levels ||--o{ users : "current_level"
-    users ||--o{ friendships : "user_id"
-    users ||--o{ friendships : "friend_id"
-    users ||--o{ parkings : "proposed_by"
-    users ||--o{ parking_photos : "uploaded_by"
-    users ||--o{ parking_verifications : "verified_by"
-    users ||--o{ parking_reports : "reported_by"
-    users ||--o{ comments : "author_id"
-    users ||--o{ comment_votes : "user_id"
-    users ||--o{ pois : "proposed_by"
-    users ||--o{ octano_events : "user_id"
-    users ||--o{ user_badges : "user_id"
-    parkings ||--o{ parking_photos : "has"
-    parkings ||--o{ parking_verifications : "is verified by"
-    parkings ||--o{ parking_reports : "reported"
-    parkings ||--o{ comments : "has"
-    parking_photos ||--o| parking_verifications : "evidence"
-    comments ||--o{ comment_votes : "receives"
-    badges ||--o{ user_badges : "awarded"
-```
+> El **diagrama ER general** (fuente de verdad) vive en **[`modelo-datos.md` §2](modelo-datos.md#2-diagrama-er-general)**,
+> junto con los diagramas detallados por subdominio (§5–§8), estados de parking y flujos.
+> Este documento no duplica el diagrama: se centra en la descripción **legible tabla por tabla**
+> (atributos, tipos, claves y restricciones) que complementa al SQL ejecutable de `modelo-datos.md`.
 
-Para diagramas detallados por subdominio, ver `modelo-datos.md` §5–§8.
+El modelo se compone de **13 entidades** en cuatro subdominios (identidad, dominio de parkings,
+POIs y gamificación). Para verlas relacionadas de un vistazo, abre el ER de `modelo-datos.md`;
+para el detalle de cada una, sigue leyendo.
 
 ---
 
