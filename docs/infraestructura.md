@@ -183,6 +183,11 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 ```
 
+> **Edge Functions desplegadas**: `propose-parking`, `validate-verification` y
+> `admin-set-role` (esta última, del panel de administración v1.3, hace el cambio de
+> rol/suspensión con `service_role`). `supabase functions deploy` sin argumentos
+> despliega todas; también pueden desplegarse de forma individual (`… deploy <nombre>`).
+
 #### `eas-build.yml`
 
 ```yaml

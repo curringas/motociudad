@@ -295,6 +295,7 @@ Para evitar scope creep y confundir a agentes de IA durante la implementación:
 - ❌ **Sistema de monedas múltiples**: solo Octanos. Nada de "gemas premium" o similar.
 - ❌ **Apuestas o competiciones con dinero real**: descartado.
 - ❌ **PvP / penalizaciones entre usuarios**: la app es colaborativa, no competitiva en sentido agresivo.
+- ❌ **Octanos desde el panel de administración**: crear o verificar un parking desde el panel admin (v1.3) **nunca** genera Octanos ni usa el flujo `parking_verifications`. Los Octanos solo se acreditan por acciones de la comunidad en la app móvil.
 
 ---
 

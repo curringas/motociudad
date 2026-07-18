@@ -100,7 +100,14 @@ graph TD
     Profile --> Settings[Ajustes]
     Settings --> Privacy[Privacidad]
     Settings --> DeleteAccount[Eliminar cuenta]
+
+    AdminPanel["Panel admin (solo web, v1.3)"]
+    AdminPanel --> AdminParkings[Gestión de parkings]
+    AdminPanel --> AdminUsers[Gestión de usuarios - solo admin]
 ```
+
+> El **panel de administración** (v1.3) es una rama de navegación **solo web**
+> (`/admin`), gateada por rol; no forma parte del tab navigator móvil.
 
 **Decisiones de navegación clave**:
 
@@ -317,6 +324,31 @@ Este componente no tiene pantalla propia: es **transversal** y se manifiesta en 
 
 ---
 
+### 3.10 Panel de administración (solo web, v1.3)
+
+**Propósito**: gestionar la comunidad y el dataset. **Solo web** (no existe en la app
+móvil); la autorización real es RLS + Edge Function, el guard de UI es solo UX.
+
+**Pantallas** (`apps/mobile/app/admin/*.web.tsx`):
+- **Layout + guard** (`_layout.web.tsx`): deniega el acceso a `user`, suspendidos y sin
+  sesión; sidebar de secciones (la sección Usuarios se oculta a `contributor`).
+- **Parkings** (`parkings.web.tsx`, para `contributor` + `admin`): listar y filtrar
+  (ciudad/estado), crear (sin Octanos), editar por propiedad, gestionar imágenes;
+  verificar y borrar/archivar solo `admin`.
+- **Usuarios** (`users.web.tsx`, solo `admin`): listar, buscar y filtrar por rol;
+  detalle (rol, estado, nivel, Octanos); cambiar rol y suspender/reactivar.
+
+**Slice de datos**: `apps/mobile/features/admin/` (`api.ts`, `hooks.ts`, `schemas.ts`,
+`permissions.ts` [lógica pura de permisos derivados], `ui.tsx`).
+
+**Datos que consume/muta**: `users` (rol/suspensión vía Edge Function `admin-set-role`),
+`parkings` y `parking_photos` (RLS por rol/propiedad). **Nunca** toca `octano_events`.
+
+**Componente que lo enlaza**: entrada "Panel" en el `NavRail` web, visible solo para
+`admin`/`contributor` no suspendidos.
+
+---
+
 ## 4. Componentes técnicos transversales
 
 ### 4.1 Capa de datos
@@ -378,6 +410,7 @@ Cubre todo lo relacionado con localización, distancia, mapas y navegación exte
 | 7 | Gamificación | Transversal | (sin pantalla propia) | `octano_events`, `badges`, `user_badges`, `user_levels` |
 | 8 | Ranking | Funcional | Ranking con tabs | `mv_ranking_global`, `mv_ranking_by_city` |
 | 9 | Perfil y Ajustes | Funcional | Perfil, ajustes | `users`, `octano_events`, `user_badges` |
+| 10 | Panel de administración (solo web, v1.3) | Funcional | `/admin` (Parkings, Usuarios) | `users`, `parkings`, `parking_photos` |
 | T1 | Capa de datos | Técnico | — | Todas las tablas |
 | T2 | Notificaciones | Técnico | — | `users` (push token) |
 | T3 | Mapas y geo | Técnico | — | `parkings.location`, `pois.location` |
@@ -399,6 +432,7 @@ Cada componente está documentado con distinto nivel de detalle en otros documen
 | 7. Gamificación | `gamificacion.md` (todo) | `arquitectura.md` §5.3 | `modelo-datos.md` §8 |
 | 8. Ranking | `gamificacion.md` §5 | `arquitectura.md` §7.1 | `modelo-datos.md` §11.2, §11.3 |
 | 9. Perfil y Ajustes | `prd.md` §8.5 | `arquitectura.md` §6.4 | `modelo-datos.md` §5.2, §8.4 |
+| 10. Panel de administración | `prd.md` §7.3 (v1.3) | `arquitectura.md` §6.2, §11.3 | `modelo-datos.md` §21 |
 
 ---
 

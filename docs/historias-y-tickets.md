@@ -352,6 +352,99 @@ Funcionalidad: Proponer un parking nuevo
 
 ---
 
+### Historia de Usuario 4
+
+```
+ID:           HU-04
+Título:       Gestionar la comunidad y el dataset desde el panel de administración
+Épica:        Administración y moderación (v1.3)
+Prioridad:    Media (roadmap v1.3)
+Estimación:   13 story points
+Sprint:       (entrega final)
+```
+
+#### 2.4.1 Narrativa
+
+> **Como** administrador de MotoCiudad,
+> **quiero** un panel web para gestionar usuarios (roles, suspensión) y parkings
+> (crear, editar, verificar, borrar),
+> **para** moderar la cola de aportes y mantener sano el dataset y la comunidad.
+
+#### 2.4.2 Descripción extendida
+
+El panel es **solo web** (sobre la versión web existente) y está gateado por rol:
+`admin` y `contributor` no suspendidos acceden; `user` y suspendidos no. La
+autorización real vive en el servidor (RLS + Edge Function), no en la UI. La sección
+**Usuarios** (solo admin) permite listar/buscar/filtrar por rol, ver el detalle y
+cambiar rol o suspender/reactivar (vía la Edge Function `admin-set-role`). La sección
+**Parkings** (contributor + admin) permite listar/filtrar, crear (sin otorgar Octanos)
+y editar; el `contributor` solo edita/añade imágenes a **sus** parkings, mientras que
+el `admin` gestiona cualquiera, **verifica** y **borra/archiva**. El panel **nunca**
+genera Octanos.
+
+#### 2.4.3 Criterios de aceptación
+
+```gherkin
+Funcionalidad: Panel de administración web
+
+  Escenario: Acceso permitido a staff no suspendido
+    Dado que estoy autenticado como admin o contributor no suspendido
+    Cuando abro /admin
+    Entonces veo el panel (la sección Usuarios solo si soy admin)
+
+  Escenario: Acceso denegado
+    Dado que soy rol user, o estoy suspendido, o no tengo sesión
+    Cuando intento entrar a /admin
+    Entonces se me deniega el acceso con un mensaje
+
+  Escenario: Admin cambia el rol de un usuario
+    Dado que soy admin y abro el detalle de otro usuario
+    Cuando le asigno un rol distinto
+    Entonces el rol se actualiza vía la Edge Function admin-set-role
+    Y no puedo modificar mi propia cuenta
+
+  Escenario: Contributor edita solo sus parkings
+    Dado que soy contributor
+    Cuando edito un parking que yo propuse
+    Entonces los cambios se guardan
+    Y no puedo editar ni verificar parkings de otros
+
+  Escenario: Admin verifica y borra
+    Dado que soy admin
+    Cuando verifico o borro/archivo un parking
+    Entonces su estado cambia y no se genera ningún Octano
+
+  Escenario: Crear desde el panel no da Octanos
+    Cuando creo un parking desde el panel
+    Entonces queda en estado pending, con proposed_by = yo, sin evento de Octanos
+```
+
+#### 2.4.4 Notas y consideraciones
+
+- La seguridad es RLS + Edge Function; el guard de cliente es solo UX.
+- `role`/`suspended` solo cambian vía `admin-set-role` (service_role); un trigger
+  bloquea el `UPDATE` directo (anti-escalada de privilegios).
+- El cambio de `status`/`deleted_at` de parkings lo restringe un trigger a admin o
+  `service_role` (preserva la verificación comunitaria).
+- Panel solo web; en nativo se muestra un aviso "solo web".
+
+#### 2.4.5 Definition of Done
+
+- [x] pgTAP de las funciones y policies de autorización (51 asserts en verde).
+- [x] Tests de la Edge Function `admin-set-role` (Deno) y de la lógica de permisos (Vitest).
+- [x] Verificación E2E en navegador (Playwright): deny, login, gestión de parkings y usuarios.
+- [x] Documentación actualizada: `prd.md` §7.3, `modelo-datos.md` §21, `arquitectura.md` §6.2/§11.3, `testing.md` §8.3, `componentes-principales.md` §3.10.
+
+#### 2.4.6 Referencias
+
+- `prd.md` §7.3 (v1.3)
+- `modelo-datos.md` §21 (autorización)
+- `arquitectura.md` §6.2, §11.3
+- `especificacion-api.md` §6.1 (`admin-set-role`)
+- OpenSpec: `openspec/changes/archive/2026-07-18-admin-panel/`
+
+---
+
 ## 3. Tickets de Trabajo
 
 ### Ticket 1
@@ -666,6 +759,56 @@ docs/
 
 ---
 
+### Ticket 4
+
+```
+ID:           ENG-104
+Título:       Panel de administración web (roles + gestión de usuarios/parkings)
+Tipo:         Full-stack (DB + Edge Function + Frontend web)
+Historia:     HU-04
+Estimación:   3 días
+Etiquetas:    admin, rls, edge-function, web, sdd
+```
+
+#### 3.4.1 Contexto
+
+El proyecto no tenía roles ni herramienta de moderación. Se implementa el panel (solo
+web) con autorización real por RLS + Edge Function, siguiendo Spec Driven Development
+(OpenSpec, change `admin-panel`, 36 tareas).
+
+#### 3.4.2 Subtareas
+
+- [x] BBDD: enum `user_role`, columnas `role`/`suspended` en `users`, funciones
+  `is_admin()`/`can_manage_parkings()`/`is_suspended()`, triggers anti-escalada y de
+  `status`/`deleted_at`, y policies de `parkings`/`parking_photos` (7 migraciones).
+- [x] Fix RLS: policy `parkings_read_admin` para que el admin pueda borrar/archivar.
+- [x] Edge Function `admin-set-role` (Deno + Zod) para cambio de rol/suspensión.
+- [x] Frontend: slice `features/admin/` + rutas `app/admin/*.web.tsx` (guard por rol,
+  secciones Usuarios y Parkings) + entrada "Panel" en el NavRail.
+- [x] Tests: 51 asserts pgTAP + 8 Deno + 16 Vitest; `pnpm typecheck` limpio.
+- [x] Despliegue a Supabase Cloud + verificación E2E (Playwright).
+
+#### 3.4.3 Archivos afectados
+
+- `supabase/migrations/20260718000001..7`, `supabase/functions/admin-set-role/`,
+  `supabase/tests/rls/{authz_functions,admin_policies}.test.sql`.
+- `apps/mobile/features/admin/`, `apps/mobile/app/admin/`, `components/web/NavRail.tsx`.
+
+#### 3.4.4 Definition of Done
+
+- [x] Código integrado en `main` (repo `motociudad`).
+- [x] Suite verde (pgTAP/Deno/Vitest) y typecheck limpio.
+- [x] Migración y Edge Functions desplegadas a Cloud; verificación E2E en navegador.
+- [x] Documentación canónica actualizada y change OpenSpec archivado.
+
+#### 3.4.5 Dependencias y bloqueantes
+
+- **Bloqueado por**: ENG-103 (tablas de parkings/usuarios base).
+- **Bloquea**: futuros v1.4 (feedback/reportes) y v1.5 (notificaciones), que se apoyan
+  en el panel.
+
+---
+
 ## 4. Resumen visual
 
 ```mermaid
@@ -681,19 +824,26 @@ graph TB
         ENG202[ENG-202<br/>Frontend: Proponer]
     end
 
+    subgraph "Entrega final (v1.3)"
+        ENG104[ENG-104<br/>Panel admin: roles + gestión]
+    end
+
     ENG103 --> ENG101
     ENG103 --> ENG102
     ENG103 --> ENG202
     ENG101 --> ENG201
+    ENG103 --> ENG104
 
     HU01[HU-01: Verificar] -.implementa.-> ENG101
     HU01 -.implementa.-> ENG201
     HU02[HU-02: Mapa] -.implementa.-> ENG102
     HU03[HU-03: Proponer] -.implementa.-> ENG202
+    HU04[HU-04: Panel admin] -.implementa.-> ENG104
 
     style ENG103 fill:#0f766e,color:#fff
     style ENG101 fill:#1e40af,color:#fff
     style ENG102 fill:#7c2d12,color:#fff
+    style ENG104 fill:#3f2a14,color:#fff
 ```
 
 ---

@@ -51,6 +51,7 @@ Estos tipos limitan los valores permitidos en sus columnas:
 | `octano_status` | `pending`, `confirmed`, `reverted` |
 | `badge_family` | `discovery`, `verification`, `community`, `thematic` |
 | `friendship_status` | `pending`, `accepted`, `blocked` |
+| `user_role` | `user`, `contributor`, `admin` (panel de administración, v1.3) |
 
 ### 1.3 Notación para claves y restricciones
 
@@ -161,6 +162,10 @@ Para diagramas detallados por subdominio, ver `modelo-datos.md` §5–§8.
 | `octanos_this_month` | `INTEGER` | NN, DEF `0` | **Caché derivada**: Octanos en últimos 30 días |
 | `ranking_visible` | `BOOLEAN` | NN, DEF `true` | Si `false`, el usuario no aparece en rankings públicos |
 | `flagged_for_review` | `BOOLEAN` | NN, DEF `false` | Cuenta marcada por sistema anti-abuso |
+| `role` | `user_role` | NN, DEF `'user'` | Rol de la cuenta: `user` / `contributor` / `admin` (panel admin v1.3) |
+| `suspended` | `BOOLEAN` | NN, DEF `false` | Si `true`, cuenta en solo-lectura (sin panel ni contribuciones) |
+| `suspended_at` | `TIMESTAMPTZ` | — | Momento de la suspensión (o `NULL` si activa) |
+| `suspended_reason` | `TEXT` | — | Motivo de la suspensión (opcional) |
 | `created_at` | `TIMESTAMPTZ` | NN, DEF `now()` | Fecha de registro |
 | `updated_at` | `TIMESTAMPTZ` | NN, DEF `now()` | Última modificación (mantenida por trigger) |
 
@@ -172,9 +177,11 @@ Para diagramas detallados por subdominio, ver `modelo-datos.md` §5–§8.
 **Índices**:
 - `idx_users_city` sobre `city_primary` (parcial: solo donde `ranking_visible = true`)
 - `idx_users_total_octanos` sobre `total_octanos DESC` (parcial: solo donde `ranking_visible = true`)
+- `idx_users_role` sobre `role` (filtrado de usuarios por rol en el panel de administración)
 
 **Notas importantes**:
 - Los campos `total_octanos` y `octanos_this_month` son **cachés derivadas**. La fuente de verdad es la suma de `octano_events` con `status='confirmed'`. Se recalculan vía trigger tras cada nuevo evento confirmado.
+- `role` y `suspended` (+ `suspended_at`/`suspended_reason`) los gestiona el **panel de administración** (v1.3). Solo pueden cambiarse desde el contexto `service_role` (Edge Function `admin-set-role`): un trigger (`trg_users_privileged_fields`) rechaza cualquier `UPDATE` de estos campos desde una sesión de usuario, cerrando la escalada de privilegios. Ver `modelo-datos.md` §21.
 - El borrado de la cuenta en `auth.users` propaga en cascada a `public.users` y, a través de relaciones, a todas las contribuciones del usuario (con anonimización previa para preservar el dataset; ver §RGPD en `modelo-datos.md` §15).
 
 **Relaciones** (resumen):
@@ -685,6 +692,9 @@ Restricciones que **no se declaran en SQL** pero son críticas; viven en lógica
 | Cap diario de 200 Octanos por usuario | Edge Function `validate-verification` |
 | Un usuario no puede verificar su propio parking | Edge Function `validate-verification` |
 | Comentarios solo otorgan Octanos cuando llegan a 2 upvotes (una sola vez) | Edge Function disparada por trigger en `comment_votes`, controlada por flag `comments.octanos_awarded` |
+| `role`/`suspended` de `users` solo cambian vía `service_role` (no auto-escalada) | Trigger `trg_users_privileged_fields` + Edge Function `admin-set-role` |
+| Solo un admin (o `service_role`) puede cambiar `parkings.status` o `deleted_at` | Trigger `enforce_admin_status_change` sobre `parkings` |
+| Un usuario suspendido no puede proponer/verificar ni gestionar en el panel | Funciones `is_suspended()`/`is_admin()`/`can_manage_parkings()` en las policies RLS |
 
 ### 8.3 Soft delete
 

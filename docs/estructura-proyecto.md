@@ -149,6 +149,12 @@ apps/mobile/
 │   ├── verify/
 │   │   ├── [parkingId].tsx        ← Verificación in situ
 │   │   └── [parkingId].web.tsx    ← [web] Aviso "verifica desde la app"
+│   ├── admin/                     ← [web] Panel de administración (v1.3)
+│   │   ├── _layout.web.tsx        ← Guard por rol + sidebar de secciones
+│   │   ├── _layout.tsx            ← Nativo: aviso "solo web"
+│   │   ├── parkings.web.tsx       ← Gestión de parkings (contributor/admin)
+│   │   ├── users.web.tsx          ← Gestión de usuarios (solo admin)
+│   │   └── index.web.tsx          ← Redirección a /admin/parkings
 │   ├── _layout.tsx                ← Layout raíz (providers)
 │   └── index.tsx                  ← Splash / redirección inicial
 │
@@ -178,6 +184,7 @@ apps/mobile/
 │   ├── auth/
 │   ├── verifications/
 │   ├── gamification/              ← Octanos, niveles, insignias
+│   ├── admin/                     ← [web] Panel: api/hooks/schemas/permissions/ui
 │   ├── ranking/
 │   ├── profile/
 │   ├── pois/                      ← Talleres

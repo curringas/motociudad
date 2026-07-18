@@ -48,6 +48,10 @@ Los tres endpoints documentados en este capítulo representan cada uno de los tr
 | 2 | POST | `/rest/v1/parkings` | REST con RLS | Proponer un parking nuevo |
 | 3 | POST | `/functions/v1/validate-verification` | Edge Function | Verificar un parking in situ |
 
+> Panel de administración (v1.3): la Edge Function privilegiada `admin-set-role`
+> (cambio de rol/suspensión) se describe en la §6.1. El resto de operaciones del
+> panel (gestión de parkings, fotos) usan REST con RLS y RPC ya cubiertos arriba.
+
 ---
 
 ## 2. Especificación OpenAPI 3.1
@@ -908,6 +912,8 @@ POST   /rest/v1/rpc/compute_user_octanos
 
 # Edge Functions
 POST   /functions/v1/validate-verification     ← documentado
+POST   /functions/v1/propose-parking
+POST   /functions/v1/admin-set-role            ← panel admin (v1.3)
 POST   /functions/v1/award-octanos
 POST   /functions/v1/check-badges
 POST   /functions/v1/process-photo-upload
@@ -916,6 +922,26 @@ POST   /functions/v1/delete-account
 # Storage
 POST   /storage/v1/object/parkings-photos/{path}
 GET    /storage/v1/object/public/parkings-photos/{path}
+```
+
+### 6.1 `admin-set-role` — cambio de rol y suspensión (panel admin, v1.3)
+
+Edge Function privilegiada (Deno + Zod) que cambia el `role` y/o el estado de
+`suspended` de un usuario. Es la **única vía** para modificar esos campos (un trigger
+bloquea el `UPDATE` directo desde el cliente).
+
+- **Método / ruta:** `POST /functions/v1/admin-set-role`
+- **Auth:** `Authorization: Bearer <jwt>`. El llamante debe ser **admin activo**
+  (`role='admin'` y `NOT suspended`); en caso contrario → `403 FORBIDDEN`. No puede
+  auto-modificarse.
+- **Body (JSON):** `{ "userId": uuid, "role"?: "user"|"contributor"|"admin", "suspended"?: boolean, "suspendedReason"?: string }` — debe incluir `role` y/o `suspended`.
+- **Respuestas:** `200` `{ success: true, data: {...} }` · `400 VALIDATION_ERROR` (input inválido) · `401` (sin token) · `403 FORBIDDEN` (no admin o auto-modificación) · `404 USER_NOT_FOUND`.
+
+```jsonc
+// Ejemplo — suspender a un usuario
+// POST /functions/v1/admin-set-role
+{ "userId": "8dac2082-…", "suspended": true, "suspendedReason": "spam reiterado" }
+// → 200 { "success": true, "data": { "userId": "8dac2082-…", "suspended": true, … } }
 ```
 
 ---
