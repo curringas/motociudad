@@ -22,7 +22,7 @@
 | Capa | Herramienta | Rol |
 |---|---|---|
 | App móvil — unit / integración | **Vitest** | Tests rápidos de lógica pura y hooks |
-| App móvil — componentes | **React Native Testing Library** | Tests de componentes y pantallas |
+| App móvil — componentes | **@testing-library/react + react-native-web** (bajo Vitest) | Tests de componentes renderizados como web (RNTL es incompatible con Vitest — ver §5.0) |
 | App móvil — E2E | **Maestro** | Flujos end-to-end en dispositivos reales/simuladores |
 | Backend — Edge Functions | **Vitest** + Deno test | Lógica de funciones serverless |
 | Backend — SQL / RLS | **pgTAP** | Validar políticas RLS y funciones SQL |
@@ -86,48 +86,57 @@ describe('formatDistance', () => {
 
 ---
 
-## 5. Tests de componentes — RN Testing Library
+## 5. Tests de componentes — @testing-library/react + react-native-web
+
+### 5.0 Enfoque y por qué
+
+Los tests de componentes se ejecutan bajo **Vitest** (el mismo runner que el
+resto), renderizando los componentes **como web** mediante el alias
+`react-native → react-native-web` (definido en `vitest.config.ts`) y
+`@testing-library/react` sobre jsdom.
+
+**No se usa `@testing-library/react-native` (RNTL)**: RNTL está diseñada para
+Jest + el preset de react-native (Metro/Babel, que strippea Flow). Bajo Vitest
+acaba cargando el `react-native` real, cuyo `index.js` usa sintaxis Flow
+(`import typeof …`) que esbuild no sabe parsear (`SyntaxError: Unexpected token
+'typeof'`). Renderizar como react-native-web evita ese muro y funciona de forma
+estable. Los módulos nativos (p. ej. `react-native-maps`) se mockean.
 
 ### 5.1 Qué testear
 
 - Renderizado correcto según props.
-- Interacciones (tap, swipe) que disparan callbacks esperados.
-- Accesibilidad: roles, labels, hint text.
+- Interacciones (click) que disparan callbacks esperados.
+- Accesibilidad: roles, labels (`accessibilityLabel` → `aria-label`).
 - Estados de loading / error / empty.
 
 ### 5.2 Lo que NO se testea aquí
 
 - Layout pixel-perfect (es responsabilidad del diseño y de Maestro / snapshots).
 - Llamadas reales a Supabase (mockear `@supabase/supabase-js`).
+- Comportamiento específico de nativo que react-native-web no reproduce (eso va
+  a E2E con Maestro sobre simulador/dispositivo).
 
 ### 5.3 Ejemplo
 
+Ver `features/parkings/components/__tests__/ParkingMapPin.test.tsx` como
+referencia real. Patrón:
+
 ```tsx
-// __tests__/components/ParkingCard.test.tsx
-import { render, screen, fireEvent } from '@testing-library/react-native';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
 import { ParkingCard } from '@/components/ParkingCard';
 
-const fixture = {
-  id: 'abc',
-  name: 'Plaza Pedro Zerolo',
-  type: 'public',
-  district: 'Malasaña',
-  capacity: 24,
-  distance_meters: 180,
-};
+// Mockear módulos nativos que el componente importe (mapas, cámara, etc.).
+vi.mock('react-native-maps', () => ({ Marker: ({ children }: any) => children }));
 
 describe('ParkingCard', () => {
-  it('muestra nombre, distancia y capacidad', () => {
-    render(<ParkingCard parking={fixture} onPress={() => {}} />);
-    expect(screen.getByText('Plaza Pedro Zerolo')).toBeOnTheScreen();
-    expect(screen.getByText('180m')).toBeOnTheScreen();
-    expect(screen.getByText(/24 plazas/)).toBeOnTheScreen();
-  });
-
-  it('llama a onPress al pulsar', () => {
+  it('muestra el nombre y llama a onPress al pulsar', () => {
     const onPress = vi.fn();
     render(<ParkingCard parking={fixture} onPress={onPress} />);
-    fireEvent.press(screen.getByRole('button', { name: /plaza pedro zerolo/i }));
+
+    expect(screen.getByText('Plaza Pedro Zerolo')).toBeTruthy();
+    // accessibilityRole="button" + accessibilityLabel → role + aria-label
+    fireEvent.click(screen.getByRole('button', { name: /plaza pedro zerolo/i }));
     expect(onPress).toHaveBeenCalledWith('abc');
   });
 });
@@ -486,7 +495,7 @@ No incluido en MVP para no inflar tooling antes de tiempo.
 ## 15. Decisiones cerradas
 
 - ✅ Vitest como runner unitario.
-- ✅ React Native Testing Library para componentes.
+- ✅ `@testing-library/react` + react-native-web (bajo Vitest) para tests de componentes; RNTL descartada por incompatibilidad con Vitest (ver §5.0).
 - ✅ Maestro para E2E.
 - ✅ pgTAP para RLS.
 - ✅ Coverage como guía, no como objetivo.

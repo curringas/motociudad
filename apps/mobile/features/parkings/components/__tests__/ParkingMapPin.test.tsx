@@ -1,10 +1,12 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react-native';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { ParkingMapPin } from '../ParkingMapPin';
 import type { NearbyParking } from '@/types/domain';
 
-// Mock react-native-maps so tests run without a native environment
+// Rendered as web via the react-native → react-native-web alias (see
+// vitest.config.ts) with @testing-library/react. react-native-maps is mocked
+// to a plain button so the pin renders without a native map environment.
 vi.mock('react-native-maps', () => ({
   Marker: ({
     children,
@@ -54,49 +56,48 @@ describe('ParkingMapPin', () => {
   it('includes formatted distance in the accessibilityLabel', () => {
     render(<ParkingMapPin parking={baseParking} onPress={vi.fn()} />);
 
-    const btn = screen.getByRole('button', { name: /350 m/ });
-    expect(btn).toBeTruthy();
+    expect(screen.getByRole('button', { name: /350 m/ })).toBeTruthy();
   });
 
   it('calls onPress when tapped', () => {
     const onPress = vi.fn();
     render(<ParkingMapPin parking={baseParking} onPress={onPress} />);
 
-    fireEvent.press(screen.getByRole('button'));
+    fireEvent.click(screen.getByRole('button'));
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
   describe('pin colour logic', () => {
     it('uses yellow (#FFD60A) for public verified parking', () => {
-      const { getByText } = render(
+      render(
         <ParkingMapPin
           parking={{ ...baseParking, type: 'public', status: 'verified' }}
           onPress={vi.fn()}
         />,
       );
       // The pin letter "M" appears inside the coloured circle view
-      expect(getByText('M')).toBeTruthy();
+      expect(screen.getByText('M')).toBeTruthy();
     });
 
     it('uses dark grey (#374151) for private verified parking', () => {
-      const { getByText } = render(
+      render(
         <ParkingMapPin
           parking={{ ...baseParking, type: 'private', status: 'verified' }}
           onPress={vi.fn()}
         />,
       );
-      expect(getByText('M')).toBeTruthy();
+      expect(screen.getByText('M')).toBeTruthy();
     });
 
     it('renders pending parking with reduced opacity', () => {
       // We verify the component renders without error for a pending parking
-      const { getByRole } = render(
+      render(
         <ParkingMapPin
           parking={{ ...baseParking, status: 'pending' }}
           onPress={vi.fn()}
         />,
       );
-      expect(getByRole('button')).toBeTruthy();
+      expect(screen.getByRole('button')).toBeTruthy();
     });
   });
 });
