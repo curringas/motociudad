@@ -32,9 +32,9 @@ del "motorista viajero"). Geocoding nativo vía `expo-location` (sin API key ni
 billing). Al encontrar la ubicación, solo se recentra el mapa; la recarga de
 pins reutiliza el ciclo por región ya existente.
 
-- **Estado:** implementado e integrado en `main`. Verificado en simulador (la
-  barra renderiza y se coloca correctamente); pendiente la prueba manual
-  end-to-end de teclear y comprobar el centrado.
+- **Estado:** implementado, integrado en `main` y **verificado end-to-end en
+  simulador** (2026-07-18): buscar "Avda la paz, la carlota" centró el mapa en
+  La Carlota (Córdoba) y cargó los parkings de esa zona.
 - **Slice:** `apps/mobile/features/search/` (`api.ts`, `hooks.ts`, `schemas.ts`,
   `components/MapSearchBar.tsx`).
 - **Tests:** `features/search/api.ts` cubierto con 4 tests (Vitest,
@@ -99,8 +99,8 @@ de 21/26 a **34/34 tests en verde** (7 ficheros).
 
 ## Deuda técnica pendiente
 
-- **Verificación manual del buscador:** teclear "Barcelona" en el simulador y
-  confirmar el centrado end-to-end.
+_(Sin deuda abierta. La verificación manual del buscador se completó el
+2026-07-18.)_
 
 ---
 
