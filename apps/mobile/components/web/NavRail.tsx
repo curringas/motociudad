@@ -4,6 +4,8 @@ import React from 'react';
 import { View, Pressable, Text } from 'react-native';
 import { usePathname, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useCurrentProfile } from '@/features/admin/hooks';
+import { canAccessPanel } from '@/features/admin/permissions';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 type Item = { href: string; label: string; icon: IconName };
@@ -16,12 +18,16 @@ const ITEMS: Item[] = [
   { href: '/profile', label: 'Perfil', icon: 'person-outline' },
 ];
 
+const PANEL_ITEM: Item = { href: '/admin', label: 'Panel', icon: 'construct-outline' };
+
 const ACTIVE = '#FFD60A';
 const INACTIVE = '#94a3b8';
 
 export function NavRail({ expanded = false }: { expanded?: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { data: profile } = useCurrentProfile();
+  const items = canAccessPanel(profile) ? [...ITEMS, PANEL_ITEM] : ITEMS;
 
   return (
     <View
@@ -43,7 +49,7 @@ export function NavRail({ expanded = false }: { expanded?: boolean }) {
         ) : null}
       </View>
 
-      {ITEMS.map((item) => {
+      {items.map((item) => {
         const active = pathname.startsWith(item.href);
         return (
           <Pressable
