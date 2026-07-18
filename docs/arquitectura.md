@@ -146,6 +146,8 @@
 
 **Pendiente de decidir**: si los mocks requieren clustering avanzado o estilizado muy específico, evaluar migración a `@rnmapbox/maps` (Mapbox GL Native) en v1.1 — implica añadir SDK key y coste por MAU.
 
+**En web** `react-native-maps` no funciona (es nativo). Se sustituye por **Leaflet + OpenStreetMap** mediante un shim con la misma API (ver §11. Versión web).
+
 ### 3.5 Estilizado: ¿NativeWind?
 
 **Decisión**: NativeWind 4 (Tailwind CSS para React Native con Jit y soporte CSS variables).
@@ -363,7 +365,66 @@ Aun así se estructura el código con `i18next` y `expo-localization` desde el d
 
 ---
 
-## 11. Decisiones cerradas
+## 11. Versión web (navegador)
+
+La app se sirve también en el navegador (build local) reutilizando **el mismo código**
+de la app móvil. No es un proyecto aparte: es la misma app Expo ejecutada sobre
+**React Native Web**. El principio de diseño es **aislamiento por plataforma**: iOS y
+Android no cambian su comportamiento en absoluto.
+
+### 11.1 Aislamiento por plataforma
+
+Dos mecanismos, ambos condicionados a la plataforma web y transparentes para nativo:
+
+1. **Ficheros `*.web.tsx`**: Metro resuelve `fichero.web.tsx` en web y `fichero.tsx`
+   en iOS/Android. Se usan para la **capa de presentación** de escritorio, sin tocar
+   las pantallas nativas.
+2. **Redirects de módulo en `metro.config.js`** (`resolveRequest`, solo `platform === 'web'`):
+   sustituyen librerías nativas por *shims* con la **misma API pública**, de modo que
+   las pantallas no cambian.
+
+| Módulo nativo | Shim web (`lib/…`) | Implementación |
+|---|---|---|
+| `react-native-maps` | `lib/maps-web/` | **Leaflet + OpenStreetMap** (sin API key). Carga diferida (SSR-safe). Convierte `Region`↔zoom (`lib/maps-web/geo.ts`). |
+| `expo-camera` | `lib/camera-web/` | `<input type="file" accept="image/*">` (cámara en móvil-web). |
+| `expo-image-manipulator` | `lib/image-manipulator-web.ts` | Redimensionado/compresión vía `<canvas>`. |
+| `expo-file-system/legacy` | `lib/file-system-web.ts` | `fetch` + `FileReader` a base64. |
+| `lib/deeplinks` | `lib/deeplinks.web.ts` | "Cómo llegar" → URL de direcciones de Google Maps en pestaña nueva. |
+
+### 11.2 Presentación responsive
+
+`lib/breakpoints.ts` (lógica pura, testeada) + `lib/responsive.ts` (`useBreakpoint()`):
+
+- **Escritorio (≥1024px)**: barra lateral (`components/web/NavRail`) + mapa + panel de
+  detalle (`components/web/ParkingSidePanel`).
+- **Tablet (768–1023px)**: rail + mapa.
+- **Móvil-web (<768px)**: pestañas inferiores (`components/web/MobileTabs`) y hoja
+  inferior, igual que la app.
+
+Pantallas web: `app/(tabs)/_layout.web.tsx`, `app/(tabs)/map.web.tsx`,
+`app/parking/[id].web.tsx`, `app/verify/[parkingId].web.tsx`. El buscador de
+direcciones usa **Nominatim** (geocoder de OSM, sin key) en `components/web/MapSearch`.
+
+### 11.3 Decisión de producto: aportar y verificar solo en móvil
+
+Las acciones de **contribución** (proponer un parking y verificarlo) exigen **estar
+físicamente en el sitio** (ubicación + foto tomada en el momento). En un navegador la
+"foto" es un input de archivo (podría subirse cualquier imagen antigua), así que hacerlas
+desde web **no es fiable**. Además, el flujo de alta usa `Alert.alert` con botones para
+confirmar posibles duplicados, y react-native-web no soporta esos callbacks. Por eso en
+web **aportar y verificar están deshabilitadas**: se muestra un aviso que remite a la app
+móvil (`app/(tabs)/contribute.web.tsx`, `app/verify/[parkingId].web.tsx`,
+`app/parking/[id].web.tsx`). La web queda como **companion de consulta** (mapa, búsqueda,
+detalle, cómo llegar).
+
+### 11.4 Librerías nuevas (solo web)
+
+`leaflet`, `@types/leaflet`, `serve` (dev), `jsdom` (dev, para tests). Ninguna entra en
+el bundle nativo. Ver `estructura-proyecto.md` §5 para la ubicación de los ficheros.
+
+---
+
+## 12. Decisiones cerradas
 
 - ✅ React Native + Expo + TypeScript.
 - ✅ Supabase como backend integral.
@@ -372,7 +433,7 @@ Aun así se estructura el código con `i18next` y `expo-localization` desde el d
 - ✅ Expo Router para navegación.
 - ✅ NativeWind para estilizado.
 
-## 12. Decisiones pendientes
+## 13. Decisiones pendientes
 
 - ⏳ Mapbox vs `react-native-maps` (decisión final cuando haya prototipo navegable).
 - ⏳ Estrategia exacta de OTA updates (canales: production / preview / development).
@@ -381,7 +442,7 @@ Aun así se estructura el código con `i18next` y `expo-localization` desde el d
 
 ---
 
-## 13. Documentos relacionados
+## 14. Documentos relacionados
 
 - `prd.md` — requisitos de producto.
 - `modelo-datos.md` — schema completo y RLS.

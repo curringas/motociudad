@@ -76,8 +76,9 @@ No hay competencia directa consolidada en España. Las apps de parking generalis
 | Ranking global y mensual | Pantalla muestra "Coming soon" |
 | Perfil completo (stats, badges, historial de Octanos) | Pantalla placeholder |
 | Insignias (badges) desbloqueables | Lógica de BD lista; falta UI |
-| Versión web | Las librerías nativas no funcionan en navegador sin adaptar |
 | Email transaccional con marca propia | Actualmente sale con marca Supabase |
+
+> **Versión web**: ya disponible como build local en el navegador (ver [Versión web (navegador)](#versión-web-navegador)). Reutiliza el mismo código de la app móvil mediante ficheros específicos de plataforma; las librerías nativas (mapas, cámara) se sustituyen en web por equivalentes de navegador.
 
 ---
 
@@ -361,6 +362,38 @@ npx expo start --dev-client --localhost
 **Build de EAS (para compartir sin compilar):**
 
 El autor puede generar un build de TestFlight o internal distribution. Contactar en **curromartinez@tallerempresarial.es** para registrar el dispositivo.
+
+### Versión web (navegador)
+
+La app corre también en el navegador (mismo código, plataforma web de Expo), sin
+compilar nada nativo. Requiere el mismo `.env` de Supabase remoto que la app móvil.
+
+```bash
+cp apps/mobile/.env.example apps/mobile/.env   # rellenar con credenciales de Supabase
+pnpm install
+
+# Desarrollo (recarga en caliente) → http://localhost:8081
+pnpm --filter mobile web
+
+# Build estático servido por HTTP:
+pnpm --filter mobile web:export     # genera apps/mobile/dist/
+pnpm --filter mobile web:serve      # sirve dist/ en http://localhost:3000
+```
+
+Qué incluye la web:
+
+- **Mapa**: [Leaflet](https://leafletjs.com/) + tiles de OpenStreetMap (sin API key), con
+  **buscador de direcciones** (geocoder [Nominatim](https://nominatim.org/), sin key) y
+  botón **"Cómo llegar"** que abre Google Maps con la ruta.
+- **Diseño responsive**: en escritorio, barra lateral + mapa + panel de detalle; en móvil,
+  el mismo layout que la app (pestañas y hoja inferior).
+- **Consulta**: ver mapa, buscar, ver detalle de parking y "Cómo llegar" funcionan en web.
+- **Aportar y verificar**: solo en la app móvil. Ambas son acciones de contribución que
+  dependen de estar en el sitio (ubicación + foto tomada en el momento), algo que un
+  navegador no puede garantizar. En web se muestra un aviso que remite a la app.
+
+La versión web **no modifica ni afecta** al código de la app móvil: usa ficheros específicos
+de plataforma (`*.web.tsx`) que el bundler de iOS/Android nunca resuelve.
 
 ### Ejecutar los tests
 

@@ -17,6 +17,21 @@
 
 No hay staging dedicado en MVP: el flujo PR → preview → producción es suficiente para el volumen actual. Cuando crezca el equipo, se introduce staging entre preview y prod.
 
+### 1.1 Target web (local)
+
+Además de los builds nativos, la app puede ejecutarse en el navegador (React Native Web)
+como build **local** para evaluación. Usa las mismas credenciales de Supabase remoto
+(`apps/mobile/.env`). No hay hosting web desplegado en MVP.
+
+```bash
+pnpm --filter mobile web           # dev server → http://localhost:8081
+pnpm --filter mobile web:export    # export estático → apps/mobile/dist/
+pnpm --filter mobile web:serve     # sirve dist/ por HTTP → http://localhost:3000
+```
+
+Diseño y librerías web en `arquitectura.md` §11. Un hosting público (EAS Hosting, Vercel,
+Netlify…) queda fuera de alcance del MVP.
+
 ---
 
 ## 2. Hosting y servicios

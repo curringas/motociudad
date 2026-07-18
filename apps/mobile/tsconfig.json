@@ -5,7 +5,9 @@
     "module": "ESNext",
     "jsx": "react-jsx",
     "lib": [
-      "ES2020"
+      "ES2020",
+      "DOM",
+      "DOM.Iterable"
     ],
     "baseUrl": ".",
     "paths": {

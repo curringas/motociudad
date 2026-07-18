@@ -8,12 +8,22 @@ const config = getDefaultConfig(__dirname);
 // don't get picked up on web — Metro falls back to the CJS 'main' field instead.
 config.resolver.unstable_enablePackageExports = false;
 
-// Redirect react-native-maps to a no-op stub on web to avoid native-only imports
+// On web, redirect native-only modules to web shims that expose the same public
+// API (see lib/*-web). Native platforms are unaffected — these branches only fire
+// when platform === 'web', so iOS/Android keep resolving the real native modules.
+const WEB_MODULE_SHIMS = {
+  'react-native-maps': 'lib/maps-web/index.tsx',
+  'expo-camera': 'lib/camera-web/index.tsx',
+  'expo-image-manipulator': 'lib/image-manipulator-web.ts',
+  'expo-file-system/legacy': 'lib/file-system-web.ts',
+  'expo-file-system': 'lib/file-system-web.ts',
+};
+
 const originalResolveRequest = config.resolver.resolveRequest;
 config.resolver.resolveRequest = (context, moduleName, platform) => {
-  if (platform === 'web' && moduleName === 'react-native-maps') {
+  if (platform === 'web' && WEB_MODULE_SHIMS[moduleName]) {
     return {
-      filePath: path.resolve(__dirname, 'lib/maps-web-stub.js'),
+      filePath: path.resolve(__dirname, WEB_MODULE_SHIMS[moduleName]),
       type: 'sourceFile',
     };
   }

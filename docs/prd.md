@@ -149,17 +149,37 @@ Lista explícita para que ningún agente de IA las infiera como necesarias:
 - ❌ Integración con sistemas de pago de zona azul / SARE.
 - ❌ Edición de parkings ya verificados por usuarios de bajo nivel.
 - ❌ Modo claro (light theme).
-- ❌ Versión web / dashboard de admin público.
+- ❌ Dashboard de admin público.
 - ❌ Soporte multi-idioma en MVP (solo castellano; inglés post-launch).
 - ❌ Notificaciones push de marketing (solo transaccionales: nivel, insignia, verificación).
 - ❌ Importación masiva desde CSV o APIs externas.
 - ❌ Gamificación con dinero / canjeables / NFTs.
 
+### 7.2b Versión web (companion de consulta)
+
+Existe una **versión web** de la app (build local en navegador) pensada como companion de
+**consulta y descubrimiento**, no como sustituto de la app móvil:
+
+- **Sí en web**: ver el mapa y los parkings, buscar por calle/ciudad, ver el detalle y "Cómo
+  llegar" (Google Maps).
+- **Solo en móvil**: **aportar** y **verificar** parkings. Son acciones de contribución que
+  exigen presencia física (ubicación + foto tomada en el momento), garantía que un navegador
+  no puede ofrecer (la foto sería una subida de archivo). En web se muestra un aviso que
+  remite a la app.
+
+Reutiliza el mismo código de la app móvil sin afectarla (ver `arquitectura.md` §11). Es una
+build local para evaluación; el hosting público queda fuera de alcance.
+
 ### 7.3 Roadmap post-MVP (orientativo, no comprometido)
 
 - **v1.1**: Multi-idioma (EN), insignias temáticas estacionales.
 - **v1.2**: Sistema de amigos completo (invitaciones, ranking entre amigos).
-- **v1.3**: Panel de admin web (para moderar la cola).
+- **v1.3**: **Panel de administración web** (sobre la versión web actual):
+  - **Gestión de usuarios con roles**: `user`, `contributor`, `admin`. Visualizar usuarios,
+    su rol y actividad; permitir cambiar roles desde el panel.
+  - **Listado de todos los parkings** en una tabla de datos (datatable) con paginación,
+    orden y **filtros** (por ciudad, por estado —pendiente/verificado—, por tipo), para
+    moderar la cola y buscar rápidamente.
 - **v2.0**: Monetización — destacados de talleres, plan premium con notificaciones avanzadas.
 
 ---
@@ -256,8 +276,9 @@ Acción que confirma Octanos → Detección de cruce de umbral → Push notifica
 
 ### 10.1 Principios de diseño
 
-- **Mobile first y solo móvil** en MVP (no responsive web).
-- **Dark mode obligatorio** (no light mode en MVP, simplifica diseño).
+- **Mobile first**: la app móvil es el producto principal. Existe además una versión web
+  responsive de consulta (companion, ver §7.2b) que reutiliza el mismo código.
+- **Dark mode obligatorio** en la app móvil (no light mode en MVP, simplifica diseño).
 - **Mapa siempre disponible** en máximo 2 taps desde cualquier pantalla.
 - **Acción primaria visible** (botón aportar destacado en la barra inferior).
 - **Datos verificables**: cada parking muestra "verificado x N veces", "última verificación hace X días".

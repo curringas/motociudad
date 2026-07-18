@@ -135,15 +135,20 @@ apps/mobile/
 │   │   └── _layout.tsx
 │   ├── (tabs)/
 │   │   ├── map.tsx                ← Tab: Mapa
+│   │   ├── map.web.tsx            ← [web] Mapa responsive (rail+panel / móvil)
 │   │   ├── list.tsx               ← Tab: Lista
 │   │   ├── contribute.tsx         ← Tab: Aportar
+│   │   ├── contribute.web.tsx     ← [web] Aviso "aporta desde la app"
 │   │   ├── ranking.tsx            ← Tab: Ranking
 │   │   ├── profile.tsx            ← Tab: Perfil
-│   │   └── _layout.tsx            ← Configuración de tabs
+│   │   ├── _layout.tsx            ← Configuración de tabs
+│   │   └── _layout.web.tsx        ← [web] Nav responsive (rail / tabs)
 │   ├── parking/
-│   │   └── [id].tsx               ← Detalle dinámico
+│   │   ├── [id].tsx               ← Detalle dinámico
+│   │   └── [id].web.tsx           ← [web] Ficha (sin verificar)
 │   ├── verify/
-│   │   └── [parkingId].tsx        ← Verificación in situ
+│   │   ├── [parkingId].tsx        ← Verificación in situ
+│   │   └── [parkingId].web.tsx    ← [web] Aviso "verifica desde la app"
 │   ├── _layout.tsx                ← Layout raíz (providers)
 │   └── index.tsx                  ← Splash / redirección inicial
 │
@@ -153,6 +158,11 @@ apps/mobile/
 │   ├── BadgeIcon.tsx
 │   ├── PinMarker.tsx
 │   ├── BottomSheet.tsx
+│   ├── web/                       ← [web] UI de escritorio (solo navegador)
+│   │   ├── NavRail.tsx            ← Barra lateral de escritorio
+│   │   ├── MobileTabs.tsx         ← Pestañas para móvil-web
+│   │   ├── ParkingSidePanel.tsx   ← Panel de lista/detalle
+│   │   └── MapSearch.tsx          ← Buscador Nominatim
 │   └── __tests__/
 │
 ├── features/                      ← Lógica de dominio agrupada
@@ -178,7 +188,17 @@ apps/mobile/
 │   ├── distance.ts                ← Cálculo de distancia
 │   ├── format.ts                  ← Formateo de fechas, números
 │   ├── geo.ts                     ← Helpers de geolocalización
-│   ├── deeplinks.ts               ← Apple Maps / Google Maps
+│   ├── deeplinks.ts               ← Apple Maps / Google Maps (nativo)
+│   ├── deeplinks.web.ts           ← [web] "Cómo llegar" → Google Maps
+│   ├── breakpoints.ts             ← [web] Lógica pura de breakpoints
+│   ├── responsive.ts              ← [web] useBreakpoint()
+│   ├── maps-web/                  ← [web] Shim de react-native-maps (Leaflet)
+│   │   ├── index.tsx
+│   │   └── geo.ts                 ← Región ↔ zoom
+│   ├── camera-web/                ← [web] Shim de expo-camera (input file)
+│   │   └── index.tsx
+│   ├── image-manipulator-web.ts   ← [web] Shim (canvas)
+│   ├── file-system-web.ts         ← [web] Shim (fetch → base64)
 │   └── __tests__/
 │
 ├── hooks/                         ← Hooks reutilizables transversales
@@ -244,6 +264,20 @@ graph LR
 ```
 
 ---
+
+### 5.3 Capa web (React Native Web)
+
+Los ficheros marcados `[web]` arriba solo se resuelven en navegador; iOS/Android nunca
+los cargan. Dos convenciones:
+
+- **`*.web.tsx`**: variante de una pantalla/layout para web (presentación de escritorio
+  responsive). El fichero `.tsx` sigue siendo el de móvil, intacto.
+- **`lib/*-web*` + redirects en `metro.config.js`**: *shims* que sustituyen librerías
+  nativas (mapas, cámara, imagen, deeplinks) por equivalentes de navegador con la misma
+  API pública, para que las pantallas compartidas no cambien.
+
+Detalle completo del diseño en `arquitectura.md` §11. Regla de oro: **la web no toca el
+código que resuelve el móvil**.
 
 ## 6. Estructura del backend (`supabase/`)
 

@@ -54,6 +54,17 @@
 - Funciones puras de `lib/` y `utils/`: parseo de coordenadas, cálculo de distancia, formato de Octanos, validación de inputs Zod.
 - Hooks personalizados (`useNearbyParkings`, `useUserOctanos`, etc.) con TanStack Query mock.
 - Reducers / stores Zustand.
+- **Lógica pura de la capa web**: conversión región↔zoom del mapa (`lib/maps-web/geo.ts`)
+  y breakpoints responsive (`lib/breakpoints.ts`).
+
+> **Nota de tooling web**: la config compartida `vitest.config.ts` (entorno jsdom +
+> setup de RN Testing Library) es la de la app. Para la lógica pura de la capa web hay una
+> config aparte y aditiva, `vitest.web.config.ts` (entorno `node`, sin setup de RN), que
+> no depende de esa infraestructura:
+>
+> ```bash
+> pnpm --filter mobile exec vitest run --config vitest.web.config.ts
+> ```
 
 ### 4.2 Patrones
 
