@@ -46,6 +46,34 @@ pins reutiliza el ciclo por región ya existente.
 - **Commits:** `e74fbe5`, `e5e79a2`, `b80017f`, `c81e290`, `8937f27`,
   `ca13a84`, `42cac40` (2026-07-11).
 
+### 2. Versión web de consulta (navegador)
+
+MotoCiudad servida en el navegador **reutilizando el código móvil**, con
+aislamiento total por plataforma (ficheros `.web.tsx` + redirects de Metro): las
+apps iOS/Android no cambian. Es una versión de **consulta** (ver mapa, buscar y
+ver fichas); aportar y verificar siguen siendo exclusivos de la app móvil para
+garantizar la integridad de foto y GPS.
+
+- **Mapa:** Leaflet + OpenStreetMap (sin API key), con carga diferida SSR-safe.
+- **Buscador de direcciones:** geocoding con Nominatim; botón "Cómo llegar" →
+  Google Maps.
+- **Presentación responsive:** rail de navegación + panel lateral en escritorio;
+  pestañas + hoja inferior en móvil.
+- **Shims web** de `react-native-maps`, `expo-camera`, `expo-image-manipulator`,
+  `expo-file-system` y deeplinks, para que el código compartido funcione en web.
+- **Estado:** implementado e integrado en `main`.
+- **Ficheros clave:** `app/**/*.web.tsx`, `components/web/` (NavRail, MobileTabs,
+  MapSearch, ParkingSidePanel), `lib/maps-web/`, `lib/camera-web/`,
+  `lib/breakpoints.ts`, `lib/responsive.ts`, `metro.config.js`.
+- **Tests:** suite web separada `vitest.web.config.ts` (entorno node) —
+  `lib/maps-web/geo.ts` (región↔zoom) y `lib/breakpoints.ts`. 5 tests en verde.
+  Se ejecuta con `pnpm --filter mobile exec vitest run --config vitest.web.config.ts`.
+- **Specs:** `docs/superpowers/specs/2026-07-10-version-web-design.md` ·
+  `docs/superpowers/plans/2026-07-10-version-web.md`.
+- **Docs actualizados:** `README.md`, `arquitectura.md`, `estructura-proyecto.md`,
+  `prd.md`, `infraestructura.md`, `testing.md`.
+- **Commits:** `745bdbe` (feat web) + `352bbad` (merge con `main`).
+
 ---
 
 ## Correcciones
