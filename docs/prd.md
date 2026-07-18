@@ -191,6 +191,12 @@ build local para evaluación; el hosting público queda fuera de alcance.
     revisan feedback y reportes desde el panel.
   - **Notificaciones por email**: al **administrador** siempre, y también al **colaborador**
     si el parking reportado lo creó dicho colaborador.
+- **v1.5**: **Sistema de notificaciones in-app**:
+  - Avisar al **usuario** cuando se **verifica** uno de sus parkings propuestos.
+  - Avisar al usuario cuando sus **Octanos pasan a definitivos** (`octano_status`
+    pending → confirmed).
+  - Para **administradores y colaboradores**: replicar in-app las mismas notificaciones
+    que reciben por email (feedback y reportes de la v1.4).
 - **v2.0**: Monetización — destacados de talleres, plan premium con notificaciones avanzadas.
 
 ---
