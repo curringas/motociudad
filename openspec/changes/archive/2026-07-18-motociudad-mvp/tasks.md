@@ -11,12 +11,12 @@
 - [x] 1.9 Crear tabla `parking_photos` con índices y FK en la misma migración
 - [x] 1.10 Crear tabla `parking_verifications` con índices y FK
 - [x] 1.11 Crear tabla `octano_events` con índices y FK (necesaria para la Edge Function)
-- [ ] 1.12 Probar localmente: `supabase db reset` sin errores
+- [x] 1.12 Probar localmente: `supabase db reset` sin errores
 - [x] 1.13 Crear `supabase/tests/sql/nearby_parkings.test.sql` con ≥ 3 casos pgTAP (distancia, filtro tipo, only_verified)
 - [x] 1.14 Crear `supabase/tests/rls/parkings.test.sql` con ≥ 6 escenarios (cada policy + caso de rechazo)
-- [ ] 1.15 Ejecutar `supabase test db` y verificar 100% pass
+- [x] 1.15 Ejecutar `supabase test db` y verificar 100% pass
 - [x] 1.16 Añadir 5 parkings seed de Madrid en `supabase/seed.sql` con coordenadas verificadas
-- [ ] 1.17 Ejecutar `pnpm gen:types` y commitear `apps/mobile/types/database.ts`
+- [x] 1.17 Ejecutar `pnpm gen:types` y commitear `apps/mobile/types/database.ts`
 
 ## 2. Backend — Edge Function `validate-verification` (ENG-101)
 
@@ -38,11 +38,11 @@
 - [x] 2.16 Escribir `__tests__/validate-cooldown.test.ts`
 - [x] 2.17 Escribir `__tests__/handler.test.ts` con test de integración usando DB efímera (`supabase start`)
 - [ ] 2.18 Ejecutar `deno test supabase/functions/validate-verification/` y verificar ≥ 90% cobertura en `validators.ts`
-- [ ] 2.19 Deploy a entorno preview: `supabase functions deploy validate-verification`
+- [x] 2.19 Deploy a entorno preview: `supabase functions deploy validate-verification`
 
 ## 3. Frontend — Pantalla Mapa (ENG-102)
 
-- [ ] 3.1 Instalar dependencias: `react-native-maps`, `@gorhom/bottom-sheet`, `expo-location`, `react-native-maps-super-cluster`
+- [x] 3.1 Instalar dependencias: `react-native-maps`, `@gorhom/bottom-sheet`, `expo-location`, `react-native-maps-super-cluster`
 - [x] 3.2 Configurar permisos de ubicación en `app.config.ts` para iOS (`NSLocationWhenInUseUsageDescription`) y Android (`ACCESS_FINE_LOCATION`)
 - [x] 3.3 Crear estilo custom del mapa dark mode en `assets/map-style-dark.json`
 - [x] 3.4 Crear `hooks/useUserLocation.ts` para gestionar permisos y posición GPS
@@ -88,13 +88,25 @@
 - [x] 5.8 Comprobar si el usuario cruzó umbral de nivel y disparar animación celebratoria
 - [x] 5.9 Añadir telemetría PostHog: `parking_verified` tras éxito
 - [x] 5.10 Crear `.maestro/verify-parking.yaml` — flow E2E con mock de GPS y cámara
-- [ ] 5.11 Ejecutar smoke test manual en dispositivo físico: verificación real contra preview backend
+- [x] 5.11 Ejecutar smoke test manual en dispositivo físico: verificación real contra preview backend
 
 ## 6. CI/CD y documentación
 
 - [x] 6.1 Actualizar workflow CI para ejecutar `supabase test db` (pgTAP) en cada PR
 - [x] 6.2 Actualizar workflow CI para ejecutar `deno test supabase/functions/**/*.test.ts`
-- [ ] 6.3 Verificar que `pnpm typecheck` pasa con los tipos regenerados
-- [ ] 6.4 Actualizar `docs/arquitectura.md` §5.3 si el contrato de la Edge Function difiere del diseño
-- [ ] 6.5 Actualizar `docs/modelo-datos.md` §6.2 con defaults reales del SQL si difieren del spec
-- [ ] 6.6 Confirmar en SQL Editor de Supabase preview: `SELECT * FROM nearby_parkings(40.4231, -3.7036, 5000)` devuelve seeds
+- [x] 6.3 Verificar que `pnpm typecheck` pasa con los tipos regenerados
+- [x] 6.4 Actualizar `docs/arquitectura.md` §5.3 si el contrato de la Edge Function difiere del diseño
+- [x] 6.5 Actualizar `docs/modelo-datos.md` §6.2 con defaults reales del SQL si difieren del spec
+- [x] 6.6 Confirmar en SQL Editor de Supabase preview: `SELECT * FROM nearby_parkings(40.4231, -3.7036, 5000)` devuelve seeds
+
+---
+
+> **Nota de cierre (entrega final):** el MVP está entregado y en producción (app en
+> dispositivo real + backend en Supabase Cloud). Los pasos de ops/verificación de este
+> change se cumplieron durante el desarrollo posterior y se marcan aquí. Quedan **2
+> tareas sin marcar por honestidad**, porque no consta su ejecución formal con el
+> criterio exacto que pedían:
+> - **2.18** — cobertura ≥ 90% en `validators.ts` con `deno test` (los tests existen y pasan; el umbral concreto no se midió).
+> - **3.18** — `maestro test` de E2E en simulador/emulador (los flows están definidos; no consta que se ejecutaran en CI).
+>
+> Se archiva con estas 2 pendientes de forma consciente.
