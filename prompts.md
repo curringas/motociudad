@@ -24,6 +24,7 @@ después se implementa con TDD y commits frecuentes.
 **MCPs (Model Context Protocol) conectados:**
 - **Supabase** (HTTP, `https://mcp.supabase.com/mcp`): esquema, migraciones, logs, advisors, tipos.
 - **XcodeBuildMCP** (`xcodebuildmcp@2.6.2 mcp`, stdio): build/run/test de la app en simulador iOS, capturas y snapshots de UI.
+- **Playwright** (browser MCP): automatización de navegador para probar y verificar la **versión web** (navegación, snapshots, capturas, interacción con el mapa/buscador en el browser).
 
 **Otras prácticas:**
 - **Git worktrees** para trabajo en paralelo: un worktree para iPhone (gamificación/verificación) y otro para la versión web.
@@ -122,6 +123,7 @@ después se implementa con TDD y commits frecuentes.
 
 - **Supabase MCP:** consulta de esquema/tablas, migraciones, logs y advisors, generación de tipos TypeScript; configuración del cliente (URL + publishable key).
 - **XcodeBuildMCP:** `discover_projs`, `list_schemes`, `list_sims`, `session_set_defaults`, `build_run_sim`, `launch_app_sim`, `screenshot`, `snapshot_ui` — para compilar y ejecutar la app en el simulador iOS y verificar la UI (p. ej. el buscador). Limitación encontrada: la automatización de UI (tap/tecleo) no está habilitada en esta instalación, por lo que el tecleo end-to-end lo hizo el usuario y la IA verificó por captura.
+- **Playwright MCP:** automatización de navegador para la **versión web** — navegar la app en el browser, tomar snapshots/capturas y ejercitar la UI (mapa Leaflet, buscador Nominatim, fichas) para verificar el port web fuera del simulador nativo.
 
 ---
 
