@@ -1,13 +1,48 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  MotoCiudad — app móvil colaborativa para encontrar, proponer y verificar
+  parkings de moto, con comunidad gamificada (Octanos, niveles, insignias).
+  Existe además una versión web de consulta (Leaflet + OSM) que reutiliza el
+  código móvil con aislamiento por plataforma (ficheros .web.tsx + redirects de
+  Metro).
+
+  Stack:
+  - Móvil: React Native + Expo (SDK 52+), TypeScript strict + noUncheckedIndexedAccess,
+    Expo Router v4, Zustand (cliente), TanStack Query v5 (server), NativeWind 4,
+    react-native-maps, expo-location, expo-camera.
+  - Backend: Supabase Cloud — PostgreSQL 15 + PostGIS + Auth + Storage + Edge
+    Functions (Deno + TypeScript). Validación con Zod (cliente y edge).
+  - Web: react-native-web + Leaflet/OSM; geocoding con Nominatim.
+  - Tests: Vitest (unit + componentes vía @testing-library/react + react-native-web,
+    NO RNTL), Maestro (E2E), pgTAP (RLS y funciones SQL), Deno test (edge).
+  - CI/CD: GitHub Actions + EAS.
+
+  Arquitectura y organización:
+  - Features en vertical slices: features/<dominio>/ con api.ts (Supabase),
+    hooks.ts (TanStack Query), schemas.ts (Zod), components/, __tests__/.
+  - Autorización SOLO vía Row Level Security (RLS) en PostgreSQL; no hay API gateway.
+  - Lógica con efectos secundarios (Octanos, insignias, ranking) vive en Edge
+    Functions, nunca en el cliente.
+
+  Reglas no negociables (deben respetarse en specs y tareas):
+  - Nunca tocar octano_events directamente desde el cliente — siempre vía Edge Function.
+  - Nunca exponer service_role_key en código cliente.
+  - No persistir geolocalización del usuario salvo user_location en una verificación
+    concreta (privacidad).
+  - Toda tabla nueva nace con RLS activa + al menos una policy + un test pgTAP en el
+    mismo cambio.
+  - No hacer DROP de columnas en una migración sin un release de deprecación previo.
+  - SQL: tablas plural/snake_case; una idea atómica por migración; sin SELECT * en producción.
+
+  Convenciones:
+  - Código y comentarios en inglés; UI (copy visible), docs y commits en castellano (es-ES).
+  - Conventional Commits (feat(dominio):, fix(dominio):, test(dominio):, docs(...): ...).
+  - Imports absolutos vía @/. Un componente por archivo, PascalCase; hooks con prefijo use.
+  - Si código y specs divergen, actualizar la spec en el mismo cambio.
+
+  Documentos canónicos a consultar/actualizar: docs/prd.md, docs/arquitectura.md,
+  docs/modelo-datos.md, docs/gamificacion.md, docs/testing.md, docs/infraestructura.md.
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.
@@ -18,3 +53,10 @@ schema: spec-driven
 #       - Always include a "Non-goals" section
 #     tasks:
 #       - Break tasks into chunks of max 2 hours
+rules:
+  proposal:
+    - Incluir siempre una sección "Non-goals" (fuera de alcance).
+    - Indicar impacto en documentos canónicos (prd, arquitectura, modelo-datos, gamificacion, testing).
+  tasks:
+    - Cada tabla o cambio de schema nuevo incluye migración + RLS + policy + test pgTAP en la misma tarea.
+    - Verificación por tarea: pnpm typecheck + tests relevantes en verde antes de cerrar.
