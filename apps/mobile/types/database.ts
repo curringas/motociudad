@@ -7,10 +7,30 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
@@ -355,6 +375,10 @@ export type Database = {
           id: string
           octanos_this_month: number
           ranking_visible: boolean
+          role: Database["public"]["Enums"]["user_role"]
+          suspended: boolean
+          suspended_at: string | null
+          suspended_reason: string | null
           total_octanos: number
           updated_at: string
           username: string
@@ -370,6 +394,10 @@ export type Database = {
           id: string
           octanos_this_month?: number
           ranking_visible?: boolean
+          role?: Database["public"]["Enums"]["user_role"]
+          suspended?: boolean
+          suspended_at?: string | null
+          suspended_reason?: string | null
           total_octanos?: number
           updated_at?: string
           username: string
@@ -385,6 +413,10 @@ export type Database = {
           id?: string
           octanos_this_month?: number
           ranking_visible?: boolean
+          role?: Database["public"]["Enums"]["user_role"]
+          suspended?: boolean
+          suspended_at?: string | null
+          suspended_reason?: string | null
           total_octanos?: number
           updated_at?: string
           username?: string
@@ -685,6 +717,7 @@ export type Database = {
             }
             Returns: string
           }
+      can_manage_parkings: { Args: never; Returns: boolean }
       check_level_up: { Args: { in_user_id: string }; Returns: undefined }
       disablelongtransactions: { Args: never; Returns: string }
       dropgeometrycolumn:
@@ -818,6 +851,8 @@ export type Database = {
       }
       geomfromewkt: { Args: { "": string }; Returns: unknown }
       gettransactionid: { Args: never; Returns: unknown }
+      is_admin: { Args: never; Returns: boolean }
+      is_suspended: { Args: never; Returns: boolean }
       longtransactionsenabled: { Args: never; Returns: boolean }
       nearby_parkings: {
         Args: {
@@ -1518,6 +1553,7 @@ export type Database = {
         | "duplicate"
         | "other"
       report_status: "pending" | "confirmed" | "dismissed"
+      user_role: "user" | "contributor" | "admin"
     }
     CompositeTypes: {
       geometry_dump: {
@@ -1651,6 +1687,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       badge_family: ["discovery", "verification", "community", "thematic"],
@@ -1680,6 +1719,8 @@ export const Constants = {
         "other",
       ],
       report_status: ["pending", "confirmed", "dismissed"],
+      user_role: ["user", "contributor", "admin"],
     },
   },
 } as const
+
