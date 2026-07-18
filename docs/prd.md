@@ -137,6 +137,7 @@ No hay competencia directa consolidada en España. Las apps de parking generalis
 | F12 | Perfil de usuario | Vitrina de progreso, motivación |
 | F13 | Reportar parking erróneo | Mantener dataset limpio |
 | F14 | POIs secundarios (talleres) | Diferencial competitivo y palanca de monetización futura |
+| F15 | Buscador de ubicaciones sobre el mapa | Centrar el mapa en una calle/ciudad buscada (geocoding nativo) para explorar parkings de otra zona |
 
 ### 7.2 Features fuera del MVP (NON-GOALS)
 
@@ -191,6 +192,7 @@ Formato: *Como [rol], quiero [acción] para [beneficio]*. Cada una se desglosar�
 ### 8.1 Descubrimiento
 
 - Como motorista, quiero ver en un mapa los parkings cercanos a mi ubicación para decidir a cuál ir.
+- Como motorista viajero, quiero buscar una calle o ciudad para centrar el mapa en esa zona y ver los parkings disponibles allí, aunque esté lejos de mi ubicación.
 - Como motorista, quiero filtrar la lista por tipo (público / privado / taller) para ver solo lo que me interesa.
 - Como motorista, quiero ordenar por distancia para llegar lo antes posible.
 - Como motorista, quiero ver fotos reales del parking para saber si es lo que busco antes de ir.

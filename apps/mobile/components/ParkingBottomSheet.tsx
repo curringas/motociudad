@@ -14,6 +14,7 @@ import { formatDistance } from '@/lib/distance';
 import { openInExternalMaps } from '@/lib/deeplinks';
 import { useSessionStore } from '@/stores/sessionStore';
 import { useParkingDetail } from '@/features/parkings/hooks';
+import { useHasVerified } from '@/features/verifications/hooks';
 import { supabase } from '@/lib/supabase';
 
 type Props = {
@@ -36,6 +37,13 @@ export function ParkingBottomSheet({ parking, onClose }: Props) {
   const { user } = useSessionStore();
 
   const { data: detail } = useParkingDetail(parking?.id ?? '');
+  const { data: hasVerified = false } = useHasVerified(parking?.id, user?.id);
+  const isProposer = !!user && !!detail && user.id === detail.proposed_by;
+  const canVerify =
+    parking !== null &&
+    parking.verifications_count < 3 &&
+    !isProposer &&
+    !hasVerified;
   const photoPath = (detail?.parking_photos as Array<{ storage_path: string }> | undefined)?.[0]?.storage_path;
   const photoUrl = photoPath
     ? supabase.storage.from('parkings-photos').getPublicUrl(photoPath).data.publicUrl
@@ -96,7 +104,7 @@ export function ParkingBottomSheet({ parking, onClose }: Props) {
                     </View>
                     {parking.status === 'verified' ? (
                       <View style={{ backgroundColor: 'rgba(34,197,94,0.2)', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 4 }}>
-                        <Text style={{ color: '#22c55e', fontSize: 12, fontWeight: '600' }}>Verificado</Text>
+                        <Text style={{ color: '#22c55e', fontSize: 12, fontWeight: '600' }}>✓ {parking.verifications_count}</Text>
                       </View>
                     ) : (
                       <View style={{ backgroundColor: 'rgba(251,191,36,0.2)', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 4 }}>
@@ -163,7 +171,7 @@ export function ParkingBottomSheet({ parking, onClose }: Props) {
                       <Text style={{ color: '#f8fafc', fontWeight: '600' }}>Detalles</Text>
                     </TouchableOpacity>
                   </View>
-                  {parking.status !== 'verified' && (
+                  {canVerify && (
                     <TouchableOpacity
                       style={{ backgroundColor: '#1e293b', borderWidth: 1, borderColor: '#FFD60A', borderRadius: 12, paddingVertical: 14, paddingHorizontal: 16, alignItems: 'center', marginTop: 8 }}
                       onPress={handleVerifyPress}

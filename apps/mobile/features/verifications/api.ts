@@ -1,3 +1,5 @@
+import { FunctionsHttpError } from '@supabase/supabase-js';
+import * as FileSystem from 'expo-file-system/legacy';
 import { supabase } from '@/lib/supabase';
 
 export type VerificationPayload = {
@@ -33,6 +35,7 @@ export const VERIFICATION_ERROR_CODES = {
   SELF_VERIFICATION_FORBIDDEN: 'SELF_VERIFICATION_FORBIDDEN',
   ALREADY_VERIFIED: 'ALREADY_VERIFIED',
   DAILY_CAP_REACHED: 'DAILY_CAP_REACHED',
+  VERIFICATION_LIMIT_REACHED: 'VERIFICATION_LIMIT_REACHED',
   UNAUTHENTICATED: 'UNAUTHENTICATED',
 } as const;
 
@@ -52,11 +55,44 @@ export async function submitVerification(
   );
 
   if (error) {
-    // Network or invocation error — not a business-rule error
+    // Business-rule failures come back with a non-2xx status and a structured
+    // JSON body ({ success: false, error: { code, message } }). supabase-js
+    // surfaces those as FunctionsHttpError and leaves `data` null, so read the
+    // response body to recover the specific error code for the UI.
+    if (error instanceof FunctionsHttpError) {
+      try {
+        const body = (await error.context.json()) as VerificationResult;
+        if (body && typeof body === 'object' && 'success' in body) {
+          return body;
+        }
+      } catch {
+        // Body was not the expected JSON — fall through to the generic error.
+      }
+    }
+    // Network or other invocation error — not a business-rule error
     throw new Error(error.message);
   }
 
   return data as VerificationResult;
+}
+
+/**
+ * Checks whether the given user has already verified the given parking.
+ * Used to hide the verify CTA (a user can only verify a parking once).
+ */
+export async function hasUserVerified(
+  parkingId: string,
+  userId: string,
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('parking_verifications')
+    .select('id')
+    .eq('parking_id', parkingId)
+    .eq('verified_by', userId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data !== null;
 }
 
 /**
@@ -76,16 +112,20 @@ export async function uploadVerificationPhoto(
   const userId = sessionData.session?.user.id;
   if (!userId) throw new Error('Usuario no autenticado');
 
-  // Fetch the local file as a blob
-  const response = await fetch(fileUri);
-  const blob = await response.blob();
+  // Read the file as base64 and convert to bytes. `fetch(fileUri).blob()`
+  // yields a 0-byte blob on React Native, so we mirror the propose-parking
+  // flow (expo-file-system + Uint8Array) which uploads valid bytes.
+  const base64 = await FileSystem.readAsStringAsync(fileUri, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
+  const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
 
   const timestamp = new Date(takenAt).getTime();
   const storagePath = `parkings/${parkingId}/${userId}/${timestamp}.jpg`;
 
   const { error } = await supabase.storage
     .from('parkings-photos')
-    .upload(storagePath, blob, {
+    .upload(storagePath, bytes, {
       contentType: 'image/jpeg',
       upsert: false,
     });

@@ -16,6 +16,7 @@ export type ErrorCode =
   | "SELF_VERIFICATION_FORBIDDEN"  // usuario intentando verificar su propio parking
   | "ALREADY_VERIFIED"     // usuario ya verificó este parking
   | "DAILY_CAP_REACHED"    // límite de 200 octanos/día alcanzado
+  | "VERIFICATION_LIMIT_REACHED"  // el parking ya tiene el máximo de 3 verificaciones
   | "PARKING_NOT_FOUND"    // parking no existe o fue borrado
   | "PARKING_ARCHIVED"     // parking archivado, no se pueden hacer más verificaciones
   // Errores internos
@@ -99,6 +100,10 @@ export const ERRORS = {
   DAILY_CAP_REACHED: makeError(
     "DAILY_CAP_REACHED",
     "Has alcanzado el límite diario de Octanos (200 puntos). Vuelve mañana.",
+  ),
+  VERIFICATION_LIMIT_REACHED: makeError(
+    "VERIFICATION_LIMIT_REACHED",
+    "Este parking ya tiene el máximo de 3 verificaciones.",
   ),
   PARKING_NOT_FOUND: makeError(
     "PARKING_NOT_FOUND",

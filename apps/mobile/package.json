@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "expo start --dev-client",
     "typecheck": "tsc --noEmit",
-    "test": "vitest",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "eslint . --ext .ts,.tsx",
     "android": "expo run:android",
     "ios": "expo run:ios"
@@ -45,7 +46,9 @@
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
+    "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-native": "^5.4.3",
+    "@testing-library/react": "^16.3.2",
     "@testing-library/react-native": "^12.8.0",
     "@types/leaflet": "^1.9.21",
     "@types/react": "~19.1.17",

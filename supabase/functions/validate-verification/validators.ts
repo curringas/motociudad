@@ -165,20 +165,31 @@ export async function validateDailyCap(
 }
 
 /**
- * Comprueba si este será el primer verificador del parking.
+ * Devuelve el número de verificaciones existentes del parking.
+ * Se usa para el tope de 3 verificaciones y para saber si es la primera.
  */
-export async function isFirstVerifier(
+export async function getVerificationCount(
   supabase: SupabaseClient,
   parkingId: string,
-): Promise<boolean> {
+): Promise<number> {
   const { count, error } = await supabase
     .from("parking_verifications")
     .select("id", { count: "exact", head: true })
     .eq("parking_id", parkingId);
 
   if (error) {
-    throw new Error(`Error checking first verifier: ${error.message}`);
+    throw new Error(`Error counting verifications: ${error.message}`);
   }
 
-  return (count ?? 0) === 0;
+  return count ?? 0;
+}
+
+/**
+ * Comprueba si este será el primer verificador del parking.
+ */
+export async function isFirstVerifier(
+  supabase: SupabaseClient,
+  parkingId: string,
+): Promise<boolean> {
+  return (await getVerificationCount(supabase, parkingId)) === 0;
 }

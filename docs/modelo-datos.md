@@ -746,11 +746,13 @@ stateDiagram-v2
     pending --> verified : 1ª verificación válida<br/>(o auto-publish si proponente nivel ≥3)
     pending --> rejected : Moderador rechaza<br/>o reportes confirmados
     verified --> archived : N reportes "no_exists"<br/>confirmados
-    verified --> verified : Nuevas verificaciones<br/>(refrescan last_verified_at)
+    verified --> verified : 2ª y 3ª verificación<br/>(máx 3; refrescan last_verified_at)
     rejected --> [*]
     archived --> verified : Re-propuesta y verificación<br/>(post-MVP)
     archived --> [*]
 ```
+
+> **Máximo de verificaciones (gamificacion.md §2.2 regla 6):** un parking admite **3 verificaciones** como máximo. La 1ª pasa `pending → verified` y otorga +40 al verificador, confirma los +50 pendientes del proponente y le suma un bonus +30 (`parking_verified_bonus`). La 2ª y 3ª otorgan +25 y +10 al verificador. A partir de la 3ª, `validate-verification` rechaza con `VERIFICATION_LIMIT_REACHED`. El contador vive en `parkings.verifications_count` (mantenido por `trg_parking_verifications_count`).
 
 ---
 

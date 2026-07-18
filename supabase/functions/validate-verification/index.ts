@@ -23,7 +23,7 @@ import { supabaseAdmin } from "../_shared/supabase.ts";
 import { ERRORS, errorResponse, makeError } from "../_shared/errors.ts";
 import { parseVerificationRequest } from "./schemas.ts";
 import {
-  isFirstVerifier,
+  getVerificationCount,
   validateDailyCap,
   validateGeofence,
   validateNotAlreadyVerified,
@@ -94,11 +94,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const input = parsed.data;
 
   // ── 3. Obtener datos del parking ────────────────────────────
+  // Usamos la vista parkings_with_stats, que expone lat/lng ya extraídos en DB
+  // (ST_Y/ST_X). PostgREST serializa la columna geography como WKB hex, no como
+  // GeoJSON, así que no se pueden leer coordenadas del campo `location`
+  // directamente. La vista también filtra los parkings borrados (deleted_at).
   const { data: parking, error: parkingError } = await supabaseAdmin
-    .from("parkings")
-    .select("id, proposed_by, status, location")
+    .from("parkings_with_stats")
+    .select("id, proposed_by, status, lat, lng")
     .eq("id", input.parking_id)
-    .is("deleted_at", null)
     .maybeSingle();
 
   if (parkingError || !parking) {
@@ -121,23 +124,36 @@ Deno.serve(async (req: Request): Promise<Response> => {
     );
   }
 
-  // Extraer coordenadas del campo geography de PostGIS
-  // Supabase devuelve el campo geography como GeoJSON
-  let parkingLat: number;
-  let parkingLng: number;
-
-  if (parking.location && typeof parking.location === "object") {
-    // GeoJSON Point: { type: "Point", coordinates: [lng, lat] }
-    const coords = (parking.location as { coordinates?: [number, number] }).coordinates;
-    if (coords) {
-      parkingLng = coords[0];
-      parkingLat = coords[1];
-    } else {
-      return errorResponse(ERRORS.INTERNAL_ERROR, 500);
-    }
-  } else {
+  // lat/lng vienen de ST_Y/ST_X en la vista (double precision → number)
+  if (typeof parking.lat !== "number" || typeof parking.lng !== "number") {
+    console.error(JSON.stringify({
+      code: "INVALID_PARKING_LOCATION",
+      parking_id: input.parking_id,
+      timestamp: new Date().toISOString(),
+    }));
     return errorResponse(ERRORS.INTERNAL_ERROR, 500);
   }
+
+  const parkingLat = parking.lat;
+  const parkingLng = parking.lng;
+
+  // ── 3b. Tope de verificaciones (máx 3) ──────────────────────
+  let verificationCount: number;
+  try {
+    verificationCount = await getVerificationCount(supabaseAdmin, input.parking_id);
+  } catch (_err) {
+    console.error(JSON.stringify({
+      code: "DATABASE_ERROR",
+      detail: "Error counting verifications",
+      parking_id: input.parking_id,
+      timestamp: new Date().toISOString(),
+    }));
+    return errorResponse(ERRORS.INTERNAL_ERROR, 500);
+  }
+  if (verificationCount >= 3) {
+    return errorResponse(ERRORS.VERIFICATION_LIMIT_REACHED, 422);
+  }
+  const isFirst = verificationCount === 0;
 
   // ── 4. Reglas anti-abuso (fail-fast) ────────────────────────
 
@@ -219,20 +235,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return errorResponse(ERRORS.INTERNAL_ERROR, 500);
   }
 
-  // ── 5. Determinar si es primer verificador ─────────────────
-  let isFirst = false;
-  try {
-    isFirst = await isFirstVerifier(supabaseAdmin, input.parking_id);
-  } catch (err) {
-    console.error(JSON.stringify({
-      code: "DATABASE_ERROR",
-      detail: "Error checking first verifier",
-      user_id: userId,
-      parking_id: input.parking_id,
-      timestamp: new Date().toISOString(),
-    }));
-    return errorResponse(ERRORS.INTERNAL_ERROR, 500);
-  }
+  // (isFirst se calculó en el paso 3b a partir de verificationCount)
 
   // ── 6. Transacción: insertar foto, verificación, octano_events ──
   // Supabase no expone transacciones directamente en el cliente,
@@ -265,9 +268,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return errorResponse(ERRORS.INTERNAL_ERROR, 500);
   }
 
-  const octanos_earned = isFirst
-    ? OCTANO_POINTS.VERIFY_PARKING + OCTANO_POINTS.FIRST_VERIFIER
-    : OCTANO_POINTS.VERIFY_PARKING;
+  // El importe exacto lo calcula la RPC según el orden (40 / 25 / 10).
+  const octanos_earned = Number(
+    txResult?.octanos_earned ??
+      (isFirst
+        ? OCTANO_POINTS.VERIFY_PARKING + OCTANO_POINTS.FIRST_VERIFIER
+        : OCTANO_POINTS.VERIFY_PARKING),
+  );
 
   const result: VerificationResult = {
     success: true,
