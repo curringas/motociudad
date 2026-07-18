@@ -75,6 +75,13 @@ cambio de `status` salvo que `public.is_admin()` **o** `auth.uid() IS NULL`
 UPDATE de `parkings` y para INSERT/UPDATE/DELETE de `parking_photos`. Borrar/
 archivar parkings: solo `is_admin()`.
 
+**(revisado durante apply)** Para que el admin pueda **borrar** (fijar `deleted_at`)
+hizo falta una policy `SELECT` adicional `parkings_read_admin` (`USING is_admin()`,
+migración `20260718000007`). Sin ella, al fijar `deleted_at` la fila deja de ser visible
+bajo las policies SELECT existentes (`deleted_at IS NULL`) y PostgreSQL rechaza el propio
+`UPDATE` con "new row violates row-level security policy". Como efecto útil, el admin
+también ve en el panel los parkings archivados/borrados para gestionarlos.
+
 ### D6. Verificación admin sin Octanos
 Verificar desde el panel = `UPDATE parkings.status = 'verified'` por el admin
 (permitido por el trigger de D4). No inserta en `octano_events` ni usa
