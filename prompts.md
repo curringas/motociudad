@@ -62,6 +62,7 @@ inspeccionar/validar (`openspec list|show|validate|status|view|archive`).
 | 2026-07-18 | Cierre entrega final | Bitácora `entrega-final-CMH.md`, verificación del buscador en simulador | `c47f8fe`, `d71f7d8`, `75abf57` |
 | 2026-07-18 | **Panel admin — backend (entrega final)** | Change OpenSpec `admin-panel`: roles/suspensión, funciones/triggers RLS, policies, Edge Function `admin-set-role` | `92f4588`, `5c15807`, `f9b5d90`, `35a3eb1` |
 | 2026-07-18 | **Panel admin — panel web + cierre (entrega final)** | `/opsx:apply`: pgTAP+Deno+Vitest, slice `features/admin`, rutas `app/admin`, fix RLS de borrado (mig. 000007), despliegue a Cloud, E2E Playwright y archivado del change | rama `feature-admin-panel-CMH` |
+| 2026-07-19 | **Prueba en Android (entrega final)** | Build nativo en emulador: fix de deps SDK 54, config de Google Maps API key, y fix de un bug real (markers de parking invisibles en Android por `tracksViewChanges`) | PR #7 (`fix/android-build-google-maps`) |
 
 **Artefactos SDD generados:**
 - **Skills superpowers** (`docs/superpowers/`):
@@ -125,6 +126,32 @@ inspeccionar/validar (`openspec list|show|validate|status|view|archive`).
   de un proyecto final de máster de AI4DEVS` → esta tanda de commits + actualización de
   `README.md`, `entrega-final-CMH.md` y este `prompts.md`.
 
+### 3.7 Prueba en Android (entrega final)
+- `me gustaria probar la app en android me ayudas?` → arrancó el emulador `Pixel_4_API_34`
+  y el build nativo (`expo run:android`, dev build — Expo Go no vale). Se descubrió y corrigió
+  un **desajuste de dependencias**: `expo-dev-client ^56` y `expo-file-system ^57` eran de una
+  SDK futura e incompatibles con `expo-modules-core@3.0.30` (rompían la compilación Kotlin);
+  se fijaron a las de SDK 54 (`~6.0.21` y `~19.0.22`).
+- Segundo bloqueo detectado: en Android el mapa fuerza `PROVIDER_GOOGLE`, que exige una
+  **Google Maps API key** (`com.google.android.geo.API_KEY`) — sin ella, crash al montar el
+  `MapView`. Se cableó `app.config.ts` para leerla de `EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_KEY`.
+- `a ver no se configurar la api key, ayudame … ¿cuáles [restricciones] selecciono?` /
+  `pues creo que ya esta` / `ya está guardado, recarga la app` → guía paso a paso en Google
+  Cloud Console (habilitar **Maps SDK for Android** + facturación + restricción por app con la
+  huella SHA-1 del debug keystore). Clave: tras poner/cambiar la key hay que
+  `expo prebuild -p android --clean` (un `expo run:android` normal no regenera el manifest).
+  Verificado: el mapa de Google carga teselas correctamente.
+- `veo que los parkings no se estan mostrando en android` → **`systematic-debugging`**: se
+  descartó problema de datos (el RPC `nearby_parkings` devuelve 8 parkings en el centro de
+  Madrid vía Supabase MCP) y se localizó la **causa raíz**: `ParkingMapPin` usaba
+  `tracksViewChanges={false}` desde el montaje; en Android react-native-maps snapshotea el
+  marker custom antes de pintarse → pins invisibles (en iOS el snapshot al montar es correcto).
+  Fix: en Android arrancar con tracking activo y desactivarlo tras el primer frame. Verificado
+  en emulador (pins "M" visibles); typecheck + 55/55 tests en verde.
+- `Recuerda documentar … rellena prompts.md … commit, push, pr y mergea` → esta entrada +
+  merge del PR #7 a `main`. (Los POIs de Google que se ven en Android se dejan a propósito:
+  *«no estorban y orientan más dónde estás situado»*.)
+
 ---
 
 ## 4. Operaciones (ops) realizadas con IA
@@ -133,6 +160,7 @@ inspeccionar/validar (`openspec list|show|validate|status|view|archive`).
 - **Resolución de incidencias de integración:** detección de un `HEAD` detached tras un `git checkout`, recuperación a `main` sin perder trabajo; resolución de conflictos previsibles (docs, `package.json`, `pnpm-lock`).
 - **Verificación previa a integrar:** siempre `pnpm typecheck` + suite de tests antes de merge/push.
 - **Diagnóstico de runtime:** redbox de Expo Router causado por un **Metro obsoleto** de un worktree borrado → arranque de Metro limpio (`expo start --clear`).
+- **Build y prueba en Android (emulador):** arranque de AVD, `expo run:android` (descarga de NDK/CMake la primera vez), `adb reverse tcp:8081` para llegar a Metro, lanzamiento del dev-client por deep link `exp+motociudad://…`, inyección de GPS con `adb emu geo fix`, capturas con `adb exec-out screencap` y lectura de errores nativos con `adb logcat` (autorización de Google Maps). Diagnóstico de datos con **Supabase MCP** (`execute_sql` sobre `parkings_with_stats` y el RPC `nearby_parkings`).
 - **CI/CD:** GitHub Actions + EAS (definido en el MVP; ver `docs/infraestructura.md`).
 - **Despliegue del panel admin a Supabase Cloud:** migración `parkings_read_admin` aplicada
   vía Supabase MCP (`apply_migration`) y verificada por `execute_sql`; redeploy de las Edge
