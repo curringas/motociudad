@@ -9,6 +9,10 @@ jobs:
   build:
     name: EAS Build (preview)
     runs-on: ubuntu-latest
+    # Expone el secret como env de job para poder condicionar los pasos:
+    # el secrets context no está disponible en los `if`, pero el env sí.
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
     steps:
       - name: Checkout
@@ -19,11 +23,14 @@ jobs:
         with:
           node-version: 20
 
+      # Los pasos de EAS solo se ejecutan si EXPO_TOKEN está configurado.
+      # Sin token, se omiten y el job queda en verde (no es un build obligatorio
+      # en cada PR; el build nativo se lanza bajo demanda con `eas build`).
       - name: Setup EAS CLI
+        if: ${{ env.EXPO_TOKEN != '' }}
         run: npm install --global eas-cli
 
       - name: Build preview profile (all platforms)
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        if: ${{ env.EXPO_TOKEN != '' }}
         run: eas build --platform all --profile preview --non-interactive
         working-directory: apps/mobile
