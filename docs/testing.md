@@ -334,6 +334,22 @@ ROLLBACK;
 
 `supabase test db` corre todos los tests pgTAP en un Postgres efímero.
 
+### 8.4 Cobertura de ranking de Octanos
+
+El change `ranking-octanos` añade cobertura en tres niveles:
+
+- **pgTAP** (`supabase/tests/rls/ranking_access.test.sql`, 9 asserts): `authenticated` puede leer
+  `mv_ranking_global` y `mv_ranking_by_city`; `anon` no (42501); los usuarios con
+  `ranking_visible = FALSE` o `flagged_for_review = TRUE` quedan excluidos; y la partición por ciudad
+  recalcula las posiciones (`PARTITION BY city_primary`). Usa `REFRESH` (no `CONCURRENTLY`) porque el
+  test corre dentro de la transacción `BEGIN/ROLLBACK`.
+- **Vitest** — lógica y datos: `features/ranking/__tests__/api.test.ts` (orden por métrica,
+  paginación con `range`, filtro por ciudad, propagación de error, con Supabase mockeado) y
+  `presenter.test.ts` (mapeo total vs. mes, fallback de nombre, octanos nulos).
+- **Vitest** — componentes (`@testing-library/react` + RNW): `features/ranking/components/__tests__/`
+  cubre resaltado del usuario, podio top-3, cambio de métrica/alcance y estado vacío.
+- **Maestro** (`.maestro/ranking.yaml`): abrir el tab Ranking y alternar Global/Ciudad y Totales/Mes.
+
 ### 8.3 Cobertura de autorización — panel de administración (v1.3)
 
 El change `admin-panel` añade dos ficheros pgTAP (`supabase test db` → 51 asserts, verde):
