@@ -1,0 +1,33 @@
+appId: com.motociudad.app
+---
+- launchApp
+- waitForAnimationToEnd
+
+# Ir al tab Ranking
+- tapOn:
+    text: "Ranking"
+- waitForAnimationToEnd
+
+# La cabecera del ranking debe estar visible
+- assertVisible:
+    text: "Ranking de Octanos"
+
+# Alternar la métrica: Totales <-> Este mes
+- tapOn:
+    text: "Este mes"
+- waitForAnimationToEnd
+- tapOn:
+    text: "Totales"
+- waitForAnimationToEnd
+
+# Alternar el alcance: Global <-> Mi ciudad
+- tapOn:
+    text: "Mi ciudad"
+- waitForAnimationToEnd
+- tapOn:
+    text: "Global"
+- waitForAnimationToEnd
+
+# Seguimos en la pantalla de ranking
+- assertVisible:
+    text: "Ranking de Octanos"

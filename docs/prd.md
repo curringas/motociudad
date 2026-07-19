@@ -133,7 +133,7 @@ No hay competencia directa consolidada en España. Las apps de parking generalis
 | F8 | Sistema de Octanos (gamificación) | Ver `gamificacion.md` — completo |
 | F9 | Niveles de usuario (1–7) | Ver `gamificacion.md` |
 | F10 | Insignias | Ver `gamificacion.md` |
-| F11 | Ranking (Madrid / Global / Amigos) | Ver `gamificacion.md` |
+| F11 | Ranking (Global / Por ciudad) | Ver `gamificacion.md` §5 — implementado (Global + Por ciudad). Entre amigos: pendiente v1.2 |
 | F12 | Perfil de usuario | Vitrina de progreso, motivación |
 | F13 | Reportar parking erróneo | Mantener dataset limpio |
 | F14 | POIs secundarios (talleres) | Diferencial competitivo y palanca de monetización futura |
@@ -173,6 +173,11 @@ build local para evaluación; el hosting público queda fuera de alcance.
 
 ### 7.3 Roadmap post-MVP (orientativo, no comprometido)
 
+- **Próximo (near-term)**: **Capturar `city_primary` en el registro/onboarding**. Hoy el campo
+  es opcional y ningún usuario lo tiene fijado, por lo que el **ranking por ciudad** (F11) queda
+  vacío hasta que el usuario define su ciudad. Pedir la ciudad al registrarse (o en el primer uso)
+  poblará el ranking por ciudad de forma natural. Relacionado: UI de ajustes para el toggle
+  `ranking_visible` (ocultarse del ranking público).
 - **v1.1**: Multi-idioma (EN), insignias temáticas estacionales.
 - **v1.2**: Sistema de amigos completo (invitaciones, ranking entre amigos).
 - **v1.3** ✅ **Implementado** (change OpenSpec `admin-panel`): **Panel de administración web**

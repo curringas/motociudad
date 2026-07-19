@@ -143,11 +143,13 @@ Las insignias temáticas son la palanca para lanzar **contenido recurrente postl
 
 ### 5.1 Tipos de ranking
 
-| Ranking | Alcance | Visibilidad |
-|---|---|---|
-| **Global** | Todos los usuarios | Pública |
-| **Por ciudad** | Usuarios con actividad en esa ciudad | Pública |
-| **Entre amigos** | Solo contactos del usuario | Privada |
+| Ranking | Alcance | Visibilidad | Estado |
+|---|---|---|---|
+| **Global** | Todos los usuarios | Pública | ✅ Implementado (`mv_ranking_global` + pantalla Ranking) |
+| **Por ciudad** | Usuarios con actividad en esa ciudad | Pública | ✅ Implementado (`mv_ranking_by_city`) |
+| **Entre amigos** | Solo contactos del usuario | Privada | ⏳ Pendiente (requiere sistema de amigos `user_friendships`, ver `prd.md` v1.2) |
+
+La pantalla vive en `apps/mobile/features/ranking/` (tab "Ranking"), lee las materialized views vía TanStack Query y resalta la posición del usuario actual. Las MV se refrescan por `pg_cron` cada 5 min. Detalle del schema y del acceso en `modelo-datos.md` §11.2–11.3.
 
 ### 5.2 Métricas del ranking
 
@@ -160,7 +162,7 @@ Esto resuelve el problema clásico de los rankings acumulativos: que los top usu
 
 ### 5.3 Reglas de privacidad
 
-- El usuario puede **ocultar su perfil del ranking público** desde ajustes (sigue acumulando Octanos, no aparece listado).
+- El usuario puede **ocultar su perfil del ranking público** desde ajustes (sigue acumulando Octanos, no aparece listado). El filtrado ya está aplicado en la definición de las materialized views (`ranking_visible = TRUE`); la UI de ajustes para cambiar el toggle queda pendiente.
 - En ranking de amigos: opt-in mutuo (ambos deben aceptar la conexión).
 - Nunca mostrar geolocalización exacta del usuario, solo ciudad de actividad.
 

@@ -498,6 +498,29 @@ export type Database = {
           },
         ]
       }
+      mv_ranking_by_city: {
+        Row: {
+          avatar_url: string | null
+          city_primary: string | null
+          current_level: number | null
+          display_name: string | null
+          id: string | null
+          octanos_this_month: number | null
+          rank_month: number | null
+          rank_total: number | null
+          total_octanos: number | null
+          username: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "users_current_level_fkey"
+            columns: ["current_level"]
+            isOneToOne: false
+            referencedRelation: "user_levels"
+            referencedColumns: ["level"]
+          },
+        ]
+      }
       parkings_with_stats: {
         Row: {
           address: string | null

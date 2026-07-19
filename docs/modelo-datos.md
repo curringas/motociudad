@@ -816,7 +816,29 @@ SELECT cron.schedule('refresh-ranking-global', '*/5 * * * *',
 
 ### 11.3 `mv_ranking_by_city` (materialized view)
 
-Como la global pero particionada por `city_primary`.
+Como la global pero con las posiciones recalculadas por ciudad (`PARTITION BY city_primary`). Implementada en `supabase/migrations/20260719000002_ranking_by_city_and_grants.sql`.
+
+```sql
+CREATE MATERIALIZED VIEW mv_ranking_by_city AS
+SELECT
+  u.id, u.username, u.display_name, u.avatar_url, u.current_level, u.city_primary,
+  u.total_octanos, u.octanos_this_month,
+  ROW_NUMBER() OVER (PARTITION BY u.city_primary ORDER BY u.total_octanos DESC)      AS rank_total,
+  ROW_NUMBER() OVER (PARTITION BY u.city_primary ORDER BY u.octanos_this_month DESC) AS rank_month
+FROM users u
+WHERE u.ranking_visible = TRUE
+  AND u.flagged_for_review = FALSE
+  AND u.city_primary IS NOT NULL;
+
+CREATE UNIQUE INDEX ON mv_ranking_by_city(id);  -- requerido por REFRESH ... CONCURRENTLY
+CREATE INDEX ON mv_ranking_by_city(city_primary, rank_total);
+CREATE INDEX ON mv_ranking_by_city(city_primary, rank_month);
+
+SELECT cron.schedule('refresh-ranking-by-city', '*/5 * * * *',
+  $$ REFRESH MATERIALIZED VIEW CONCURRENTLY mv_ranking_by_city; $$);
+```
+
+**Acceso**: las materialized views no soportan RLS. Como ambas MV ya excluyen filas privadas en su definición, se concede `GRANT SELECT ... TO authenticated` sobre `mv_ranking_global` y `mv_ranking_by_city`; `anon` no recibe acceso (el ranking requiere sesión). El cliente lee el ranking únicamente de estas vistas, nunca de `users` directamente.
 
 ---
 
