@@ -412,19 +412,16 @@ graph LR
 
 ## 7. Pull Requests
 
-> _Sección en preparación para la entrega final._ El histórico de integración se ha llevado por
-> ramas y merges verificados (typecheck + suite de tests antes de cada integración); se está
-> formalizando como Pull Requests con título, descripción (qué cambia, por qué, impacto) y
-> referencia a la historia/ticket correspondiente. Ramas de referencia:
-> `feature-entrega2-CMH` (snapshot entrega 2, tag `entrega2`) y `feature-admin-panel-CMH`
-> (panel de administración). Bitácora detallada de cambios de la entrega final:
-> **[`entrega-final-CMH.md`](entrega-final-CMH.md)**.
+El flujo de integración se ha llevado por ramas verificadas (typecheck + suite de tests verde
+antes de cada merge). Los hitos principales se documentan como Pull Requests con título,
+descripción (qué cambia, por qué, impacto con _diffstat_) y trazabilidad a la historia/ticket
+correspondiente. Bitácora detallada de la entrega final:
+**[`entrega-final-CMH.md`](entrega-final-CMH.md)**.
 
-| PR | Alcance | Historia/Ticket | Estado |
-|---|---|---|:---:|
-| _(por documentar)_ | Buscador de direcciones sobre el mapa | HU-02 / F15 | ⏳ |
-| _(por documentar)_ | Versión web de consulta (Leaflet + OSM) | — | ⏳ |
-| _(por documentar)_ | Panel de administración web (roles + gestión) | HU-04 / ENG-104 | ⏳ |
+| PR | Alcance | Base ← Head | Historia/Ticket | Estado |
+|---|---|---|---|:---:|
+| [#1](https://github.com/curringas/motociudad/pull/1) | Entrega 2 — gamificación (Octanos/niveles) y verificación de plazas | `estado1_valido` ← `feature-entrega2-CMH` | HU-03 / gamificación + verificación | ✅ |
+| [#2](https://github.com/curringas/motociudad/pull/2) | Panel de administración web — roles, suspensión y gestión de parkings | `base/pre-admin-panel` ← `feature-admin-panel-CMH` | HU-04 / OpenSpec `admin-panel` | ✅ |
 
 ---
 
