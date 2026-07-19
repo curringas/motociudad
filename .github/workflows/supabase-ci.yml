@@ -24,7 +24,10 @@ jobs:
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
         with:
-          version: latest
+          # Versión fijada para reproducibilidad: evita el rate-limit al
+          # resolver "latest" y que un cambio de comportamiento del stack
+          # rompa CI sin aviso. Verificada en local (pgTAP + Deno en verde).
+          version: 2.109.1
 
       - name: Start local Supabase
         run: supabase start --debug
