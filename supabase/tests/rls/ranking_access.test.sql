@@ -32,18 +32,29 @@ INSERT INTO auth.users (
   ('f0000000-c17a-0000-0000-000000000005'::uuid, 'rank-e@motociudad.test', 'x', now(), now(), now(), '{}'::jsonb, '{}'::jsonb, 'authenticated', 'authenticated')
 ON CONFLICT (id) DO NOTHING;
 
--- A y B: visibles en Madrid; C: oculto (ranking_visible = FALSE); D: flagged;
--- E: visible en Sevilla. Octanos elegidos para fijar el orden por ciudad.
+-- A y B: visibles en ZZRankTest; C: oculto (ranking_visible = FALSE); D: flagged;
+-- E: visible en ZZRankTest2. Se usan ciudades de prueba únicas (no Madrid/Sevilla)
+-- para que las posiciones sean deterministas e independientes del seed.
+-- Nota: el trigger handle_new_user ya crea la fila en public.users al insertar en
+-- auth.users (con defaults: ranking_visible=TRUE, city_primary=NULL). Por eso se usa
+-- DO UPDATE (no DO NOTHING): hay que fijar explícitamente los campos que testeamos.
 INSERT INTO public.users (
   id, username, display_name, city_primary, total_octanos, octanos_this_month,
   ranking_visible, flagged_for_review
 ) VALUES
-  ('f0000000-c17a-0000-0000-000000000001'::uuid, 'rank_a', 'Rank A', 'Madrid',  100, 40, TRUE,  FALSE),
-  ('f0000000-c17a-0000-0000-000000000002'::uuid, 'rank_b', 'Rank B', 'Madrid',   50, 10, TRUE,  FALSE),
-  ('f0000000-c17a-0000-0000-000000000003'::uuid, 'rank_c', 'Rank C', 'Madrid',  999, 99, FALSE, FALSE),
-  ('f0000000-c17a-0000-0000-000000000004'::uuid, 'rank_d', 'Rank D', 'Madrid',  888, 88, TRUE,  TRUE),
-  ('f0000000-c17a-0000-0000-000000000005'::uuid, 'rank_e', 'Rank E', 'Sevilla',  30,  5, TRUE,  FALSE)
-ON CONFLICT (id) DO NOTHING;
+  ('f0000000-c17a-0000-0000-000000000001'::uuid, 'rank_a', 'Rank A', 'ZZRankTest',  100, 40, TRUE,  FALSE),
+  ('f0000000-c17a-0000-0000-000000000002'::uuid, 'rank_b', 'Rank B', 'ZZRankTest',   50, 10, TRUE,  FALSE),
+  ('f0000000-c17a-0000-0000-000000000003'::uuid, 'rank_c', 'Rank C', 'ZZRankTest',  999, 99, FALSE, FALSE),
+  ('f0000000-c17a-0000-0000-000000000004'::uuid, 'rank_d', 'Rank D', 'ZZRankTest',  888, 88, TRUE,  TRUE),
+  ('f0000000-c17a-0000-0000-000000000005'::uuid, 'rank_e', 'Rank E', 'ZZRankTest2',  30,  5, TRUE,  FALSE)
+ON CONFLICT (id) DO UPDATE SET
+  username           = EXCLUDED.username,
+  display_name       = EXCLUDED.display_name,
+  city_primary       = EXCLUDED.city_primary,
+  total_octanos      = EXCLUDED.total_octanos,
+  octanos_this_month = EXCLUDED.octanos_this_month,
+  ranking_visible    = EXCLUDED.ranking_visible,
+  flagged_for_review = EXCLUDED.flagged_for_review;
 
 -- Reconstruir las materialized views con los datos de prueba.
 REFRESH MATERIALIZED VIEW public.mv_ranking_global;
@@ -109,13 +120,13 @@ SELECT is(
   (SELECT rank_total::int FROM public.mv_ranking_by_city
      WHERE id = 'f0000000-c17a-0000-0000-000000000002'::uuid),
   2,
-  'CIUDAD: en Madrid, Rank B (50 octanos) queda 2º por detrás de Rank A (100)'
+  'CIUDAD: en ZZRankTest, Rank B (50 octanos) queda 2º por detrás de Rank A (100)'
 );
 SELECT is(
   (SELECT rank_total::int FROM public.mv_ranking_by_city
      WHERE id = 'f0000000-c17a-0000-0000-000000000005'::uuid),
   1,
-  'CIUDAD: en Sevilla, Rank E es 1º de su ciudad (posición independiente de Madrid)'
+  'CIUDAD: en ZZRankTest2, Rank E es 1º de su ciudad (posición independiente de ZZRankTest)'
 );
 
 -- ============================================================
