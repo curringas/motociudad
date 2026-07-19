@@ -36,6 +36,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: 'es.motociudad.app',
+    config: {
+      googleMaps: {
+        // Maps SDK for Android requiere una API key; se lee de .env (gitignored).
+        apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_KEY,
+      },
+    },
     adaptiveIcon: {
       foregroundImage: './assets/images/adaptive-icon.png',
       backgroundColor: '#0f172a',
