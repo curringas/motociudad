@@ -2,7 +2,7 @@
 // map.tsx; only the layout differs by breakpoint. Unlike native, it does NOT gate
 // the map render on location loading (browser geolocation may prompt/hang) — it
 // centres on Madrid until GPS resolves. Native never resolves this file.
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, ActivityIndicator, Pressable } from 'react-native';
 import MapView, { type Region, PROVIDER_DEFAULT } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
@@ -75,6 +75,21 @@ export default function MapScreenWeb() {
 
   const handleRecenter = useCallback(() => {
     if (!location) return;
+    mapRef.current?.animateToRegion({
+      latitude: location.latitude,
+      longitude: location.longitude,
+      ...INITIAL_DELTA,
+    });
+  }, [location]);
+
+  // The web map mounts on Madrid before geolocation resolves (see file header),
+  // and the Leaflet shim reads initialRegion only once on mount. So recenter the
+  // map the first time the user's location arrives — otherwise it silently stays
+  // on Madrid even though location is known. Runs once; later pans are preserved.
+  const didAutoCenter = useRef(false);
+  useEffect(() => {
+    if (!location || didAutoCenter.current) return;
+    didAutoCenter.current = true;
     mapRef.current?.animateToRegion({
       latitude: location.latitude,
       longitude: location.longitude,
