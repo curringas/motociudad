@@ -47,14 +47,11 @@ push a main (apps/mobile/**)
 Expo copia el contenido de `apps/mobile/public/` a la raíz del `dist/`. El `.htaccess`
 resuelve las entradas por URL directa a rutas del router.
 
-**Decisión abierta (a validar empíricamente en implementación):** según cómo Expo genere el
-export con `output: 'static'` y cómo se comporten las rutas dinámicas (`/parking/[id]`), se
-elegirá entre:
-- (a) `.htaccess` con fallback progresivo (fichero existente → `$1.html` → `index.html`), o
-- (b) cambiar a `output: 'single'` (SPA de un solo `index.html`) + `.htaccess` catch-all a
-  `index.html`.
-Se decide tras probar el `dist/` en local (ver Verificación). Se prioriza la opción que sirva
-correctamente las rutas dinámicas por URL directa.
+**Decisión (resuelta en implementación):** se fija `web.output = 'single'` — SPA de un único
+`index.html` — y un `.htaccess` catch-all que sirve los ficheros/directorios reales tal cual y
+enruta todo lo demás a `index.html`. Es lo más robusto para una app cliente en un dominio
+dedicado (sin SEO ni API routes) y verificable en local con `serve -s`. Validado: `/` y
+`/parking/<id>` por URL directa devuelven 200.
 
 ### 3. Secrets de GitHub (los configura el usuario)
 | Secret | Uso |
