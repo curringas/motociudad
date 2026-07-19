@@ -1,5 +1,5 @@
-import React, { memo } from 'react';
-import { View, Text } from 'react-native';
+import React, { memo, useState, useEffect } from 'react';
+import { View, Text, Platform } from 'react-native';
 import { Marker } from 'react-native-maps';
 import type { NearbyParking } from '@/types/domain';
 import { formatDistance } from '@/lib/distance';
@@ -20,12 +20,27 @@ function getPinColor(parking: NearbyParking): string {
  * static snapshot immediately at mount time with tracksViewChanges={false}.
  * NativeWind class resolution happens asynchronously and would produce a blank
  * snapshot if used here.
+ *
+ * On Android, react-native-maps snapshots the custom marker view lazily: with
+ * tracksViewChanges={false} from mount the bitmap is captured before the view
+ * has painted, leaving the marker invisible. So on Android we start with
+ * tracking enabled and disable it after the first frame — the bitmap is
+ * captured once, then frozen to avoid the continuous-redraw performance cost.
  */
 const ParkingMapPin = memo(function ParkingMapPin({ parking, onPress }: Props) {
   const pinColor = getPinColor(parking);
   const pinOpacity = parking.status === 'pending' ? 0.6 : 1;
   const textColor = parking.type === 'public' ? '#0f172a' : '#ffffff';
   const label = `${parking.name}, ${formatDistance(parking.distance_meters)}`;
+
+  const [tracksViewChanges, setTracksViewChanges] = useState(
+    Platform.OS === 'android',
+  );
+  useEffect(() => {
+    if (!tracksViewChanges) return;
+    const timer = setTimeout(() => setTracksViewChanges(false), 500);
+    return () => clearTimeout(timer);
+  }, [tracksViewChanges]);
 
   return (
     <Marker
@@ -34,7 +49,7 @@ const ParkingMapPin = memo(function ParkingMapPin({ parking, onPress }: Props) {
       onPress={onPress}
       accessibilityLabel={label}
       accessibilityRole="button"
-      tracksViewChanges={false}
+      tracksViewChanges={tracksViewChanges}
     >
       <View style={{ opacity: pinOpacity, alignItems: 'center' }}>
         <View
