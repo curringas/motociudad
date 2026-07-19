@@ -55,7 +55,7 @@ moderación por nivel), sin scraping ni bases de datos comerciales.
 | Recurso | URL |
 |---|---|
 | Repositorio de código | https://github.com/curringas/motociudad |
-| Demo web pública (consulta) | _pendiente de despliegue — se publicará para la entrega final_ |
+| Demo web pública (consulta) | https://motociudad.com |
 | App móvil (iOS/Android) | Build EAS / TestFlight bajo petición (requiere registrar dispositivo) |
 | Contacto para credenciales de evaluación | curromartinez@tallerempresarial.es |
 
