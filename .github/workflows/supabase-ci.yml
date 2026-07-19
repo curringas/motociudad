@@ -41,4 +41,5 @@ jobs:
           deno-version: v2.x
 
       - name: Run Edge Function tests
-        run: deno test --allow-env --allow-net supabase/functions/validate-verification/__tests__/
+        run: deno task test
+        working-directory: supabase/functions/validate-verification
