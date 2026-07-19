@@ -1,8 +1,13 @@
 # SPA fallback for Expo Router client-side routing.
-# Serve real files/dirs as-is; route everything else to index.html.
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+
+  # Force HTTPS (301) — must run before the SPA fallback.
+  RewriteCond %{HTTPS} off
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # Serve real files/dirs as-is; route everything else to index.html.
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]

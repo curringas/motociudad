@@ -47,3 +47,10 @@ jobs:
           protocol: ftp
           server-dir: ${{ secrets.FTP_SERVER_DIR }}
           local-dir: apps/mobile/dist/
+          # Override the action's default excludes: the default drops
+          # **/node_modules/**, but Expo's web assets (fonts, icons) live under
+          # dist/assets/__node_modules/.pnpm/.../node_modules/... — excluding
+          # them left the site without fonts. Keep only the .git excludes.
+          exclude: |
+            **/.git*
+            **/.git*/**
