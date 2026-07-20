@@ -63,6 +63,7 @@ inspeccionar/validar (`openspec list|show|validate|status|view|archive`).
 | 2026-07-18 | **Panel admin — backend (entrega final)** | Change OpenSpec `admin-panel`: roles/suspensión, funciones/triggers RLS, policies, Edge Function `admin-set-role` | `92f4588`, `5c15807`, `f9b5d90`, `35a3eb1` |
 | 2026-07-18 | **Panel admin — panel web + cierre (entrega final)** | `/opsx:apply`: pgTAP+Deno+Vitest, slice `features/admin`, rutas `app/admin`, fix RLS de borrado (mig. 000007), despliegue a Cloud, E2E Playwright y archivado del change | rama `feature-admin-panel-CMH` |
 | 2026-07-19 | **Prueba en Android (entrega final)** | Build nativo en emulador: fix de deps SDK 54, config de Google Maps API key, y fix de un bug real (markers de parking invisibles en Android por `tracksViewChanges`) | PR #7 (`fix/android-build-google-maps`) |
+| 2026-07-19 | **Ranking de Octanos (entrega final)** | Change OpenSpec `ranking-octanos` con `/opsx:propose`+`/opsx:apply`: migración `mv_ranking_by_city` + grants, slice `features/ranking` (UI + hooks), auth-gate sin sesión, pgTAP + Vitest + Maestro; E2E en web/iOS/Android; desplegado a Cloud + web; change archivado | PR #8 (`feat/ranking-octanos`) |
 
 **Artefactos SDD generados:**
 - **Skills superpowers** (`docs/superpowers/`):
@@ -71,6 +72,7 @@ inspeccionar/validar (`openspec list|show|validate|status|view|archive`).
 - **OpenSpec** (`openspec/changes/`):
   - `motociudad-mvp` — change del MVP (`proposal.md` + `design.md` + `tasks.md`), 71/83 tareas.
   - `admin-panel` — change del panel de administración (proposal + design + 3 specs + tasks), **36/36 tareas, archivado** en `openspec/changes/archive/2026-07-18-admin-panel/`. Specs canónicas sincronizadas a `openspec/specs/{user-roles,admin-user-management,admin-parking-management}/`.
+  - `ranking-octanos` — change del ranking (proposal + design + spec + tasks), **archivado** en `openspec/changes/archive/2026-07-19-ranking-octanos/`. Spec canónica en `openspec/specs/ranking-octanos/`.
 
 ---
 
@@ -151,6 +153,34 @@ inspeccionar/validar (`openspec list|show|validate|status|view|archive`).
 - `Recuerda documentar … rellena prompts.md … commit, push, pr y mergea` → esta entrada +
   merge del PR #7 a `main`. (Los POIs de Google que se ven en Android se dejan a propósito:
   *«no estorban y orientan más dónde estás situado»*.)
+
+### 3.8 Ranking de Octanos (entrega final)
+- `La sección de Ranking de octanos esta realizada?` → auditoría del estado: backend (`mv_ranking_global`)
+  y specs existían, pero la pantalla del tab era un placeholder "Próximamente" (≈20% hecho).
+- `lo podemos hacer con opsx?` → `/opsx:propose ranking-octanos`: proposal + design + spec + tasks.
+- `/opsx:apply` → implementación: migración `mv_ranking_by_city` (partición por ciudad) + grants,
+  slice `features/ranking` (schemas/api/hooks con `useInfiniteQuery`/presenter/componentes), pantalla,
+  pgTAP + Vitest + flow Maestro. Se pausó antes de tocar Cloud para pedir confirmación.
+- `Pruebalo e2e con mcps y me lo dejas levantado que lo vea` → `apply_migration` a Supabase Cloud +
+  verificación con `execute_sql` (contenido de las MV, grants, privacidad) + `generate_typescript_types`;
+  app levantada en web y verificada con **Playwright MCP** (login, podio, "Tu posición", Mi ciudad).
+- `si no estoy registrado da error … poner que es necesario validarse … boton de inicia sesion como en
+  aportar` → **fix**: auth-gate en `RankingScreen` (sin sesión, prompt de login en vez del error de carga)
+  + `enabled` en `useRanking` para no lanzar consultas anónimas; 2 tests nuevos.
+- `pues cierra o archiva el spec push y pr y anota que el roadmap … usuarios al registrarse apunten su
+  ciudad no?` → `/opsx:archive` + sync de spec, nota de roadmap en `docs/prd.md` (capturar `city_primary`
+  en el registro), commit + push + **PR #8**.
+- `lo has probado en emuladores?` / `cuando diga que pruebes o hagas e2e … tiene que ser en todos lados
+  en los que se vea … el panel de administracion solo … web pero el resto … en cada sitio` → E2E en las
+  **3 plataformas**: web (Playwright), iOS (render nativo del gate; sin tap/type en el MCP) y Android
+  (flujo completo logueado automatizado con `adb input`: podio con resaltado + Mi ciudad). Pauta anotada
+  en memoria para próximas sesiones.
+- `mergea a main la pr si no lo hiciste y lo dejamos todo en produccion` → el primer CI falló por **mi
+  test pgTAP** (el trigger `handle_new_user` creaba la fila antes que el INSERT → `DO NOTHING` no fijaba
+  los campos): fix con `ON CONFLICT DO UPDATE` + ciudades de prueba únicas, verificado con `supabase test
+  db` local en verde. Merge de PR #8; el push a `main` no disparó el CD (filtro `paths` en merge commit),
+  así que se lanzó **Deploy Web** con `workflow_dispatch` → web en producción.
+- `algo que poner en prompts o docs?` → esta entrada.
 
 ---
 
