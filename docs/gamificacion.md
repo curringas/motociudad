@@ -41,7 +41,9 @@ Esta separación permite que un usuario de nivel medio pueda destacar por insign
 - Octanos del verificador según el orden: **1ª = +40** (`verify_parking` +25 y `first_verifier` +15), **2ª = +25** (`verify_parking`), **3ª = +10** (`verify_parking`).
 - En la **1ª verificación**, el **proponente** recibe: sus **+50** de `propose_parking` pasan de `pending` a `confirmed` **y** un bonus **+30** (`parking_verified_bonus`).
 - El número de verificaciones se muestra en la UI como un badge `✓ N` (ver `parkings.verifications_count`).
-| Comentario útil | **+5** | Solo cuenta si recibe ≥2 votos positivos |
+| 1er comentario en un parking | **+10** | Escalera de primeros comentarios. Solo autores **elegibles** (≠ proponente y ≠ verificador). No requiere estar en el lugar |
+| 2º comentario en un parking | **+5** | Segundo puesto de la escalera, a un autor **distinto** del 1º. 3º en adelante: 0 por posición |
+| Comentario útil | **+5** | Bonus de calidad: cuenta si recibe **≥2 votos netos** positivos. **Se acumula** con el bonus de posición (1er comentario votado = +15) |
 | Proponer taller/POI secundario | **+30** | Feature secundario, peso menor que parking |
 | Racha semanal (abrir app 7 días seguidos) | **+15** | Refuerza hábito |
 | Invitar amigo que se registra y verifica algo | **+40** | Crecimiento orgánico |
@@ -56,6 +58,17 @@ Estas reglas son **obligatorias** desde el día 1 para evitar farmeo:
 4. **Cooldown por parking**: un usuario no puede verificar dos veces el mismo parking, ni proponer y autoverificar el suyo propio.
 5. **Detección de patrones**: marcar para revisión cuentas con >5 propuestas rechazadas en 7 días.
 6. **Máximo de verificaciones**: un parking admite **3 verificaciones** como máximo. La 1ª/2ª/3ª otorgan **40/25/10** Octanos al verificador; a partir de la 3ª no se admiten más (código de error `VERIFICATION_LIMIT_REACHED`). En la 1ª verificación se confirman los +50 pendientes del proponente y se le añade el bonus +30.
+7. **Comentarios**: comentar **no requiere geolocalización** (no se persiste ninguna coordenada del usuario). Para comentar hay que estar **registrado, con email confirmado y sin suspensión**; el cuerpo debe medir **1–500 caracteres** y hay **rate limit** (arranque: máx. 1 comentario / 30 s por usuario). El bonus de la escalera (+10/+5) y el de calidad (+5) respetan el **cap diario de 200**; si el cap está alcanzado, el comentario se publica pero **sin** Octanos. La elegibilidad de la escalera se **congela al comentar** (sin clawback si el autor verifica el parking después).
+
+### 2.3 Escalera de primeros comentarios
+
+Regla nueva (change `add-parking-comments`) que convive con el bonus de calidad `useful_comment`:
+
+- **1er comentario elegible → +10** (`first_comment`), **2º comentario elegible → +5** (`second_comment`), 3º en adelante → 0 por posición.
+- *Elegible* = autor **distinto del proponente** del parking **y distinto de cualquier verificador** en el momento de comentar. Los comentarios del proponente/verificadores se permiten, dan 0 puntos y **no consumen puesto** en la escalera.
+- Los dos puestos se otorgan a **autores distintos**: un mismo usuario no puede cobrar +10 y +5 en el mismo parking.
+- **Acumulación**: la escalera (+10/+5) y el bonus de calidad `useful_comment` (+5, al alcanzar ≥2 upvotes netos) se **suman** sobre el mismo comentario (mejor caso: 1er comentario con ≥2 upvotes = **+15**).
+- El bonus de calidad `useful_comment` se otorga **al autor** del comentario (no al votante), una sola vez por comentario (idempotente); retirar votos por debajo del umbral no lo revierte.
 
 ---
 
@@ -197,7 +210,8 @@ octano_events
 ├── user_id         (uuid, fk → users)
 ├── action_type     (enum: propose_parking, verify_parking, first_verifier,
 │                          parking_verified_bonus, report_error, upload_photo,
-│                          useful_comment, propose_poi, weekly_streak, invite_friend)
+│                          first_comment, second_comment, useful_comment,
+│                          propose_poi, weekly_streak, invite_friend)
 ├── points          (int)
 ├── reference_id    (uuid, nullable — id del parking/comentario/etc.)
 ├── reference_type  (enum: parking, comment, poi, user, none)
@@ -276,7 +290,9 @@ EVENT: parking.verified_by_community → action_type = parking_verified_bonus (a
                                       → action_type = verify_parking (al verificador)
 EVENT: parking.error_confirmed       → action_type = report_error (al reportante)
 EVENT: photo.uploaded                → action_type = upload_photo (con cap de 3 por parking)
-EVENT: comment.received_2_upvotes    → action_type = useful_comment
+EVENT: comment.posted (1er elegible) → action_type = first_comment  (+10 al autor, reference = parking)
+EVENT: comment.posted (2º elegible)  → action_type = second_comment (+5 al autor, reference = parking)
+EVENT: comment.received_2_upvotes    → action_type = useful_comment (+5 al autor, reference = comment)
 EVENT: poi.proposed                  → action_type = propose_poi
 EVENT: user.weekly_streak_completed  → action_type = weekly_streak
 EVENT: invite.completed              → action_type = invite_friend

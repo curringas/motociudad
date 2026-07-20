@@ -7,33 +7,138 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
+      comment_votes: {
+        Row: {
+          comment_id: string
+          created_at: string
+          updated_at: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          updated_at?: string
+          user_id: string
+          value: number
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          updated_at?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_votes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comment_votes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "mv_ranking_by_city"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comment_votes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "mv_ranking_global"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comment_votes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comments: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          deleted_at: string | null
+          id: string
+          octanos_awarded: boolean
+          parking_id: string
+          updated_at: string
+          upvotes_count: number
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          octanos_awarded?: boolean
+          parking_id: string
+          updated_at?: string
+          upvotes_count?: number
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          octanos_awarded?: boolean
+          parking_id?: string
+          updated_at?: string
+          upvotes_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "mv_ranking_by_city"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "mv_ranking_global"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_parking_id_fkey"
+            columns: ["parking_id"]
+            isOneToOne: false
+            referencedRelation: "parkings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_parking_id_fkey"
+            columns: ["parking_id"]
+            isOneToOne: false
+            referencedRelation: "parkings_with_stats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       octano_events: {
         Row: {
           action_type: Database["public"]["Enums"]["octano_action"]
@@ -75,6 +180,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "octano_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "mv_ranking_by_city"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "octano_events_user_id_fkey"
             columns: ["user_id"]
@@ -150,6 +262,13 @@ export type Database = {
             foreignKeyName: "parking_photos_uploaded_by_fkey"
             columns: ["uploaded_by"]
             isOneToOne: false
+            referencedRelation: "mv_ranking_by_city"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parking_photos_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
             referencedRelation: "mv_ranking_global"
             referencedColumns: ["id"]
           },
@@ -213,6 +332,13 @@ export type Database = {
             columns: ["photo_id"]
             isOneToOne: false
             referencedRelation: "parking_photos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parking_verifications_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "mv_ranking_by_city"
             referencedColumns: ["id"]
           },
           {
@@ -296,6 +422,13 @@ export type Database = {
           verifications_count?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "parkings_proposed_by_fkey"
+            columns: ["proposed_by"]
+            isOneToOne: false
+            referencedRelation: "mv_ranking_by_city"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "parkings_proposed_by_fkey"
             columns: ["proposed_by"]
@@ -475,7 +608,7 @@ export type Database = {
         }
         Relationships: []
       }
-      mv_ranking_global: {
+      mv_ranking_by_city: {
         Row: {
           avatar_url: string | null
           city_primary: string | null
@@ -498,7 +631,7 @@ export type Database = {
           },
         ]
       }
-      mv_ranking_by_city: {
+      mv_ranking_global: {
         Row: {
           avatar_url: string | null
           city_primary: string | null
@@ -526,6 +659,7 @@ export type Database = {
           address: string | null
           capacity: number | null
           city: string | null
+          comments_count: number | null
           created_at: string | null
           deleted_at: string | null
           district: string | null
@@ -550,6 +684,7 @@ export type Database = {
           address?: string | null
           capacity?: number | null
           city?: string | null
+          comments_count?: never
           created_at?: string | null
           deleted_at?: string | null
           district?: string | null
@@ -574,6 +709,7 @@ export type Database = {
           address?: string | null
           capacity?: number | null
           city?: string | null
+          comments_count?: never
           created_at?: string | null
           deleted_at?: string | null
           district?: string | null
@@ -595,6 +731,13 @@ export type Database = {
           verifications_count?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "parkings_proposed_by_fkey"
+            columns: ["proposed_by"]
+            isOneToOne: false
+            referencedRelation: "mv_ranking_by_city"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "parkings_proposed_by_fkey"
             columns: ["proposed_by"]
@@ -742,6 +885,10 @@ export type Database = {
           }
       can_manage_parkings: { Args: never; Returns: boolean }
       check_level_up: { Args: { in_user_id: string }; Returns: undefined }
+      confirmed_octanos_last_24h: {
+        Args: { in_user_id: string }
+        Returns: number
+      }
       disablelongtransactions: { Args: never; Returns: string }
       dropgeometrycolumn:
         | {
@@ -941,6 +1088,14 @@ export type Database = {
       }
       postgis_version: { Args: never; Returns: string }
       postgis_wagyu_version: { Args: never; Returns: string }
+      process_comment: {
+        Args: { p_body: string; p_parking_id: string; p_user_id: string }
+        Returns: Json
+      }
+      process_comment_vote: {
+        Args: { p_comment_id: string; p_user_id: string; p_value: number }
+        Returns: Json
+      }
       process_parking_verification: {
         Args: {
           p_distance_meters: number
@@ -955,6 +1110,10 @@ export type Database = {
           p_user_lat: number
           p_user_lng: number
         }
+        Returns: Json
+      }
+      soft_delete_comment: {
+        Args: { p_comment_id: string; p_user_id: string }
         Returns: Json
       }
       st_3dclosestpoint: {
@@ -1564,6 +1723,8 @@ export type Database = {
         | "propose_poi"
         | "weekly_streak"
         | "invite_friend"
+        | "first_comment"
+        | "second_comment"
       octano_status: "pending" | "confirmed" | "reverted"
       parking_status: "pending" | "verified" | "rejected" | "archived"
       parking_type: "public" | "private"
@@ -1710,9 +1871,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       badge_family: ["discovery", "verification", "community", "thematic"],
@@ -1728,6 +1886,8 @@ export const Constants = {
         "propose_poi",
         "weekly_streak",
         "invite_friend",
+        "first_comment",
+        "second_comment",
       ],
       octano_status: ["pending", "confirmed", "reverted"],
       parking_status: ["pending", "verified", "rejected", "archived"],
@@ -1746,4 +1906,3 @@ export const Constants = {
     },
   },
 } as const
-

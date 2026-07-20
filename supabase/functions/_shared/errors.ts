@@ -10,9 +10,14 @@ export type ErrorCode =
   | "FORBIDDEN"            // autenticado pero sin permisos (p. ej. no es admin)
   | "USER_NOT_FOUND"       // el usuario objetivo no existe
   | "USER_SUSPENDED"       // la cuenta está suspendida (solo lectura)
+  | "EMAIL_NOT_CONFIRMED"  // la cuenta no ha confirmado su email
   // Errores de validación de input
   | "VALIDATION_ERROR"
   | "MISSING_FIELDS"
+  // Errores de negocio — comentarios (post-comment / vote-comment / delete-comment)
+  | "RATE_LIMITED"         // demasiados comentarios en poco tiempo
+  | "COMMENT_NOT_FOUND"    // comentario inexistente o borrado
+  | "SELF_VOTE_FORBIDDEN"  // intento de votar el propio comentario
   // Errores de negocio — verificación (validate-verification)
   | "GEOFENCE_FAIL"        // usuario > 100m del parking
   | "STALE_PHOTO"          // foto tomada hace > 5 minutos
@@ -95,6 +100,26 @@ export const ERRORS = {
   USER_SUSPENDED: makeError(
     "USER_SUSPENDED",
     "Tu cuenta está suspendida: no puedes contribuir.",
+  ),
+  EMAIL_NOT_CONFIRMED: makeError(
+    "EMAIL_NOT_CONFIRMED",
+    "Debes confirmar tu email para poder comentar.",
+  ),
+  RATE_LIMITED: makeError(
+    "RATE_LIMITED",
+    "Estás comentando demasiado rápido. Espera unos segundos.",
+  ),
+  COMMENT_NOT_FOUND: makeError(
+    "COMMENT_NOT_FOUND",
+    "Comentario no encontrado o eliminado",
+  ),
+  SELF_VOTE_FORBIDDEN: makeError(
+    "SELF_VOTE_FORBIDDEN",
+    "No puedes votar tu propio comentario",
+  ),
+  PARKING_ARCHIVED: makeError(
+    "PARKING_ARCHIVED",
+    "Este parking no admite comentarios",
   ),
   GEOFENCE_FAIL: makeError(
     "GEOFENCE_FAIL",

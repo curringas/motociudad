@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   KeyboardAvoidingView,
+  ScrollView,
   Platform,
   Alert,
 } from 'react-native';
@@ -71,7 +72,11 @@ export default function LoginScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
       >
-        <View style={{ flex: 1, justifyContent: 'center', padding: 24 }}>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           {/* Logo / título */}
           <Text style={{ color: '#FFD60A', fontSize: 32, fontWeight: 'bold', textAlign: 'center', marginBottom: 8 }}>
             MotoCiudad
@@ -171,7 +176,7 @@ export default function LoginScreen() {
           >
             <Text style={{ color: '#64748b', fontSize: 14 }}>Cancelar</Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

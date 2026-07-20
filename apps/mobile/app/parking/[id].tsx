@@ -11,6 +11,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useParkingDetail } from '@/features/parkings/hooks';
 import { useHasVerified } from '@/features/verifications/hooks';
+import { CommentsSection } from '@/features/comments/components/CommentsSection';
 import { useSessionStore } from '@/stores/sessionStore';
 import { openInExternalMaps } from '@/lib/deeplinks';
 import { supabase } from '@/lib/supabase';
@@ -95,7 +96,11 @@ export default function ParkingDetailScreen() {
 
   return (
     <SafeAreaView edges={['bottom']} className="flex-1 bg-background">
-      <ScrollView className="flex-1" contentContainerStyle={{ padding: 16 }}>
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ padding: 16 }}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Header */}
         <View className="flex-row items-start justify-between mb-4">
           <Text className="text-content text-2xl font-bold flex-1 mr-3">
@@ -200,6 +205,9 @@ export default function ParkingDetailScreen() {
             <Text className="text-content text-sm">{parking.notes}</Text>
           </View>
         )}
+
+        {/* Comentarios */}
+        <CommentsSection parkingId={id} />
       </ScrollView>
 
       {/* Action buttons */}

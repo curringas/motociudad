@@ -350,6 +350,23 @@ El change `ranking-octanos` añade cobertura en tres niveles:
   cubre resaltado del usuario, podio top-3, cambio de métrica/alcance y estado vacío.
 - **Maestro** (`.maestro/ranking.yaml`): abrir el tab Ranking y alternar Global/Ciudad y Totales/Mes.
 
+### 8.5 Cobertura de comentarios en parkings
+
+El change `add-parking-comments` añade cobertura en cuatro niveles:
+
+- **pgTAP** — RLS (`supabase/tests/rls/comments.test.sql`, 13 asserts): lectura pública de
+  `comments`/`comment_votes` (no borrados), y que el cliente NO puede insertar/actualizar/borrar
+  comentarios, votar directamente ni escribir `octano_events` (regla #1).
+- **pgTAP** — lógica (`supabase/tests/sql/comment_octanos.test.sql`, 32 asserts): escalera
+  +10/+5 (1º/2º elegibles), proponente/verificador no consumen puesto, mismo autor no cobra ambos,
+  cap diario, `useful_comment` idempotente al cruzar ≥2 upvotes netos, acumulación (+15),
+  soft-delete sin clawback y errores (`PARKING_NOT_FOUND`, `PARKING_ARCHIVED`, auto-voto).
+- **Deno test** — Edge Functions (`post-comment`, `vote-comment`, `delete-comment`
+  `__tests__/schemas.test.ts`): validación Zod del body (cuerpo 1–500, `value ∈ {-1,1}`, UUIDs).
+- **Vitest** — cliente: `features/comments/__tests__/presenter.test.ts` (tiempo relativo, nombre de
+  autor, `canDelete`) y `features/comments/components/__tests__/CommentComponents.test.tsx`
+  (`CommentItem`/`CommentList`: autor, cuerpo, upvotes, borrar-si-propio, estado vacío).
+
 ### 8.3 Cobertura de autorización — panel de administración (v1.3)
 
 El change `admin-panel` añade dos ficheros pgTAP (`supabase test db` → 51 asserts, verde):

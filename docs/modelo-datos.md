@@ -447,7 +447,13 @@ CREATE INDEX idx_reports_status ON public.parking_reports(status);
 
 ### 6.6 `comments`
 
-Comentarios sobre parkings. Solo computan Octanos cuando reciben ≥2 upvotes.
+Comentarios sobre parkings. **Sin geolocalización** (privacidad). La escritura
+(crear/votar/borrar) pasa **solo por Edge Functions** (`post-comment`,
+`vote-comment`, `delete-comment`); no hay policy de INSERT/UPDATE/DELETE para el
+cliente, solo SELECT público de no borrados. Octanos: escalera de primeros
+comentarios (`first_comment` +10 / `second_comment` +5, ver `gamificacion.md`
+§2.3) **acumulable** con el bonus de calidad `useful_comment` (+5) al alcanzar
+≥2 upvotes netos. `octanos_awarded` marca el pago único del bonus de posición.
 
 ```sql
 CREATE TABLE public.comments (
@@ -473,8 +479,12 @@ CREATE TABLE public.comment_votes (
   user_id       UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   value         SMALLINT NOT NULL CHECK (value IN (-1, 1)),
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT now(),  -- permite upsert al cambiar el voto
   PRIMARY KEY (comment_id, user_id)
 );
+
+-- No se puede votar el propio comentario (lo impone la Edge Function/RPC).
+-- El bonus useful_comment (+5) usa el neto (SUM(value)) ≥ 2, una sola vez por comentario.
 ```
 
 ---

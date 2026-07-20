@@ -7,6 +7,7 @@ import { View, Text, ScrollView, ActivityIndicator, Image, Pressable } from 'rea
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useParkingDetail } from '@/features/parkings/hooks';
+import { CommentsSection } from '@/features/comments/components/CommentsSection';
 import { openInExternalMaps } from '@/lib/deeplinks';
 import { supabase } from '@/lib/supabase';
 import { useBreakpoint } from '@/lib/responsive';
@@ -167,6 +168,9 @@ export default function ParkingDetailScreenWeb() {
             </Text>
           </View>
         ) : null}
+
+        {/* Comentarios (funciona igual en web y móvil, no requiere ubicación) */}
+        <CommentsSection parkingId={id ?? ''} />
       </View>
     </ScrollView>
   );
