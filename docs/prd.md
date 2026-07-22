@@ -138,6 +138,7 @@ No hay competencia directa consolidada en España. Las apps de parking generalis
 | F13 | Reportar parking erróneo | Mantener dataset limpio |
 | F14 | POIs secundarios (talleres) | Diferencial competitivo y palanca de monetización futura |
 | F15 | Buscador de ubicaciones sobre el mapa | Centrar el mapa en una calle/ciudad buscada (geocoding nativo) para explorar parkings de otra zona |
+| F16 | Comentarios en parkings (crear, votar, borrar) | Contexto colaborativo sin necesidad de estar en el lugar; gamificado con la escalera de primeros comentarios (`gamificacion.md` §2.3) |
 
 ### 7.2 Features fuera del MVP (NON-GOALS)
 
@@ -258,6 +259,9 @@ Formato: *Como [rol], quiero [acción] para [beneficio]*. Cada una se desglosar�
 - Como motorista, quiero verificar un parking propuesto por otro usuario haciendo una foto in situ para confirmar que existe.
 - Como motorista, quiero reportar un parking que ya no existe o ha cambiado para que el dataset esté actualizado.
 - Como motorista, quiero subir fotos a parkings existentes para enriquecer la información.
+- Como motorista, quiero comentar un parking (aunque no esté allí) para aportar contexto útil (accesos, seguridad, horarios).
+- Como motorista, quiero ganar Octanos por ser de los primeros en comentar un parking (+10 el 1º, +5 el 2º) para incentivar la participación temprana.
+- Como motorista, quiero votar los comentarios útiles de otros para que los mejores destaquen (y su autor gane +5).
 
 ### 8.3 Gamificación
 
