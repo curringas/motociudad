@@ -65,6 +65,7 @@ inspeccionar/validar (`openspec list|show|validate|status|view|archive`).
 | 2026-07-19 | **Prueba en Android (entrega final)** | Build nativo en emulador: fix de deps SDK 54, config de Google Maps API key, y fix de un bug real (markers de parking invisibles en Android por `tracksViewChanges`) | PR #7 (`fix/android-build-google-maps`) |
 | 2026-07-19 | **Ranking de Octanos (entrega final)** | Change OpenSpec `ranking-octanos` con `/opsx:propose`+`/opsx:apply`: migración `mv_ranking_by_city` + grants, slice `features/ranking` (UI + hooks), auth-gate sin sesión, pgTAP + Vitest + Maestro; E2E en web/iOS/Android; desplegado a Cloud + web; change archivado | PR #8 (`feat/ranking-octanos`) |
 | 2026-07-20/22 | **Comentarios en parkings (entrega final)** | Change OpenSpec `add-parking-comments` con `/opsx:explore`+`/opsx:propose`+`/opsx:apply`: tablas `comments`/`comment_votes` (RLS+pgTAP), RPCs atómicas, 3 Edge Functions (post/vote/delete-comment), slice `features/comments` (móvil+web); **escalera de Octanos +10/+5** acumulable con `useful_comment`, sin geolocalización; desplegado a Cloud + E2E lógica/HTTP/UI Android; fix UX teclado; change archivado | PR #10 (`comentarios`) |
+| 2026-07-22 | **Regla de verificación E2E multiplataforma (DX)** | Regla de cierre para todo `opsx:apply`: skill `verify-all-platforms` + subagente `e2e-verifier` (web/Playwright + Android/adb + iOS/XcodeBuildMCP, login usuario+admin, limpieza de datos) + regla en `CLAUDE.md`/`openspec/config.yaml` + **hook** que bloquea `openspec archive` sin evidencia; se habilita `ui-automation` de XcodeBuildMCP y se crea cuenta `E2E_USER_*` | PR #13 (`chore/verify-all-platforms-gate`) |
 
 **Artefactos SDD generados:**
 - **Skills superpowers** (`docs/superpowers/`):
@@ -223,6 +224,29 @@ inspeccionar/validar (`openspec list|show|validate|status|view|archive`).
 - `tenemos el prompts y docs actualizados? con la nueva feature` → esta entrada (§3.9) + fila en §2 +
   artefacto OpenSpec; los docs canónicos (`gamificacion.md` §2.3, `prd.md` F16, `modelo-datos.md`,
   `testing.md` §8.5) ya iban en el PR #10.
+
+### 3.10 Regla de verificación E2E multiplataforma (DX / entrega final)
+- `cómo podemos hacer para trabajar con opsx que el apply tenga como regla final probar con
+  playwright, emu en android y emu en iphone y con un usuario si es necesario validarse, tanto como
+  usuario como administrador para el panel de administración … a ver qué se te ocurre junto con esta
+  docs [features-overview] o quizás con la propia doc de openspec` → lectura de la doc de features de
+  Claude Code (WebFetch) + cómo funciona OpenSpec por dentro (`openspec/config.yaml` inyecta `context`
+  y `rules`). Propuesta de arquitectura por capas: **skill** (procedimiento), **subagente** (aislar el
+  E2E que inunda el contexto), **CLAUDE.md/rules** (regla) y **hook** (garantía). Cita clave de la doc:
+  *"una instrucción es una petición, no una garantía; si una regla debe cumplirse siempre, hazla un hook"*.
+- Decisiones vía `AskUserQuestion`: **regla + hook (garantía)** · **intentar habilitar la UI-automation de
+  iOS** · **subagente `e2e-verifier`**.
+- Implementación: `.claude/skills/verify-all-platforms/SKILL.md` (matriz por superficie, login user+admin
+  desde `.env`, patrones robustos de adb/Xcode/Playwright aprendidos en la sesión de comentarios,
+  limpieza de datos, evidencia), subagente `.claude/agents/e2e-verifier.md`, regla en `CLAUDE.md` (#7) y
+  `openspec/config.yaml` (`context` + `rules.tasks`), hook `.claude/settings.json` +
+  `.claude/hooks/require-verify-evidence.py` (bloquea `openspec archive` sin
+  `.claude/verify-runs/<change>.md`), y `.xcodebuildmcp/config.yaml` con `enabledWorkflows: [simulator,
+  ui-automation]`.
+- `necesitas que aporte credenciales en el .env?` → no: `E2E_ADMIN_*` ya estaba y se creó `E2E_USER_*`
+  (usuario normal `e2e_user`, email confirmado); ambos verifican login OK contra Cloud.
+- `nada salgo y entro ya con el hook` → el hook se activa al recargar config (reiniciar / `/hooks`).
+- `añade esta característica en la doc del proyecto en prompts.md` → esta entrada (§3.10) + fila en §2.
 
 ---
 
