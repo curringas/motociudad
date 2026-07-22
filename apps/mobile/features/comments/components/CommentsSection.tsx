@@ -130,7 +130,7 @@ function FeedbackBanner({ feedback }: { feedback: Feedback }) {
   const styles = {
     success: { box: 'bg-verified/15 border border-verified', text: 'text-verified' },
     info: { box: 'bg-surface border border-border', text: 'text-content-muted' },
-    error: { box: 'bg-danger/15 border border-danger', text: 'text-danger' },
+    error: { box: 'bg-rejected/15 border border-rejected', text: 'text-rejected' },
   }[feedback.kind];
 
   return (
