@@ -44,6 +44,14 @@ context: |
   Documentos canónicos a consultar/actualizar: docs/prd.md, docs/arquitectura.md,
   docs/modelo-datos.md, docs/gamificacion.md, docs/testing.md, docs/infraestructura.md.
 
+  Verificación obligatoria (regla de cierre de todo apply): ningún change se
+  considera aplicado —ni se archiva— hasta pasar el skill `verify-all-platforms`
+  (vía subagente `e2e-verifier`): E2E en las plataformas donde la feature se ve
+  (app móvil → web con Playwright + emulador Android + simulador iOS; panel de
+  administración → solo web), logueado como usuario normal Y como admin donde
+  aplique, limpiando los datos de prueba al terminar. Deja evidencia en
+  `.claude/verify-runs/<change>.md`. Ver `.claude/skills/verify-all-platforms/`.
+
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.
 # Example:
@@ -60,3 +68,4 @@ rules:
   tasks:
     - Cada tabla o cambio de schema nuevo incluye migración + RLS + policy + test pgTAP en la misma tarea.
     - Verificación por tarea: pnpm typecheck + tests relevantes en verde antes de cerrar.
+    - El ÚLTIMO grupo de tareas es SIEMPRE "Verificación multiplataforma": ejecutar el skill `verify-all-platforms` (subagente `e2e-verifier`) en las plataformas donde la feature se ve (app móvil → web + Android + iOS; panel admin → solo web), con login como usuario normal y como admin donde aplique, y limpieza de datos de prueba. El change NO se archiva sin evidencia en `.claude/verify-runs/<change>.md`.

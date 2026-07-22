@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(openspec archive *)",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/require-verify-evidence.py\"",
+            "timeout": 10,
+            "statusMessage": "Comprobando evidencia de verificación E2E…"
+          }
+        ]
+      }
+    ]
+  }
+}
