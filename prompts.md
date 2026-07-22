@@ -64,6 +64,7 @@ inspeccionar/validar (`openspec list|show|validate|status|view|archive`).
 | 2026-07-18 | **Panel admin — panel web + cierre (entrega final)** | `/opsx:apply`: pgTAP+Deno+Vitest, slice `features/admin`, rutas `app/admin`, fix RLS de borrado (mig. 000007), despliegue a Cloud, E2E Playwright y archivado del change | rama `feature-admin-panel-CMH` |
 | 2026-07-19 | **Prueba en Android (entrega final)** | Build nativo en emulador: fix de deps SDK 54, config de Google Maps API key, y fix de un bug real (markers de parking invisibles en Android por `tracksViewChanges`) | PR #7 (`fix/android-build-google-maps`) |
 | 2026-07-19 | **Ranking de Octanos (entrega final)** | Change OpenSpec `ranking-octanos` con `/opsx:propose`+`/opsx:apply`: migración `mv_ranking_by_city` + grants, slice `features/ranking` (UI + hooks), auth-gate sin sesión, pgTAP + Vitest + Maestro; E2E en web/iOS/Android; desplegado a Cloud + web; change archivado | PR #8 (`feat/ranking-octanos`) |
+| 2026-07-20/22 | **Comentarios en parkings (entrega final)** | Change OpenSpec `add-parking-comments` con `/opsx:explore`+`/opsx:propose`+`/opsx:apply`: tablas `comments`/`comment_votes` (RLS+pgTAP), RPCs atómicas, 3 Edge Functions (post/vote/delete-comment), slice `features/comments` (móvil+web); **escalera de Octanos +10/+5** acumulable con `useful_comment`, sin geolocalización; desplegado a Cloud + E2E lógica/HTTP/UI Android; fix UX teclado; change archivado | PR #10 (`comentarios`) |
 
 **Artefactos SDD generados:**
 - **Skills superpowers** (`docs/superpowers/`):
@@ -73,6 +74,7 @@ inspeccionar/validar (`openspec list|show|validate|status|view|archive`).
   - `motociudad-mvp` — change del MVP (`proposal.md` + `design.md` + `tasks.md`), 71/83 tareas.
   - `admin-panel` — change del panel de administración (proposal + design + 3 specs + tasks), **36/36 tareas, archivado** en `openspec/changes/archive/2026-07-18-admin-panel/`. Specs canónicas sincronizadas a `openspec/specs/{user-roles,admin-user-management,admin-parking-management}/`.
   - `ranking-octanos` — change del ranking (proposal + design + spec + tasks), **archivado** en `openspec/changes/archive/2026-07-19-ranking-octanos/`. Spec canónica en `openspec/specs/ranking-octanos/`.
+  - `add-parking-comments` — change de comentarios (proposal + design + spec + tasks), **archivado** en `openspec/changes/archive/2026-07-20-add-parking-comments/`. Spec canónica en `openspec/specs/parking-comments/`.
 
 ---
 
@@ -181,6 +183,46 @@ inspeccionar/validar (`openspec list|show|validate|status|view|archive`).
   db` local en verde. Merge de PR #8; el push a `main` no disparó el CD (filtro `paths` en merge commit),
   así que se lanzó **Deploy Web** con `workflow_dispatch` → web en producción.
 - `algo que poner en prompts o docs?` → esta entrada.
+
+### 3.9 Comentarios en parkings (entrega final)
+- `/opsx:explore Añadir comentarios en los parkings. el primer comentario seran 10 octanos para
+  el primer comentario diferente del que creo el parking y de cualquiera que lo verifique … hay
+  que cambiar gamificación, hay que añadir la posibilidad de comentar, no será necesario estar en
+  el lugar para comentar` → modo explore: se detectó que `comments`/`comment_votes` ya estaban
+  **diseñadas** en `modelo-datos.md` §6.6–6.7 pero nunca implementadas, y que la regla del usuario
+  **difería** de la documentada (`useful_comment` +5 por upvotes). Con `AskUserQuestion` se cerró el
+  modelo: escalera **+10 (1º elegible) / +5 (2º)** que **evolucionó** a incluir el 2º puesto por
+  idea del usuario (`creo que el segundo comentario también podemos otorgar 5 puntos`), acumulable
+  con `useful_comment`, gate = registrado + **email confirmado**, sin geolocalización, elegible =
+  autor ≠ proponente y ≠ verificador (no consumen puesto), sin clawback.
+- `/opsx:propose` → proposal + design (6 decisiones con alternativas) + spec `parking-comments`
+  (8 requisitos SHALL/MUST) + tasks (32).
+- `/opsx:apply` → implementación completa: 4 migraciones (enum, tablas+RLS, RPCs+índices
+  anti-carrera, `comments_count`), 2 ficheros pgTAP (13+32 asserts), 3 Edge Functions Deno+Zod
+  con tests, slice `features/comments`, integración en detalle de parking (móvil+web) y docs.
+- `si hazlo todo en cloud no esta aun en producción, haz test e2e para comprobar que funciona`
+  → **Supabase MCP**: `apply_migration` ×4 + `deploy_edge_function` ×3 + `generate_typescript_types`
+  + `get_advisors` (sin issues nuevos). E2E de **lógica** contra Cloud con un bloque `DO` que se
+  auto-revierte por excepción centinela (32 asserts) y E2E **HTTP** invocando las Edge Functions con
+  un JWT real (401/400/200 +10/429/422/200); datos de prueba limpiados y caché de Octanos recalculada.
+- `primero prueba en emulador` → E2E de **UI en emulador Android** (`adb`): login, detalle de parking,
+  publicar comentario (+10 con banner), votar y **borrar**; datos reales limpiados por SQL tras la prueba.
+- `Pues mejora los findings` → sobre los 3 hallazgos de la verificación: (2) banner de Octanos que era
+  fugaz → **banner de color persistente** (6 s) en `CommentsSection`; (3) el teclado tapaba el botón →
+  `login.tsx` en `ScrollView` + `keyboardShouldPersistTaps` en el detalle; (1) deep-link a parking = artefacto
+  del dev-client, no se tocó routing. Re-verificado en emulador.
+- `en android al tomar la foto parece que la foto no se muestra. En el emulador` +
+  `1 por ahora solo he probado en emulador android. 2 recuadro gris vacio. 3 acabo de hacerla y se
+  queda el cuadro gris vacio` → **`systematic-debugging`** con instrumentación: el feed en vivo del
+  `CameraView` ya sale **negro** → causa raíz = cámara trasera del AVD en `hw.camera.back=virtualscene`
+  (no renderiza), la foto capturada es negra. **No es bug de la app** (funciona en dispositivo real);
+  instrumentación revertida.
+- `si no es un problema real pues hacemos … el archive de openspec commit push y pr` /
+  `haz el merge y lo que falte para tener todo actualizado` → `openspec archive` (sync de la spec
+  `parking-comments` + movida a `archive/`), commit en la rama `comentarios`, push, **PR #10** y merge a `main`.
+- `tenemos el prompts y docs actualizados? con la nueva feature` → esta entrada (§3.9) + fila en §2 +
+  artefacto OpenSpec; los docs canónicos (`gamificacion.md` §2.3, `prd.md` F16, `modelo-datos.md`,
+  `testing.md` §8.5) ya iban en el PR #10.
 
 ---
 
