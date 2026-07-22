@@ -20,14 +20,14 @@ export function CommentItem({ comment, onUpvote, onDelete, isVoting = false, isD
             {comment.authorName}
           </Text>
           {comment.authorLevel != null && (
-            <View className="bg-surface-2 rounded-pill px-2 py-0.5">
-              <Text className="text-content-subtle text-[10px] font-bold">
+            <View className="bg-primary/15 rounded-pill px-2 py-0.5">
+              <Text className="text-primary text-[10px] font-bold">
                 Nv {comment.authorLevel}
               </Text>
             </View>
           )}
         </View>
-        <Text className="text-content-subtle text-xs">{comment.timeLabel}</Text>
+        <Text className="text-content-muted text-xs">{comment.timeLabel}</Text>
       </View>
 
       <Text className="text-content text-sm mb-3">{comment.body}</Text>
@@ -51,7 +51,7 @@ export function CommentItem({ comment, onUpvote, onDelete, isVoting = false, isD
             accessibilityRole="button"
             accessibilityLabel="Borrar mi comentario"
           >
-            <Text className="text-danger text-sm">Borrar</Text>
+            <Text className="text-rejected text-sm font-semibold">Borrar</Text>
           </TouchableOpacity>
         )}
       </View>
