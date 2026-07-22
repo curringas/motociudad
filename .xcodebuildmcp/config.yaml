@@ -1,0 +1,8 @@
+# XcodeBuildMCP config — habilita la automatización de UI en el simulador iOS
+# (tap, swipe, type_text, gesture, touch, button) además del workflow de simulador.
+# Necesario para el E2E completo de iOS (skill verify-all-platforms).
+# AXe viene incluido por defecto; descomenta axePath solo si necesitas otra ruta.
+enabledWorkflows:
+  - simulator
+  - ui-automation
+uiDebuggerGuardMode: error

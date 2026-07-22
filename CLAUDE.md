@@ -96,6 +96,7 @@ If code and specs diverge, **update the spec in the same PR** (or delegate to th
 4. Every new table requires RLS enabled + at least one policy + a pgTAP test in the same PR.
 5. Never `DROP` a column in a migration without a deprecation release first.
 6. Do not implement features absent from `docs/prd.md` without explicit confirmation.
+7. **Verificación de cierre de `opsx:apply`**: ningún change se considera aplicado —ni se archiva— hasta ejecutar el skill `verify-all-platforms` (vía subagente `e2e-verifier`) como último paso: E2E en las plataformas donde la feature se ve (app móvil → web + Android + iOS; panel admin → solo web), logueado como usuario y como admin donde aplique, con limpieza de datos de prueba. Debe dejar evidencia en `.claude/verify-runs/<change>.md` (un hook bloquea `openspec archive` sin ella).
 
 ---
 
