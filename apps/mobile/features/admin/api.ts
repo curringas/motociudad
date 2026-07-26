@@ -216,8 +216,8 @@ export const ADMIN_COMMENTS_PAGE_SIZE = 25;
 export async function listAdminComments(filter: AdminCommentFilter): Promise<AdminCommentList> {
   const { data, error } = await supabase.rpc('admin_list_comments', {
     p_status: filter.status,
-    p_city: filter.city,
-    p_search: filter.search.trim() || null,
+    p_city: filter.city ?? undefined,
+    p_search: filter.search.trim() || undefined,
     p_limit: ADMIN_COMMENTS_PAGE_SIZE,
     p_offset: filter.page * ADMIN_COMMENTS_PAGE_SIZE,
   });

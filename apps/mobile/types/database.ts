@@ -886,6 +886,21 @@ export type Database = {
             }
             Returns: string
           }
+      admin_comment_cities: { Args: never; Returns: string[] }
+      admin_delete_comments: {
+        Args: { p_comment_ids: string[] }
+        Returns: Json
+      }
+      admin_list_comments: {
+        Args: {
+          p_city?: string
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+          p_status?: string
+        }
+        Returns: Json
+      }
       can_manage_parkings: { Args: never; Returns: boolean }
       check_level_up: { Args: { in_user_id: string }; Returns: undefined }
       confirmed_octanos_last_24h: {

@@ -34,9 +34,9 @@
 
 ## 6. Infra y tipos
 
-- [ ] 6.1 Desplegar RPCs y Edge Functions a Cloud
-- [ ] 6.2 Regenerar tipos TS (`pnpm gen:types`) y pasar `pnpm typecheck`
-- [ ] 6.3 Suite Vitest en verde
+- [x] 6.1 Desplegar RPCs y Edge Functions a Cloud
+- [x] 6.2 Regenerar tipos TS (`pnpm gen:types`) y pasar `pnpm typecheck`
+- [x] 6.3 Suite Vitest en verde
 
 ## 7. Documentación
 
