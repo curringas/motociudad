@@ -13,8 +13,10 @@ import {
   softDeleteParking,
   listParkingPhotos,
   uploadParkingPhoto,
-  listPendingComments,
-  moderateComment,
+  listAdminComments,
+  approveComments,
+  deleteComments,
+  type AdminCommentFilter,
 } from './api';
 import type {
   UserFilter,
@@ -27,12 +29,12 @@ import type {
 export const adminKeys = {
   all: ['admin'] as const,
   profile: (userId: string | undefined) => [...adminKeys.all, 'profile', userId ?? 'anon'] as const,
-  users: (filter: UserFilter) => [...adminKeys.all, 'users', filter] as const,
+  users: (filter: UserFilter, page: number) => [...adminKeys.all, 'users', filter, page] as const,
   levelName: (level: number) => [...adminKeys.all, 'level', level] as const,
-  parkings: (filter: ParkingFilter, actorId: string) =>
-    [...adminKeys.all, 'parkings', actorId, filter] as const,
+  parkings: (filter: ParkingFilter, actorId: string, page: number) =>
+    [...adminKeys.all, 'parkings', actorId, filter, page] as const,
   photos: (parkingId: string) => [...adminKeys.all, 'photos', parkingId] as const,
-  pendingComments: () => [...adminKeys.all, 'pending-comments'] as const,
+  comments: (filter: AdminCommentFilter) => [...adminKeys.all, 'comments', filter] as const,
 };
 
 /** Perfil (con role/suspended) del usuario autenticado. */
@@ -46,12 +48,13 @@ export function useCurrentProfile() {
   });
 }
 
-export function useAdminUsers(filter: UserFilter, enabled = true) {
+export function useAdminUsers(filter: UserFilter, page = 0, enabled = true) {
   return useQuery({
-    queryKey: adminKeys.users(filter),
-    queryFn: () => listUsers(filter),
+    queryKey: adminKeys.users(filter, page),
+    queryFn: () => listUsers(filter, page),
     enabled,
     staleTime: 15_000,
+    placeholderData: (prev) => prev,
   });
 }
 
@@ -75,12 +78,13 @@ export function useSetUserRole() {
   });
 }
 
-export function useAdminParkings(filter: ParkingFilter, actorId: string | undefined, enabled = true) {
+export function useAdminParkings(filter: ParkingFilter, actorId: string | undefined, page = 0, enabled = true) {
   return useQuery({
-    queryKey: adminKeys.parkings(filter, actorId ?? 'anon'),
-    queryFn: () => listParkings(filter, actorId!),
+    queryKey: adminKeys.parkings(filter, actorId ?? 'anon', page),
+    queryFn: () => listParkings(filter, actorId!, page),
     enabled: enabled && !!actorId,
     staleTime: 15_000,
+    placeholderData: (prev) => prev,
   });
 }
 
@@ -137,27 +141,38 @@ export function useParkingPhotos(parkingId: string | undefined) {
   });
 }
 
-/** Comentarios pendientes de moderación (cola admin). */
-export function useAdminPendingComments(enabled = true) {
+/** Listado paginado/buscable de comentarios (RPC admin_list_comments). */
+export function useAdminComments(filter: AdminCommentFilter, enabled = true) {
   return useQuery({
-    queryKey: adminKeys.pendingComments(),
-    queryFn: () => listPendingComments(),
+    queryKey: adminKeys.comments(filter),
+    queryFn: () => listAdminComments(filter),
     enabled,
-    staleTime: 15_000,
+    staleTime: 10_000,
+    placeholderData: (prev) => prev, // evita parpadeo al paginar/filtrar
   });
 }
 
-/** Aprueba/rechaza un comentario pendiente; refresca la cola al terminar. */
-export function useModerateComment() {
+function invalidateComments(queryClient: ReturnType<typeof useQueryClient>) {
+  void queryClient.invalidateQueries({ queryKey: [...adminKeys.all, 'comments'] });
+  // Aprobar/borrar afecta a Octanos y a los contadores de parkings.
+  void queryClient.invalidateQueries({ queryKey: [...adminKeys.all, 'parkings'] });
+}
+
+/** Aprueba comentarios (individual o en bloque); refresca el listado. */
+export function useApproveComments() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ commentId, action }: { commentId: string; action: 'approve' | 'reject' }) =>
-      moderateComment(commentId, action),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: adminKeys.pendingComments() });
-      // Approving credits Octanos and makes the comment public.
-      void queryClient.invalidateQueries({ queryKey: [...adminKeys.all, 'parkings'] });
-    },
+    mutationFn: (commentIds: string[]) => approveComments(commentIds),
+    onSuccess: () => invalidateComments(queryClient),
+  });
+}
+
+/** Elimina comentarios (hard delete + retira Octanos); refresca el listado. */
+export function useDeleteComments() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (commentIds: string[]) => deleteComments(commentIds),
+    onSuccess: () => invalidateComments(queryClient),
   });
 }
 

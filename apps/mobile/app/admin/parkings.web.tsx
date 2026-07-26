@@ -1,9 +1,10 @@
 // Sección Parkings del panel (contributor / admin).
 // Listar y filtrar · crear · editar (por propiedad) · verificar/borrar (admin) · fotos.
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image } from 'react-native';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useCurrentProfile, useAdminParkings, useCreateParking, useUpdateParking, useSetParkingStatus, useSoftDeleteParking, useParkingPhotos, useUploadParkingPhoto } from '@/features/admin/hooks';
+import { ADMIN_PAGE_SIZE } from '@/features/admin/api';
 import {
   canEditParking,
   canChangeParkingStatus,
@@ -12,7 +13,7 @@ import {
   canAddPhoto,
 } from '@/features/admin/permissions';
 import { createParkingSchema, editParkingSchema, type AdminParking, type AdminProfile, type ParkingFilter } from '@/features/admin/schemas';
-import { C, Card, Button, Field, Chips, StatusBadge, Spinner, Banner } from '@/features/admin/ui';
+import { C, Card, Button, Field, Chips, StatusBadge, Spinner, Banner, Pagination } from '@/features/admin/ui';
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'Todos' },
@@ -44,10 +45,14 @@ export default function AdminParkingsWeb() {
   const [status, setStatus] = useState<ParkingFilter['status']>('all');
   const [scope, setScope] = useState<ParkingFilter['scope']>('all');
   const [creating, setCreating] = useState(false);
+  const [page, setPage] = useState(0);
 
   const debouncedCity = useDebounce(city, 400);
+  useEffect(() => setPage(0), [debouncedCity, status, scope]);
   const filter: ParkingFilter = { city: debouncedCity, status, scope };
-  const { data: parkings, isLoading, isError, error } = useAdminParkings(filter, profile?.id);
+  const { data, isLoading, isError, error } = useAdminParkings(filter, profile?.id, page);
+  const parkings = data?.rows ?? [];
+  const total = data?.total ?? 0;
 
   const isAdmin = canManageUsers(profile); // admin activo
   const scopeOptions = isAdmin
@@ -82,17 +87,19 @@ export default function AdminParkingsWeb() {
         </View>
       </Card>
 
-      {isLoading ? <Spinner label="Cargando parkings…" /> : null}
+      {isLoading && parkings.length === 0 ? <Spinner label="Cargando parkings…" /> : null}
       {isError ? <Banner kind="error">Error al cargar: {(error as Error)?.message}</Banner> : null}
-      {parkings && parkings.length === 0 ? (
+      {!isLoading && parkings.length === 0 ? (
         <Banner kind="info">No hay parkings que coincidan con el filtro.</Banner>
       ) : null}
 
-      <View style={{ gap: 12 }}>
-        {parkings?.map((p) => (
+      <View style={{ gap: 8 }}>
+        {parkings.map((p) => (
           <ParkingRow key={p.id} parking={p} profile={profile ?? null} />
         ))}
       </View>
+
+      <Pagination page={page} pageSize={ADMIN_PAGE_SIZE} total={total} onPage={setPage} />
     </View>
   );
 }

@@ -286,6 +286,12 @@ La IA **no es determinista**, así que no se llama al proveedor real en tests:
 - El **fail-safe** se prueba sin red: sin `DEEPSEEK_API_KEY`, `moderateComment` de un comentario limpio resuelve a `pending_review` (nunca aprueba por defecto).
 - El diferido de Octanos (pending no acredita; aprobación admin acredita en su momento; sin doble pago) se cubre en pgTAP: `supabase/tests/sql/comment_moderation.test.sql`. La visibilidad por estado (RLS) en `supabase/tests/rls/comment_moderation.test.sql`.
 
+### 7.4 Gestión de comentarios en el panel (change `admin-comments-management`)
+
+- **pgTAP** `supabase/tests/sql/admin_comment_management.test.sql`: `admin_delete_comments` retira Octanos (borra eventos + recalcula, libera puesto de escalera) y `admin_list_comments` aplica guard admin, filtros (estado/ciudad/búsqueda) y paginación.
+- **Deno**: schemas de `admin-delete-comment` y `admin-moderate-comment` (bloque).
+- **Componentes** (Vitest + RNW): primitivas del kit claro (`Pagination`, `BulkBar`, `Checkbox`, `SearchInput`, badges) y la fila `CommentRow` (estados y acciones).
+
 ---
 
 ## 8. Tests de RLS con pgTAP

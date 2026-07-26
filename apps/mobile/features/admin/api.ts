@@ -4,10 +4,11 @@ import { supabase } from '@/lib/supabase';
 import {
   adminProfileSchema,
   adminParkingSchema,
-  adminCommentSchema,
+  adminCommentListSchema,
   type AdminProfile,
   type AdminParking,
-  type AdminComment,
+  type AdminCommentList,
+  type CommentStatusFilter,
   type UserFilter,
   type ParkingFilter,
   type SetRoleInput,
@@ -37,8 +38,14 @@ export async function getProfile(userId: string): Promise<AdminProfile> {
 }
 
 /** Lista usuarios con búsqueda (username/display_name) y filtro por rol. */
-export async function listUsers(filter: UserFilter): Promise<AdminProfile[]> {
-  let query = supabase.from('users').select(PROFILE_COLUMNS).order('created_at', { ascending: false });
+export const ADMIN_PAGE_SIZE = 50;
+export type Paged<T> = { rows: T[]; total: number };
+
+export async function listUsers(filter: UserFilter, page = 0): Promise<Paged<AdminProfile>> {
+  let query = supabase
+    .from('users')
+    .select(PROFILE_COLUMNS, { count: 'exact' })
+    .order('created_at', { ascending: false });
 
   const search = filter.search.trim();
   if (search !== '') {
@@ -48,9 +55,10 @@ export async function listUsers(filter: UserFilter): Promise<AdminProfile[]> {
     query = query.eq('role', filter.role);
   }
 
-  const { data, error } = await query.limit(200);
+  const from = page * ADMIN_PAGE_SIZE;
+  const { data, error, count } = await query.range(from, from + ADMIN_PAGE_SIZE - 1);
   if (error) throw error;
-  return z.array(adminProfileSchema).parse(data ?? []);
+  return { rows: z.array(adminProfileSchema).parse(data ?? []), total: count ?? 0 };
 }
 
 /** Nombre del nivel del catálogo user_levels para un nivel dado. */
@@ -98,8 +106,12 @@ export async function setUserRole(input: SetRoleInput): Promise<void> {
 export async function listParkings(
   filter: ParkingFilter,
   actorId: string,
-): Promise<AdminParking[]> {
-  let query = supabase.from('parkings').select(PARKING_COLUMNS).order('created_at', { ascending: false });
+  page = 0,
+): Promise<Paged<AdminParking>> {
+  let query = supabase
+    .from('parkings')
+    .select(PARKING_COLUMNS, { count: 'exact' })
+    .order('created_at', { ascending: false });
 
   if (filter.scope === 'mine') {
     query = query.eq('proposed_by', actorId);
@@ -112,9 +124,10 @@ export async function listParkings(
     query = query.eq('status', filter.status);
   }
 
-  const { data, error } = await query.limit(300);
+  const from = page * ADMIN_PAGE_SIZE;
+  const { data, error, count } = await query.range(from, from + ADMIN_PAGE_SIZE - 1);
   if (error) throw error;
-  return z.array(adminParkingSchema).parse(data ?? []);
+  return { rows: z.array(adminParkingSchema).parse(data ?? []), total: count ?? 0 };
 }
 
 /**
@@ -180,50 +193,58 @@ export async function softDeleteParking(id: string): Promise<void> {
   if (error) throw error;
 }
 
-/**
- * Comentarios en cola de moderación (pending_review), más antiguos primero.
- * Admin los ve por RLS; el público no. Feature ai-comment-moderation.
- */
-export async function listPendingComments(): Promise<AdminComment[]> {
-  const { data, error } = await supabase
-    .from('comments')
-    .select(
-      'id, parking_id, body, created_at, parking:parking_id(name), ' +
-        'author:author_id(username, display_name)',
-    )
-    .eq('moderation_status', 'pending_review')
-    .is('deleted_at', null)
-    .order('created_at', { ascending: true })
-    .limit(200);
-  if (error) throw error;
-  return z.array(adminCommentSchema).parse(data ?? []);
-}
-
-/** Aprueba o rechaza un comentario pendiente vía Edge Function admin-moderate-comment. */
-export async function moderateComment(
-  commentId: string,
-  action: 'approve' | 'reject',
-): Promise<void> {
+/** Recupera un mensaje de error legible de una invocación de Edge Function. */
+async function invokeAdmin(fn: string, body: Record<string, unknown>): Promise<void> {
   const { data: sessionData } = await supabase.auth.getSession();
   const jwt = sessionData.session?.access_token;
   if (!jwt) throw new Error('Usuario no autenticado');
-
-  const { error } = await supabase.functions.invoke('admin-moderate-comment', {
-    body: { commentId, action },
+  const { error } = await supabase.functions.invoke(fn, {
+    body,
     headers: { Authorization: `Bearer ${jwt}` },
   });
-
   if (error) {
     if (error instanceof FunctionsHttpError) {
       try {
-        const body = (await error.context.json()) as { error?: { message?: string } };
-        throw new Error(body?.error?.message ?? 'No se pudo moderar el comentario');
+        const b = (await error.context.json()) as { error?: { message?: string } };
+        throw new Error(b?.error?.message ?? 'La operación falló');
       } catch (parseErr) {
         if (parseErr instanceof Error && parseErr.message !== error.message) throw parseErr;
       }
     }
     throw new Error(error.message);
   }
+}
+
+export type AdminCommentFilter = {
+  status: CommentStatusFilter;
+  city: string; // búsqueda de texto (ILIKE) sobre la ciudad del parking
+  search: string;
+  page: number; // 0-indexed
+};
+
+export const ADMIN_COMMENTS_PAGE_SIZE = 50;
+
+/** Listado paginado/buscable de comentarios para el panel (RPC admin_list_comments). */
+export async function listAdminComments(filter: AdminCommentFilter): Promise<AdminCommentList> {
+  const { data, error } = await supabase.rpc('admin_list_comments', {
+    p_status: filter.status,
+    p_city: filter.city.trim() || undefined,
+    p_search: filter.search.trim() || undefined,
+    p_limit: ADMIN_COMMENTS_PAGE_SIZE,
+    p_offset: filter.page * ADMIN_COMMENTS_PAGE_SIZE,
+  });
+  if (error) throw error;
+  return adminCommentListSchema.parse(data);
+}
+
+/** Aprueba 1..N comentarios pendientes (bloque) vía admin-moderate-comment. */
+export async function approveComments(commentIds: string[]): Promise<void> {
+  await invokeAdmin('admin-moderate-comment', { commentIds, action: 'approve' });
+}
+
+/** Borra 1..N comentarios (hard delete + retira Octanos) vía admin-delete-comment. */
+export async function deleteComments(commentIds: string[]): Promise<void> {
+  await invokeAdmin('admin-delete-comment', { commentIds });
 }
 
 export type ParkingPhoto = { id: string; storage_path: string; url: string };
