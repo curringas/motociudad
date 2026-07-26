@@ -14,9 +14,9 @@
 
 ## 3. Kit visual claro (features/admin/ui.tsx)
 
-- [ ] 3.1 Paleta CLARA (`C` light: fondo `#f8fafc`, superficie `#ffffff`, borde `#e2e8f0`, texto `#0f172a`, muted `#64748b`, acento `#FFD60A`) y badges suaves (estado y rol)
-- [ ] 3.2 Primitivas: `Tabs`, `SearchInput`, `CompactRow`, `Pagination`, `BulkBar`, `Badge` (reutilizar `Card`/`Button`/`Chips`)
-- [ ] 3.3 Tests de componente de las primitivas nuevas (Vitest + @testing-library/react + RNW)
+- [x] 3.1 Paleta CLARA (`C` light: fondo `#f8fafc`, superficie `#ffffff`, borde `#e2e8f0`, texto `#0f172a`, muted `#64748b`, acento `#FFD60A`) y badges suaves (estado y rol)
+- [x] 3.2 Primitivas: `Tabs`, `SearchInput`, `CompactRow`, `Pagination`, `BulkBar`, `Badge` (reutilizar `Card`/`Button`/`Chips`)
+- [x] 3.3 Tests de componente de las primitivas nuevas (Vitest + @testing-library/react + RNW)
 
 ## 4. Pantalla de comentarios (solo web)
 
