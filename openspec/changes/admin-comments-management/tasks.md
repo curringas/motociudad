@@ -40,9 +40,9 @@
 
 ## 7. Documentación
 
-- [ ] 7.1 `docs/prd.md`: gestión de comentarios en el panel + **excepción de tema claro** del panel admin (app móvil sigue oscura)
-- [ ] 7.2 `docs/arquitectura.md`: tema claro del panel admin y kit `ui.tsx`; `docs/gamificacion.md`: retirada de Octanos al borrar por admin
-- [ ] 7.3 `docs/modelo-datos.md`/`docs/testing.md` si aplica (RPCs nuevos, mock)
+- [x] 7.1 `docs/prd.md`: gestión de comentarios en el panel + **excepción de tema claro** del panel admin (app móvil sigue oscura)
+- [x] 7.2 `docs/arquitectura.md`: tema claro del panel admin y kit `ui.tsx`; `docs/gamificacion.md`: retirada de Octanos al borrar por admin
+- [x] 7.3 `docs/modelo-datos.md`/`docs/testing.md` si aplica (RPCs nuevos, mock)
 
 ## 8. Verificación de cierre (obligatoria)
 

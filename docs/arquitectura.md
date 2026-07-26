@@ -321,6 +321,12 @@ Toda confirmación de Octanos pasa por la edge function `validate-verification`,
 - **Residencia de datos** (decisión consciente): al usar DeepSeek se envía **solo el cuerpo del comentario** (contenido público) a un tercero con servidores fuera de la UE; no se envía PII de cuenta ni geolocalización. El cuerpo viaja como dato delimitado (resistencia a inyección de prompt). `MODERATION_PROVIDER=off` es el interruptor de rollback.
 - **Efectos secundarios en el servidor**: los Octanos se difieren y solo se acreditan al pasar a `approved` (RPC `process_comment`/`moderate_comment`), coherente con la regla de que la lógica con efectos vive en Edge/DB, nunca en el cliente.
 
+### 6.6 Panel de administración: tema claro y kit de UI (change `admin-comments-management`)
+
+- El **panel admin (solo web)** usa un **tema claro** propio (fondo claro, texto oscuro, acento amarillo), como **excepción consciente** al "sin light theme" del MVP —que aplica a la app móvil, que sigue oscura—. Es una herramienta interna y el patrón habitual en dashboards.
+- El lenguaje visual vive en un **kit compartido** `features/admin/ui.tsx` (paleta `C` clara + primitivas: `Card`, `Button`, `Chips`, `SearchInput`, `CompactRow`/badges, `Pagination`, `BulkBar`, `Checkbox`), aplicado a las 3 secciones (Parkings, Usuarios, Comentarios) manteniendo **sidebar + contenido**.
+- La **gestión de comentarios** lista vía RPC `admin_list_comments` (paginado/buscable, guard `is_admin()`); aprobar/eliminar (incl. bloque) pasan por Edge Functions (`admin-moderate-comment`, `admin-delete-comment`) con `service_role`, y el borrado retira Octanos vía `admin_delete_comments` — coherente con "efectos secundarios solo en Edge/DB".
+
 ---
 
 ## 7. Performance

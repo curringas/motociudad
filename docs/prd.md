@@ -140,6 +140,7 @@ No hay competencia directa consolidada en España. Las apps de parking generalis
 | F15 | Buscador de ubicaciones sobre el mapa | Centrar el mapa en una calle/ciudad buscada (geocoding nativo) para explorar parkings de otra zona |
 | F16 | Comentarios en parkings (crear, votar, borrar) | Contexto colaborativo sin necesidad de estar en el lugar; gamificado con la escalera de primeros comentarios (`gamificacion.md` §2.3) |
 | F17 | Moderación IA de comentarios | Cada comentario se modera con un agente de IA (DeepSeek) al publicarse: pre-filtros + veredicto `allow`/`reject`/`flag`. Rechaza insultos, spam, datos personales y off-topic; protege la crítica honesta. Los dudosos y los no validables quedan `pending_review` (fail-safe, nunca aprueba por defecto) para una cola de moderación en el panel admin. Octanos diferidos a la aprobación. Change `ai-comment-moderation` |
+| F18 | Gestión de comentarios en el panel admin | Listado paginado y buscable de comentarios `approved`/`pending_review` (por defecto pendientes), con filtro por ciudad, selección múltiple y acciones en bloque. Aprobar los pendientes (acredita Octanos) y **eliminar** (hard delete que **retira los Octanos** del comentario). Change `admin-comments-management` |
 
 ### 7.2 Features fuera del MVP (NON-GOALS)
 
@@ -151,7 +152,7 @@ Lista explícita para que ningún agente de IA las infiera como necesarias:
 - ❌ Foros / hilos de discusión.
 - ❌ Integración con sistemas de pago de zona azul / SARE.
 - ❌ Edición de parkings ya verificados por usuarios de bajo nivel.
-- ❌ Modo claro (light theme).
+- ❌ Modo claro (light theme) **en la app móvil** (sigue siendo oscura). Excepción intencionada: el **panel de administración** (web) usa **tema claro** por decisión de UX (herramienta interna); no afecta a la app móvil. Change `admin-comments-management`.
 - ❌ Dashboard de admin público.
 - ❌ Soporte multi-idioma en MVP (solo castellano; inglés post-launch).
 - ❌ Notificaciones push de marketing (solo transaccionales: nivel, insignia, verificación).
