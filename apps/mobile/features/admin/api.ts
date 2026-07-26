@@ -205,31 +205,24 @@ async function invokeAdmin(fn: string, body: Record<string, unknown>): Promise<v
 
 export type AdminCommentFilter = {
   status: CommentStatusFilter;
-  city: string | null;
+  city: string; // búsqueda de texto (ILIKE) sobre la ciudad del parking
   search: string;
   page: number; // 0-indexed
 };
 
-export const ADMIN_COMMENTS_PAGE_SIZE = 25;
+export const ADMIN_COMMENTS_PAGE_SIZE = 50;
 
 /** Listado paginado/buscable de comentarios para el panel (RPC admin_list_comments). */
 export async function listAdminComments(filter: AdminCommentFilter): Promise<AdminCommentList> {
   const { data, error } = await supabase.rpc('admin_list_comments', {
     p_status: filter.status,
-    p_city: filter.city ?? undefined,
+    p_city: filter.city.trim() || undefined,
     p_search: filter.search.trim() || undefined,
     p_limit: ADMIN_COMMENTS_PAGE_SIZE,
     p_offset: filter.page * ADMIN_COMMENTS_PAGE_SIZE,
   });
   if (error) throw error;
   return adminCommentListSchema.parse(data);
-}
-
-/** Ciudades con comentarios, para el filtro (RPC admin_comment_cities). */
-export async function listAdminCommentCities(): Promise<string[]> {
-  const { data, error } = await supabase.rpc('admin_comment_cities');
-  if (error) throw error;
-  return z.array(z.string()).parse(data ?? []);
 }
 
 /** Aprueba 1..N comentarios pendientes (bloque) vía admin-moderate-comment. */

@@ -12,7 +12,7 @@ CREATE OR REPLACE FUNCTION public.admin_list_comments(
   p_status text DEFAULT 'pending_review',
   p_city   text DEFAULT NULL,
   p_search text DEFAULT NULL,
-  p_limit  int  DEFAULT 25,
+  p_limit  int  DEFAULT 50,
   p_offset int  DEFAULT 0
 )
 RETURNS JSONB
@@ -44,7 +44,7 @@ BEGIN
     WHERE c.deleted_at IS NULL
       AND c.moderation_status IN ('approved', 'pending_review')
       AND (p_status = 'all' OR c.moderation_status = p_status::comment_moderation_status)
-      AND (v_city IS NULL OR p.city = v_city)
+      AND (v_city IS NULL OR p.city ILIKE '%' || v_city || '%')
       AND (
         v_search IS NULL
         OR c.body ILIKE '%' || v_search || '%'
@@ -71,33 +71,7 @@ COMMENT ON FUNCTION public.admin_list_comments IS
 REVOKE EXECUTE ON FUNCTION public.admin_list_comments(text, text, text, int, int) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.admin_list_comments(text, text, text, int, int) TO authenticated;
 
--- ============================================================
--- admin_comment_cities: distinct cities among parkings with stored comments,
--- for the panel's city filter. Read-only; guarded by is_admin().
--- ============================================================
-CREATE OR REPLACE FUNCTION public.admin_comment_cities()
-RETURNS TEXT[]
-LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public
-AS $$
-DECLARE
-  v_cities text[];
-BEGIN
-  IF NOT public.is_admin() THEN
-    RAISE EXCEPTION 'FORBIDDEN: solo administradores';
-  END IF;
-  SELECT array_agg(DISTINCT p.city ORDER BY p.city) INTO v_cities
-  FROM public.parkings p
-  WHERE EXISTS (
-    SELECT 1 FROM public.comments c
-    WHERE c.parking_id = p.id AND c.deleted_at IS NULL
-      AND c.moderation_status IN ('approved', 'pending_review')
-  );
-  RETURN coalesce(v_cities, ARRAY[]::text[]);
-END;
-$$;
-
-REVOKE EXECUTE ON FUNCTION public.admin_comment_cities() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_comment_cities() TO authenticated;
+-- (El filtro de ciudad usa búsqueda de texto ILIKE, no un catálogo de ciudades.)
 
 -- ============================================================
 -- admin_delete_comments: hard delete comments + revoke their Octanos.

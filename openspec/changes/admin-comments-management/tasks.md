@@ -2,7 +2,7 @@
 
 - [x] 1.1 RPC `admin_list_comments(p_status, p_city, p_search, p_limit, p_offset)` (SECURITY DEFINER + search_path fijo, guard `is_admin()`): devuelve `{ rows, total }` con comentario + estado + fecha + upvotes + autor + parking(name, city); solo `approved`/`pending_review`; orden reciente
 - [x] 1.2 RPC `admin_delete_comments(p_comment_ids uuid[])` (SECURITY DEFINER + fijo, guard `is_admin()`): borra `octano_events` de esos comentarios, borra los comentarios (votes por cascade) y recalcula `total_octanos`/`octanos_this_month` de los autores afectados
-- [x] 1.3 RPC ligero de ciudades distintas para el autocompletado (o reutilizar consulta existente)
+- [x] 1.3 Filtro de ciudad por **texto** (ILIKE en `admin_list_comments.p_city`); sin RPC de catálogo de ciudades
 - [x] 1.4 `REVOKE EXECUTE` a anon/authenticated en los RPCs nuevos
 - [x] 1.5 pgTAP: `admin_delete_comments` retira Octanos (borra eventos + recalcula, residuo cero, libera puesto de escalera); `admin_list_comments` filtra por estado/ciudad/búsqueda y pagina
 
@@ -46,6 +46,6 @@
 
 ## 8. Verificación de cierre (obligatoria)
 
-- [ ] 8.1 Ejecutar `verify-all-platforms` (subagente `e2e-verifier`): panel admin → **solo web**, logueado como admin
-- [ ] 8.2 Cubrir: listado por defecto (pendientes), búsqueda, filtro ciudad, paginación; aprobar (individual y bloque); eliminar (individual y bloque) con retirada de Octanos verificada; guard de no-admin; restyle claro de las 3 secciones
-- [ ] 8.3 Limpiar datos de prueba y dejar evidencia en `.claude/verify-runs/admin-comments-management.md`
+- [x] 8.1 Ejecutar `verify-all-platforms` (subagente `e2e-verifier`): panel admin → **solo web**, logueado como admin
+- [x] 8.2 Cubrir: listado por defecto (pendientes), búsqueda, filtro ciudad, paginación; aprobar (individual y bloque); eliminar (individual y bloque) con retirada de Octanos verificada; guard de no-admin; restyle claro de las 3 secciones
+- [x] 8.3 Limpiar datos de prueba y dejar evidencia en `.claude/verify-runs/admin-comments-management.md`

@@ -2,7 +2,7 @@
 // Lista approved + pending_review; por defecto pendientes. Búsqueda + filtro por
 // ciudad, selección múltiple + acciones en bloque, paginación.
 // OpenSpec: changes/admin-comments-management.
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { Redirect } from 'expo-router';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -10,7 +10,6 @@ import { formatRelativeTime } from '@/features/comments/presenter';
 import {
   useCurrentProfile,
   useAdminComments,
-  useAdminCommentCities,
   useApproveComments,
   useDeleteComments,
 } from '@/features/admin/hooks';
@@ -19,7 +18,7 @@ import { canManageUsers } from '@/features/admin/permissions';
 import type { CommentStatusFilter } from '@/features/admin/schemas';
 import { CommentRow } from '@/features/admin/components/CommentRow';
 import {
-  C, Chips, SearchInput, Checkbox, BulkBar, Pagination, Button, Banner, Spinner,
+  C, Chips, SearchInput, Field, Checkbox, BulkBar, Pagination, Button, Banner, Spinner,
 } from '@/features/admin/ui';
 
 const STATUS_TABS: readonly { value: CommentStatusFilter; label: string }[] = [
@@ -40,26 +39,21 @@ export default function AdminCommentsWeb() {
   const [err, setErr] = useState<string | null>(null);
 
   const debouncedSearch = useDebounce(search, 400);
+  const debouncedCity = useDebounce(city, 400);
 
   // Reset de página al cambiar cualquier filtro.
   useEffect(() => {
     setPage(0);
     setSelected(new Set());
-  }, [status, city, debouncedSearch]);
+  }, [status, debouncedCity, debouncedSearch]);
 
-  const filter = { status, city: city || null, search: debouncedSearch, page };
+  const filter = { status, city: debouncedCity, search: debouncedSearch, page };
   const { data, isLoading, isError, error } = useAdminComments(filter, isAdmin);
-  const { data: cities = [] } = useAdminCommentCities(isAdmin);
   const approve = useApproveComments();
   const del = useDeleteComments();
 
   const rows = data?.rows ?? [];
   const total = data?.total ?? 0;
-
-  const cityOptions = useMemo(
-    () => [{ value: '', label: 'Todas' }, ...cities.map((c) => ({ value: c, label: c }))],
-    [cities],
-  );
 
   if (!profileLoading && !isAdmin) return <Redirect href="/admin/parkings" />;
 
@@ -104,9 +98,9 @@ export default function AdminCommentsWeb() {
           <Chips options={STATUS_TABS} value={status} onChange={setStatus} />
           <SearchInput value={search} onChangeText={setSearch} placeholder="Buscar por texto, autor o parking…" />
         </View>
-        {cities.length > 0 ? (
-          <Chips options={cityOptions} value={city} onChange={setCity} />
-        ) : null}
+        <View style={{ maxWidth: 280 }}>
+          <Field label="Ciudad" value={city} onChangeText={setCity} placeholder="Filtra por ciudad…" />
+        </View>
       </View>
 
       {err ? <Banner kind="error">{err}</Banner> : null}

@@ -14,7 +14,6 @@ import {
   listParkingPhotos,
   uploadParkingPhoto,
   listAdminComments,
-  listAdminCommentCities,
   approveComments,
   deleteComments,
   type AdminCommentFilter,
@@ -148,16 +147,6 @@ export function useAdminComments(filter: AdminCommentFilter, enabled = true) {
     enabled,
     staleTime: 10_000,
     placeholderData: (prev) => prev, // evita parpadeo al paginar/filtrar
-  });
-}
-
-/** Ciudades con comentarios (para el filtro). */
-export function useAdminCommentCities(enabled = true) {
-  return useQuery({
-    queryKey: [...adminKeys.all, 'comment-cities'] as const,
-    queryFn: () => listAdminCommentCities(),
-    enabled,
-    staleTime: 60_000,
   });
 }
 

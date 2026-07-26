@@ -39,9 +39,10 @@ autor (username/display_name) + parking (name, city). Orden: más reciente prime
 ### D2 — Filtros y estados
 `p_status ∈ { pending_review, approved, all }` (por defecto en el cliente:
 `pending_review`). Solo se listan `approved` y `pending_review` (nunca `rejected`
-ni borrados). `p_city` filtra por `parkings.city` exacta (autocompletado desde el
-conjunto de ciudades). `p_search` aplica ILIKE sobre body, username, display_name y
-parking name.
+ni borrados). `p_city` filtra por `parkings.city` con **búsqueda de texto (ILIKE,
+match parcial)** — no un catálogo de ciudades en botones, porque pueden ser
+cientos; el cliente usa un input de texto como en Parkings. `p_search` aplica ILIKE
+sobre body, username, display_name y parking name.
 
 ### D3 — Aprobar (individual y en bloque)
 Reutiliza `moderate_comment` (acredita Octanos diferidos, D3 del change anterior).
@@ -74,7 +75,7 @@ aplican en las 3 pantallas web (`parkings`, `users`, `comments`) manteniendo
 consciente al "sin light theme" (que aplica a la app móvil).
 
 ### D6 — Paginación por offset
-`p_limit`/`p_offset` con controles de página numerados (25/pág). Suficiente para el
+`p_limit`/`p_offset` con controles de página numerados (50/pág). Suficiente para el
 volumen previsto; simple de implementar y con total exacto para "N–M de T".
 
 ## Risks / Trade-offs
@@ -96,9 +97,9 @@ volumen previsto; simple de implementar y con total exacto para "N–M de T".
 
 ## Migration Plan
 
-1. Migración: RPCs `admin_list_comments` (lectura) y `admin_delete_comments`
-   (borrado + retirada de Octanos), con `REVOKE` a anon/authenticated y guard
-   `is_admin()`. pgTAP de la retirada de Octanos.
+1. Migración: RPCs `admin_list_comments` (lectura, filtro de ciudad por ILIKE) y
+   `admin_delete_comments` (borrado + retirada de Octanos), con `REVOKE` a
+   anon/authenticated y guard `is_admin()`. pgTAP de la retirada de Octanos.
 2. Edge Functions: `admin-delete-comment` (nueva) y `admin-moderate-comment`
    (aceptar array para aprobar en bloque). Deploy a Cloud.
 3. Ampliar `features/admin/ui.tsx` (paleta clara + primitivas) y reestilar
@@ -112,7 +113,6 @@ volumen previsto; simple de implementar y con total exacto para "N–M de T".
 
 ## Open Questions
 
-- ¿Autocompletado de ciudad desde un `distinct city` (RPC ligero) o lista fija? →
-  arranque: `distinct city` de parkings no borrados.
+- Filtro de ciudad: **resuelto** como búsqueda de texto (ILIKE), no catálogo.
 - ¿Mostrar en el listado el motivo por el que un comentario quedó `pending_review`
   (flag vs fail-safe)? → útil pero opcional; se decide en implementación.
