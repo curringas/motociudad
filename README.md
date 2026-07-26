@@ -114,19 +114,20 @@ Detalle completo (personas, KPIs, roadmap, out-of-scope): **[`docs/prd.md`](docs
 | Base de datos con RLS, triggers, vistas y funciones PostGIS | ✅ |
 | Versión web de consulta (Leaflet + OSM + Nominatim, responsive) | ✅ |
 | Panel de administración web (roles + gestión) — [ver 1.2 Panel admin](#panel-de-administración-web-v13) | ✅ |
-| Moderación IA de comentarios (DeepSeek) con cola de revisión en el panel admin | ✅ |
+| Moderación IA de comentarios (DeepSeek) al publicar (`allow`/`reject`/`flag`, fail-safe) | ✅ |
+| Gestión de comentarios en el panel admin (listado paginado, buscar, filtrar, aprobar/eliminar en bloque, retirada de Octanos) | ✅ |
 | CI/CD (GitHub Actions) + tests unitarios, E2E y de base de datos | ✅ |
 
 #### Panel de administración web (v1.3)
 
-Panel **solo web** con autorización real por RLS + Edge Function (el guard de UI es solo UX):
+Panel **solo web** con autorización real por RLS + Edge Function (el guard de UI es solo UX). **Tema claro** (decisión de UX para la herramienta interna; la app móvil sigue oscura), con listados **compactos y paginados (50/pág)** en las tres secciones:
 
 - Roles (`user` / `contributor` / `admin`) y suspensión global de cuenta.
 - Primitivas de autorización SQL (`is_admin()`, `can_manage_parkings()`) usadas por las policies.
 - **Usuarios** (solo admin): listar, buscar, filtrar por rol, detalle, cambiar rol, suspender/reactivar.
 - **Parkings** (contributor/admin): listar/filtrar, crear (sin Octanos), editar por propiedad, imágenes; verificar y borrar/archivar (solo admin).
 - Edge Function `admin-set-role` con anti-escalada de privilegios. **El panel nunca genera Octanos.**
-- **Comentarios** (cola de moderación): lista de comentarios `pending_review` con aprobar/rechazar (Edge Function `admin-moderate-comment`); al aprobar se acreditan los Octanos diferidos.
+- **Comentarios** (gestión completa): listado **paginado** (50/pág) y buscable de comentarios `approved`/`pending_review` (por defecto pendientes), con **filtro por ciudad** (texto) y **selección múltiple + acciones en bloque**. **Aprobar** los pendientes (acredita los Octanos diferidos, Edge Function `admin-moderate-comment`) y **Eliminar** = hard delete que **retira los Octanos** del comentario (Edge Function `admin-delete-comment`).
 
 #### Moderación IA de comentarios (v1.4)
 
