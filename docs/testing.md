@@ -278,6 +278,14 @@ describe('check_level_up', () => {
 });
 ```
 
+### 7.3 Moderación IA de comentarios (change `ai-comment-moderation`)
+
+La IA **no es determinista**, así que no se llama al proveedor real en tests:
+
+- El clasificador se **mockea** o se aísla. Se testea directo la lógica pura y determinista: pre-filtros (`prefilter`), mapeo veredicto→estado (`resolveVerdict`, incluida la degradación de `reject` de baja confianza a revisión) y el contrato Zod del veredicto (`verdictSchema`). Ver `supabase/functions/_shared/__tests__/moderation.test.ts`.
+- El **fail-safe** se prueba sin red: sin `DEEPSEEK_API_KEY`, `moderateComment` de un comentario limpio resuelve a `pending_review` (nunca aprueba por defecto).
+- El diferido de Octanos (pending no acredita; aprobación admin acredita en su momento; sin doble pago) se cubre en pgTAP: `supabase/tests/sql/comment_moderation.test.sql`. La visibilidad por estado (RLS) en `supabase/tests/rls/comment_moderation.test.sql`.
+
 ---
 
 ## 8. Tests de RLS con pgTAP

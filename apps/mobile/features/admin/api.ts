@@ -4,8 +4,10 @@ import { supabase } from '@/lib/supabase';
 import {
   adminProfileSchema,
   adminParkingSchema,
+  adminCommentSchema,
   type AdminProfile,
   type AdminParking,
+  type AdminComment,
   type UserFilter,
   type ParkingFilter,
   type SetRoleInput,
@@ -176,6 +178,52 @@ export async function softDeleteParking(id: string): Promise<void> {
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', id);
   if (error) throw error;
+}
+
+/**
+ * Comentarios en cola de moderación (pending_review), más antiguos primero.
+ * Admin los ve por RLS; el público no. Feature ai-comment-moderation.
+ */
+export async function listPendingComments(): Promise<AdminComment[]> {
+  const { data, error } = await supabase
+    .from('comments')
+    .select(
+      'id, parking_id, body, created_at, parking:parking_id(name), ' +
+        'author:author_id(username, display_name)',
+    )
+    .eq('moderation_status', 'pending_review')
+    .is('deleted_at', null)
+    .order('created_at', { ascending: true })
+    .limit(200);
+  if (error) throw error;
+  return z.array(adminCommentSchema).parse(data ?? []);
+}
+
+/** Aprueba o rechaza un comentario pendiente vía Edge Function admin-moderate-comment. */
+export async function moderateComment(
+  commentId: string,
+  action: 'approve' | 'reject',
+): Promise<void> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const jwt = sessionData.session?.access_token;
+  if (!jwt) throw new Error('Usuario no autenticado');
+
+  const { error } = await supabase.functions.invoke('admin-moderate-comment', {
+    body: { commentId, action },
+    headers: { Authorization: `Bearer ${jwt}` },
+  });
+
+  if (error) {
+    if (error instanceof FunctionsHttpError) {
+      try {
+        const body = (await error.context.json()) as { error?: { message?: string } };
+        throw new Error(body?.error?.message ?? 'No se pudo moderar el comentario');
+      } catch (parseErr) {
+        if (parseErr instanceof Error && parseErr.message !== error.message) throw parseErr;
+      }
+    }
+    throw new Error(error.message);
+  }
 }
 
 export type ParkingPhoto = { id: string; storage_path: string; url: string };

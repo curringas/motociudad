@@ -314,6 +314,13 @@ Toda confirmación de Octanos pasa por la edge function `validate-verification`,
 - Política de privacidad publicada antes del primer release público.
 - Endpoint de borrado RGPD funcional (`delete-account`).
 
+### 6.5 Moderación IA de comentarios (change `ai-comment-moderation`)
+
+- **Proveedor desacoplado**: la moderación vive en `supabase/functions/_shared/moderation.ts` tras la interfaz `moderateComment(text)`, con un adaptador por proveedor seleccionado con `MODERATION_PROVIDER`. Arranque con **DeepSeek** (`deepseek-v4-flash`, API compatible con OpenAI, salida JSON forzada). Cambiar de proveedor —o volver a Claude— es cambiar config, no lógica.
+- **Puerta síncrona** en `post-comment`: pre-filtros deterministas (enlaces/flood/mayúsculas) → veredicto estructurado (`allow`/`reject`/`flag`) validado con Zod. Timeout corto y 0 reintentos; cualquier fallo o veredicto inválido cae a `pending_review` (**fail-safe**, nunca aprueba por defecto).
+- **Residencia de datos** (decisión consciente): al usar DeepSeek se envía **solo el cuerpo del comentario** (contenido público) a un tercero con servidores fuera de la UE; no se envía PII de cuenta ni geolocalización. El cuerpo viaja como dato delimitado (resistencia a inyección de prompt). `MODERATION_PROVIDER=off` es el interruptor de rollback.
+- **Efectos secundarios en el servidor**: los Octanos se difieren y solo se acreditan al pasar a `approved` (RPC `process_comment`/`moderate_comment`), coherente con la regla de que la lógica con efectos vive en Edge/DB, nunca en el cliente.
+
 ---
 
 ## 7. Performance

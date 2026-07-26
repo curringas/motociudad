@@ -16,6 +16,7 @@
 
 import { supabaseAdmin } from "../_shared/supabase.ts";
 import { ERRORS, errorResponse, makeError } from "../_shared/errors.ts";
+import { moderateComment } from "../_shared/moderation.ts";
 import { parsePostComment } from "./schemas.ts";
 
 const CORS_HEADERS = {
@@ -107,13 +108,30 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return errorResponse(ERRORS.RATE_LIMITED, 429);
   }
 
+  // ── 4.5 Moderación IA (pre-filtros → proveedor → veredicto) ─
+  // Nunca lanza: un fallo del proveedor resuelve a pending_review (fail-safe).
+  const moderation = await moderateComment(input.body);
+
+  // Rechazo duro: no se inserta el comentario; se devuelve el motivo legible.
+  if (moderation.status === "rejected") {
+    return errorResponse(
+      makeError(
+        "COMMENT_REJECTED",
+        moderation.reason_es || "Tu comentario no cumple las normas de la comunidad.",
+      ),
+      422,
+    );
+  }
+
   // ── 5. Transacción atómica: insertar comentario + acreditar ──
+  // Acredita Octanos solo si el estado resultante es 'approved' (D3).
   const { data: txResult, error: txError } = await supabaseAdmin.rpc(
     "process_comment",
     {
       p_parking_id: input.parking_id,
       p_user_id: userId,
       p_body: input.body,
+      p_moderation_status: moderation.status,
     },
   );
 
@@ -140,10 +158,16 @@ Deno.serve(async (req: Request): Promise<Response> => {
       success: true,
       data: {
         comment_id: txResult?.comment_id ?? "",
+        moderation_status: txResult?.moderation_status ?? moderation.status,
         octanos_earned: Number(txResult?.octanos_earned ?? 0),
         action_type: txResult?.action_type ?? null,
         eligible: Boolean(txResult?.eligible),
         cap_reached: Boolean(txResult?.cap_reached),
+        // Mensaje legible para el estado "pendiente" (flag o fail-safe).
+        review_notice: moderation.status === "pending_review"
+          ? moderation.reason_es ||
+            "Tu comentario queda pendiente de revisión por un administrador."
+          : null,
       },
     }),
     { status: 200, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } },

@@ -12,7 +12,11 @@ import { toCommentView } from '../presenter';
 import { CommentComposer } from './CommentComposer';
 import { CommentList } from './CommentList';
 
-type Props = { parkingId: string };
+type Props = {
+  parkingId: string;
+  /** Called when the composer input focuses (native: scroll it above the keyboard). */
+  onComposerFocus?: () => void;
+};
 
 type Feedback = { kind: 'success' | 'info' | 'error'; text: string };
 
@@ -24,7 +28,7 @@ const FEEDBACK_TTL_MS = 6000;
  * banner, and list. Self-contained (wires hooks + session), so it can be dropped
  * into both the native and web parking-detail screens.
  */
-export function CommentsSection({ parkingId }: Props) {
+export function CommentsSection({ parkingId, onComposerFocus }: Props) {
   const router = useRouter();
   const { user } = useSessionStore();
 
@@ -53,7 +57,15 @@ export function CommentsSection({ parkingId }: Props) {
     try {
       const res = await postMutation.mutateAsync(body);
       if (!res.success) {
+        // Incluye COMMENT_REJECTED: el mensaje es el motivo legible (reason_es).
         setFeedback({ kind: 'error', text: res.error?.message ?? 'No se pudo publicar el comentario' });
+      } else if (res.data?.moderation_status === 'pending_review') {
+        setFeedback({
+          kind: 'info',
+          text:
+            res.data.review_notice ??
+            '⏳ Tu comentario queda pendiente de revisión por un administrador.',
+        });
       } else if (res.data && res.data.octanos_earned > 0) {
         setFeedback({ kind: 'success', text: `🎉 ¡+${res.data.octanos_earned} Octanos por tu comentario!` });
       } else if (res.data?.cap_reached) {
@@ -95,6 +107,7 @@ export function CommentsSection({ parkingId }: Props) {
         <CommentComposer
           onSubmit={handleSubmit}
           isSubmitting={postMutation.isPending}
+          onFocus={onComposerFocus}
         />
       ) : (
         <TouchableOpacity

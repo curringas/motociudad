@@ -17,6 +17,8 @@ export type ErrorCode =
   // Errores de negocio — comentarios (post-comment / vote-comment / delete-comment)
   | "RATE_LIMITED"         // demasiados comentarios en poco tiempo
   | "COMMENT_NOT_FOUND"    // comentario inexistente o borrado
+  | "COMMENT_REJECTED"     // la moderación IA rechazó el contenido
+  | "NOT_PENDING"          // el comentario no está pendiente de revisión
   | "SELF_VOTE_FORBIDDEN"  // intento de votar el propio comentario
   // Errores de negocio — verificación (validate-verification)
   | "GEOFENCE_FAIL"        // usuario > 100m del parking
@@ -78,7 +80,15 @@ export function errorResponse(
     }),
     {
       status,
-      headers: { "Content-Type": "application/json" },
+      // CORS headers are required so browsers can READ error bodies (non-2xx).
+      // Without them the web client only sees an opaque network error and can't
+      // surface the reason (e.g. the moderation reason on COMMENT_REJECTED).
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers":
+          "authorization, x-client-info, apikey, content-type",
+      },
     },
   );
 }

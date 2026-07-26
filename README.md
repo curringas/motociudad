@@ -114,6 +114,7 @@ Detalle completo (personas, KPIs, roadmap, out-of-scope): **[`docs/prd.md`](docs
 | Base de datos con RLS, triggers, vistas y funciones PostGIS | ✅ |
 | Versión web de consulta (Leaflet + OSM + Nominatim, responsive) | ✅ |
 | Panel de administración web (roles + gestión) — [ver 1.2 Panel admin](#panel-de-administración-web-v13) | ✅ |
+| Moderación IA de comentarios (DeepSeek) con cola de revisión en el panel admin | ✅ |
 | CI/CD (GitHub Actions) + tests unitarios, E2E y de base de datos | ✅ |
 
 #### Panel de administración web (v1.3)
@@ -125,6 +126,17 @@ Panel **solo web** con autorización real por RLS + Edge Function (el guard de U
 - **Usuarios** (solo admin): listar, buscar, filtrar por rol, detalle, cambiar rol, suspender/reactivar.
 - **Parkings** (contributor/admin): listar/filtrar, crear (sin Octanos), editar por propiedad, imágenes; verificar y borrar/archivar (solo admin).
 - Edge Function `admin-set-role` con anti-escalada de privilegios. **El panel nunca genera Octanos.**
+- **Comentarios** (cola de moderación): lista de comentarios `pending_review` con aprobar/rechazar (Edge Function `admin-moderate-comment`); al aprobar se acreditan los Octanos diferidos.
+
+#### Moderación IA de comentarios (v1.4)
+
+Cada comentario se modera con un **agente de IA** en el momento de publicarlo (Edge Function `post-comment`):
+
+- **Proveedor desacoplado** (`MODERATION_PROVIDER`, arranque con **DeepSeek**): pre-filtros deterministas (enlaces/flood/mayúsculas) → veredicto estructurado `allow`/`reject`/`flag`.
+- **Reglas**: rechaza insultos, spam, contenido sexual, datos personales y off-topic; **protege la crítica honesta** (negativo ≠ tóxico).
+- **Fail-safe**: si el proveedor falla o el caso es dudoso, el comentario queda `pending_review` (oculto al público, visible para su autor) — **nunca se aprueba por defecto** — y pasa a la cola de moderación del panel.
+- **Octanos diferidos**: solo se acreditan cuando el comentario queda `approved`.
+- **Privacidad**: se envía solo el cuerpo del comentario al proveedor (sin PII de cuenta ni geolocalización); `MODERATION_PROVIDER=off` desactiva la moderación (rollback).
 
 #### Gamificación (resumen)
 

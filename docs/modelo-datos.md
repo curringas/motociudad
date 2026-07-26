@@ -320,6 +320,7 @@ erDiagram
         text body
         int upvotes_count
         bool octanos_awarded
+        enum moderation_status "approved|pending_review|rejected"
         timestamptz deleted_at
     }
 

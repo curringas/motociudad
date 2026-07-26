@@ -74,6 +74,7 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           id: string
+          moderation_status: Database["public"]["Enums"]["comment_moderation_status"]
           octanos_awarded: boolean
           parking_id: string
           updated_at: string
@@ -85,6 +86,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           id?: string
+          moderation_status?: Database["public"]["Enums"]["comment_moderation_status"]
           octanos_awarded?: boolean
           parking_id: string
           updated_at?: string
@@ -96,6 +98,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           id?: string
+          moderation_status?: Database["public"]["Enums"]["comment_moderation_status"]
           octanos_awarded?: boolean
           parking_id?: string
           updated_at?: string
@@ -889,6 +892,10 @@ export type Database = {
         Args: { in_user_id: string }
         Returns: number
       }
+      credit_comment_position: {
+        Args: { p_comment_id: string; p_parking_id: string; p_user_id: string }
+        Returns: Json
+      }
       disablelongtransactions: { Args: never; Returns: string }
       dropgeometrycolumn:
         | {
@@ -1024,6 +1031,13 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_suspended: { Args: never; Returns: boolean }
       longtransactionsenabled: { Args: never; Returns: boolean }
+      moderate_comment: {
+        Args: {
+          p_comment_id: string
+          p_new_status: Database["public"]["Enums"]["comment_moderation_status"]
+        }
+        Returns: Json
+      }
       nearby_parkings: {
         Args: {
           in_filter?: Database["public"]["Enums"]["parking_type"]
@@ -1089,7 +1103,12 @@ export type Database = {
       postgis_version: { Args: never; Returns: string }
       postgis_wagyu_version: { Args: never; Returns: string }
       process_comment: {
-        Args: { p_body: string; p_parking_id: string; p_user_id: string }
+        Args: {
+          p_body: string
+          p_moderation_status?: Database["public"]["Enums"]["comment_moderation_status"]
+          p_parking_id: string
+          p_user_id: string
+        }
         Returns: Json
       }
       process_comment_vote: {
@@ -1711,6 +1730,7 @@ export type Database = {
     }
     Enums: {
       badge_family: "discovery" | "verification" | "community" | "thematic"
+      comment_moderation_status: "approved" | "pending_review" | "rejected"
       friendship_status: "pending" | "accepted" | "blocked"
       octano_action:
         | "propose_parking"
@@ -1874,6 +1894,7 @@ export const Constants = {
   public: {
     Enums: {
       badge_family: ["discovery", "verification", "community", "thematic"],
+      comment_moderation_status: ["approved", "pending_review", "rejected"],
       friendship_status: ["pending", "accepted", "blocked"],
       octano_action: [
         "propose_parking",
