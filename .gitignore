@@ -17,3 +17,6 @@ supabase/.temp/
 supabase/.branches/
 .claude/worktrees/
 supabase/functions/*/deno.lock
+
+# Visual brainstorming companion (superpowers)
+.superpowers/
