@@ -20,10 +20,10 @@
 
 ## 4. Pantalla de comentarios (solo web)
 
-- [ ] 4.1 `features/admin` api/hooks/schemas: listado paginado (`admin_list_comments`), aprobar (individual/bloque), eliminar (individual/bloque), ciudades para el filtro
-- [ ] 4.2 `app/admin/comments.web.tsx`: tabs (Pendientes por defecto/Aprobados/Todos), buscador, filtro por ciudad, filas compactas de 2 líneas con badges y votos, selección múltiple + barra de bloque, paginación
-- [ ] 4.3 Sustituir/replegar `PendingCommentsQueue` a la nueva estructura; invalidación de queries tras aprobar/eliminar
-- [ ] 4.4 Tests de componente del listado (filas, estados vacíos, selección múltiple, acciones)
+- [x] 4.1 `features/admin` api/hooks/schemas: listado paginado (`admin_list_comments`), aprobar (individual/bloque), eliminar (individual/bloque), ciudades para el filtro
+- [x] 4.2 `app/admin/comments.web.tsx`: tabs (Pendientes por defecto/Aprobados/Todos), buscador, filtro por ciudad, filas compactas de 2 líneas con badges y votos, selección múltiple + barra de bloque, paginación
+- [x] 4.3 Sustituir/replegar `PendingCommentsQueue` a la nueva estructura; invalidación de queries tras aprobar/eliminar
+- [x] 4.4 Tests de componente del listado (filas, estados vacíos, selección múltiple, acciones)
 
 ## 5. Restyle del resto del panel (tema claro)
 

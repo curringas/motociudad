@@ -38,18 +38,31 @@ export const adminParkingSchema = z.object({
 });
 export type AdminParking = z.infer<typeof adminParkingSchema>;
 
-// Comentario en cola de moderación (pending_review) para el panel.
-export const adminCommentSchema = z.object({
+// Fila del RPC admin_list_comments (comentario aplanado con autor + parking).
+export const adminCommentRowSchema = z.object({
   id: z.string().uuid(),
-  parking_id: z.string().uuid(),
   body: z.string(),
+  moderation_status: z.enum(['approved', 'pending_review']),
+  upvotes_count: z.number().int().nonnegative(),
   created_at: z.string(),
-  parking: z.object({ name: z.string() }).nullable(),
-  author: z
-    .object({ username: z.string().nullable(), display_name: z.string().nullable() })
-    .nullable(),
+  author_id: z.string().uuid(),
+  username: z.string().nullable(),
+  display_name: z.string().nullable(),
+  parking_id: z.string().uuid(),
+  parking_name: z.string().nullable(),
+  city: z.string().nullable(),
 });
-export type AdminComment = z.infer<typeof adminCommentSchema>;
+export type AdminComment = z.infer<typeof adminCommentRowSchema>;
+
+export const adminCommentListSchema = z.object({
+  rows: z.array(adminCommentRowSchema),
+  total: z.number().int().nonnegative(),
+});
+export type AdminCommentList = z.infer<typeof adminCommentListSchema>;
+
+// Vista/estado del filtro de comentarios del panel.
+export const commentStatusFilterSchema = z.enum(['pending_review', 'approved', 'all']);
+export type CommentStatusFilter = z.infer<typeof commentStatusFilterSchema>;
 
 // ── Filtros ──────────────────────────────────────────────────
 export const userFilterSchema = z.object({
