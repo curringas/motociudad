@@ -49,3 +49,9 @@
 - [x] 8.1 Ejecutar `verify-all-platforms` (subagente `e2e-verifier`): panel admin → **solo web**, logueado como admin
 - [x] 8.2 Cubrir: listado por defecto (pendientes), búsqueda, filtro ciudad, paginación; aprobar (individual y bloque); eliminar (individual y bloque) con retirada de Octanos verificada; guard de no-admin; restyle claro de las 3 secciones
 - [x] 8.3 Limpiar datos de prueba y dejar evidencia en `.claude/verify-runs/admin-comments-management.md`
+
+## 9. Paginación de Usuarios y Parkings (mismo estilo)
+
+- [x] 9.1 `listUsers`/`listParkings` devuelven `{rows,total}` con `range()` + `count:'exact'` (page)
+- [x] 9.2 Hooks `useAdminUsers`/`useAdminParkings` con page; pantallas con estado de página + reset al filtrar
+- [x] 9.3 `Pagination` (50/pág) en Usuarios y Parkings; typecheck + tests verdes

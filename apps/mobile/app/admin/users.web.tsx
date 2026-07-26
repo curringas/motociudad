@@ -1,14 +1,15 @@
 // Sección Usuarios del panel (solo admin).
 // Listar/buscar/filtrar · detalle (perfil, rol, estado, nivel, Octanos) ·
 // cambiar rol y suspender/reactivar (vía Edge Function admin-set-role).
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { Redirect } from 'expo-router';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useCurrentProfile, useAdminUsers, useSetUserRole, useLevelName } from '@/features/admin/hooks';
+import { ADMIN_PAGE_SIZE } from '@/features/admin/api';
 import { canManageUsers } from '@/features/admin/permissions';
 import type { AdminProfile, UserFilter, UserRole } from '@/features/admin/schemas';
-import { C, Card, Button, Field, Chips, RoleBadge, StatusBadge, Spinner, Banner } from '@/features/admin/ui';
+import { C, Card, Button, Field, Chips, RoleBadge, StatusBadge, Spinner, Banner, Pagination } from '@/features/admin/ui';
 
 const ROLE_FILTER_OPTIONS = [
   { value: 'all', label: 'Todos' },
@@ -28,11 +29,15 @@ export default function AdminUsersWeb() {
   const [search, setSearch] = useState('');
   const [role, setRole] = useState<UserFilter['role']>('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
 
   const debouncedSearch = useDebounce(search, 400);
+  useEffect(() => setPage(0), [debouncedSearch, role]);
   const filter: UserFilter = { search: debouncedSearch, role };
   const isAdmin = canManageUsers(profile);
-  const { data: users, isLoading, isError, error } = useAdminUsers(filter, isAdmin);
+  const { data, isLoading, isError, error } = useAdminUsers(filter, page, isAdmin);
+  const users = data?.rows ?? [];
+  const total = data?.total ?? 0;
 
   // El layout ya bloquea a no-admin, pero reforzamos: contributor no ve esta sección.
   if (!profileLoading && !isAdmin) {
@@ -53,12 +58,12 @@ export default function AdminUsersWeb() {
         </View>
       </Card>
 
-      {isLoading ? <Spinner label="Cargando usuarios…" /> : null}
+      {isLoading && users.length === 0 ? <Spinner label="Cargando usuarios…" /> : null}
       {isError ? <Banner kind="error">Error al cargar: {(error as Error)?.message}</Banner> : null}
-      {users && users.length === 0 ? <Banner kind="info">No hay usuarios que coincidan.</Banner> : null}
+      {!isLoading && users.length === 0 ? <Banner kind="info">No hay usuarios que coincidan.</Banner> : null}
 
-      <View style={{ gap: 12 }}>
-        {users?.map((u) => (
+      <View style={{ gap: 8 }}>
+        {users.map((u) => (
           <UserRow
             key={u.id}
             user={u}
@@ -68,6 +73,8 @@ export default function AdminUsersWeb() {
           />
         ))}
       </View>
+
+      <Pagination page={page} pageSize={ADMIN_PAGE_SIZE} total={total} onPage={setPage} />
     </View>
   );
 }

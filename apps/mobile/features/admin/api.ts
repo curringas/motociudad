@@ -38,8 +38,14 @@ export async function getProfile(userId: string): Promise<AdminProfile> {
 }
 
 /** Lista usuarios con búsqueda (username/display_name) y filtro por rol. */
-export async function listUsers(filter: UserFilter): Promise<AdminProfile[]> {
-  let query = supabase.from('users').select(PROFILE_COLUMNS).order('created_at', { ascending: false });
+export const ADMIN_PAGE_SIZE = 50;
+export type Paged<T> = { rows: T[]; total: number };
+
+export async function listUsers(filter: UserFilter, page = 0): Promise<Paged<AdminProfile>> {
+  let query = supabase
+    .from('users')
+    .select(PROFILE_COLUMNS, { count: 'exact' })
+    .order('created_at', { ascending: false });
 
   const search = filter.search.trim();
   if (search !== '') {
@@ -49,9 +55,10 @@ export async function listUsers(filter: UserFilter): Promise<AdminProfile[]> {
     query = query.eq('role', filter.role);
   }
 
-  const { data, error } = await query.limit(200);
+  const from = page * ADMIN_PAGE_SIZE;
+  const { data, error, count } = await query.range(from, from + ADMIN_PAGE_SIZE - 1);
   if (error) throw error;
-  return z.array(adminProfileSchema).parse(data ?? []);
+  return { rows: z.array(adminProfileSchema).parse(data ?? []), total: count ?? 0 };
 }
 
 /** Nombre del nivel del catálogo user_levels para un nivel dado. */
@@ -99,8 +106,12 @@ export async function setUserRole(input: SetRoleInput): Promise<void> {
 export async function listParkings(
   filter: ParkingFilter,
   actorId: string,
-): Promise<AdminParking[]> {
-  let query = supabase.from('parkings').select(PARKING_COLUMNS).order('created_at', { ascending: false });
+  page = 0,
+): Promise<Paged<AdminParking>> {
+  let query = supabase
+    .from('parkings')
+    .select(PARKING_COLUMNS, { count: 'exact' })
+    .order('created_at', { ascending: false });
 
   if (filter.scope === 'mine') {
     query = query.eq('proposed_by', actorId);
@@ -113,9 +124,10 @@ export async function listParkings(
     query = query.eq('status', filter.status);
   }
 
-  const { data, error } = await query.limit(300);
+  const from = page * ADMIN_PAGE_SIZE;
+  const { data, error, count } = await query.range(from, from + ADMIN_PAGE_SIZE - 1);
   if (error) throw error;
-  return z.array(adminParkingSchema).parse(data ?? []);
+  return { rows: z.array(adminParkingSchema).parse(data ?? []), total: count ?? 0 };
 }
 
 /**
