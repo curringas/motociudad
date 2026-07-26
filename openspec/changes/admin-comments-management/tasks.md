@@ -1,10 +1,10 @@
 ## 1. Base de datos (RPCs + pgTAP)
 
-- [ ] 1.1 RPC `admin_list_comments(p_status, p_city, p_search, p_limit, p_offset)` (SECURITY DEFINER + search_path fijo, guard `is_admin()`): devuelve `{ rows, total }` con comentario + estado + fecha + upvotes + autor + parking(name, city); solo `approved`/`pending_review`; orden reciente
-- [ ] 1.2 RPC `admin_delete_comments(p_comment_ids uuid[])` (SECURITY DEFINER + fijo, guard `is_admin()`): borra `octano_events` de esos comentarios, borra los comentarios (votes por cascade) y recalcula `total_octanos`/`octanos_this_month` de los autores afectados
-- [ ] 1.3 RPC ligero de ciudades distintas para el autocompletado (o reutilizar consulta existente)
-- [ ] 1.4 `REVOKE EXECUTE` a anon/authenticated en los RPCs nuevos
-- [ ] 1.5 pgTAP: `admin_delete_comments` retira Octanos (borra eventos + recalcula, residuo cero, libera puesto de escalera); `admin_list_comments` filtra por estado/ciudad/búsqueda y pagina
+- [x] 1.1 RPC `admin_list_comments(p_status, p_city, p_search, p_limit, p_offset)` (SECURITY DEFINER + search_path fijo, guard `is_admin()`): devuelve `{ rows, total }` con comentario + estado + fecha + upvotes + autor + parking(name, city); solo `approved`/`pending_review`; orden reciente
+- [x] 1.2 RPC `admin_delete_comments(p_comment_ids uuid[])` (SECURITY DEFINER + fijo, guard `is_admin()`): borra `octano_events` de esos comentarios, borra los comentarios (votes por cascade) y recalcula `total_octanos`/`octanos_this_month` de los autores afectados
+- [x] 1.3 RPC ligero de ciudades distintas para el autocompletado (o reutilizar consulta existente)
+- [x] 1.4 `REVOKE EXECUTE` a anon/authenticated en los RPCs nuevos
+- [x] 1.5 pgTAP: `admin_delete_comments` retira Octanos (borra eventos + recalcula, residuo cero, libera puesto de escalera); `admin_list_comments` filtra por estado/ciudad/búsqueda y pagina
 
 ## 2. Edge Functions
 
