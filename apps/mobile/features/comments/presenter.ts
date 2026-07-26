@@ -10,6 +10,8 @@ export type CommentView = {
   upvotes: number;
   timeLabel: string;
   canDelete: boolean;
+  /** TRUE when the comment is awaiting admin moderation (author-only view). */
+  isPending: boolean;
 };
 
 /**
@@ -58,5 +60,6 @@ export function toCommentView(
     upvotes: row.upvotes_count,
     timeLabel: formatRelativeTime(row.created_at, now),
     canDelete: !!currentUserId && currentUserId === row.author_id,
+    isPending: row.moderation_status === 'pending_review',
   };
 }

@@ -69,6 +69,7 @@ Regla nueva (change `add-parking-comments`) que convive con el bonus de calidad 
 - Los dos puestos se otorgan a **autores distintos**: un mismo usuario no puede cobrar +10 y +5 en el mismo parking.
 - **Acumulación**: la escalera (+10/+5) y el bonus de calidad `useful_comment` (+5, al alcanzar ≥2 upvotes netos) se **suman** sobre el mismo comentario (mejor caso: 1er comentario con ≥2 upvotes = **+15**).
 - El bonus de calidad `useful_comment` se otorga **al autor** del comentario (no al votante), una sola vez por comentario (idempotente); retirar votos por debajo del umbral no lo revierte.
+- **Octanos diferidos por moderación IA** (change `ai-comment-moderation`): desde la moderación por IA, los Octanos de posición se acreditan **en el momento en que el comentario pasa a `approved`**, evaluando la escalera solo entre comentarios `approved`. Un comentario en `pending_review` (dudoso o no validable) **no acredita ni consume puesto** hasta que un administrador lo aprueba; al aprobarlo se evalúa la escalera en ese instante. Un comentario `rejected` nunca acredita. Sin clawback: los Octanos ya acreditados no se revierten.
 
 ---
 

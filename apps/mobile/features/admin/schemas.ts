@@ -38,6 +38,19 @@ export const adminParkingSchema = z.object({
 });
 export type AdminParking = z.infer<typeof adminParkingSchema>;
 
+// Comentario en cola de moderación (pending_review) para el panel.
+export const adminCommentSchema = z.object({
+  id: z.string().uuid(),
+  parking_id: z.string().uuid(),
+  body: z.string(),
+  created_at: z.string(),
+  parking: z.object({ name: z.string() }).nullable(),
+  author: z
+    .object({ username: z.string().nullable(), display_name: z.string().nullable() })
+    .nullable(),
+});
+export type AdminComment = z.infer<typeof adminCommentSchema>;
+
 // ── Filtros ──────────────────────────────────────────────────
 export const userFilterSchema = z.object({
   search: z.string().default(''),

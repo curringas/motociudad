@@ -76,6 +76,7 @@ export default function AdminLayoutWeb() {
   const showUsers = canManageUsers(profile);
   const sections: { href: string; label: string; icon: IconName; show: boolean }[] = [
     { href: '/admin/parkings', label: 'Parkings', icon: 'car-outline', show: true },
+    { href: '/admin/comments', label: 'Comentarios', icon: 'chatbubbles-outline', show: showUsers },
     { href: '/admin/users', label: 'Usuarios', icon: 'people-outline', show: showUsers },
   ];
 

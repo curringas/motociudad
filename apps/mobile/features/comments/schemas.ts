@@ -8,6 +8,12 @@ export const commentAuthorSchema = z.object({
   current_level: z.number().int().nullable(),
 });
 
+/** Moderation state of a comment (mirrors the DB enum). */
+export const moderationStatusSchema = z
+  .enum(['approved', 'pending_review', 'rejected'])
+  .default('approved');
+export type ModerationStatus = z.infer<typeof moderationStatusSchema>;
+
 /** A comment row as returned by the list query (with author join). */
 export const commentRowSchema = z.object({
   id: z.string().uuid(),
@@ -16,6 +22,7 @@ export const commentRowSchema = z.object({
   body: z.string(),
   upvotes_count: z.number().int().nonnegative(),
   created_at: z.string(),
+  moderation_status: moderationStatusSchema,
   author: commentAuthorSchema.nullable(),
 });
 
@@ -35,10 +42,13 @@ export type PostCommentResult = {
   error?: { code: string; message: string };
   data?: {
     comment_id: string;
+    moderation_status: ModerationStatus;
     octanos_earned: number;
     action_type: 'first_comment' | 'second_comment' | null;
     eligible: boolean;
     cap_reached: boolean;
+    /** Legible notice when the comment is left pending review (flag/fail-safe). */
+    review_notice: string | null;
   };
 };
 

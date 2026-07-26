@@ -17,6 +17,7 @@ const view = (over: Partial<CommentView> = {}): CommentView => ({
   upvotes: 2,
   timeLabel: 'hace 5 min',
   canDelete: false,
+  isPending: false,
   ...over,
 });
 
@@ -45,6 +46,16 @@ describe('CommentItem', () => {
     render(<CommentItem comment={view()} onUpvote={onUpvote} onDelete={vi.fn()} />);
     fireEvent.click(screen.getByLabelText('Votar útil este comentario'));
     expect(onUpvote).toHaveBeenCalledWith('c1');
+  });
+
+  it('muestra el distintivo "En revisión" cuando isPending', () => {
+    render(<CommentItem comment={view({ isPending: true })} onUpvote={vi.fn()} onDelete={vi.fn()} />);
+    expect(screen.getByText(/En revisión/)).toBeTruthy();
+  });
+
+  it('no muestra el distintivo cuando está aprobado', () => {
+    render(<CommentItem comment={view({ isPending: false })} onUpvote={vi.fn()} onDelete={vi.fn()} />);
+    expect(screen.queryByText(/En revisión/)).toBeNull();
   });
 });
 

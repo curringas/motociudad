@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -33,6 +33,16 @@ export default function ParkingDetailScreen() {
 
   const { data: parking, isLoading, error } = useParkingDetail(id ?? '');
   const { data: hasVerified = false } = useHasVerified(id, user?.id);
+
+  // Scroll the comments block fully into view when its composer focuses, so the
+  // input AND the "Comentar" button clear the on-screen keyboard (iOS).
+  const scrollRef = useRef<ScrollView>(null);
+  const commentsY = useRef(0);
+  const handleComposerFocus = () => {
+    setTimeout(() => {
+      scrollRef.current?.scrollTo({ y: Math.max(0, commentsY.current - 12), animated: true });
+    }, 250);
+  };
 
   if (!id) {
     return (
@@ -97,9 +107,13 @@ export default function ParkingDetailScreen() {
   return (
     <SafeAreaView edges={['bottom']} className="flex-1 bg-background">
       <ScrollView
+        ref={scrollRef}
         className="flex-1"
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
         keyboardShouldPersistTaps="handled"
+        // iOS: lift content above the keyboard so the comment composer and its
+        // "Comentar" button stay visible/tappable while typing (no-op on Android/web).
+        automaticallyAdjustKeyboardInsets
       >
         {/* Header */}
         <View className="flex-row items-start justify-between mb-4">
@@ -207,7 +221,9 @@ export default function ParkingDetailScreen() {
         )}
 
         {/* Comentarios */}
-        <CommentsSection parkingId={id} />
+        <View onLayout={(e) => (commentsY.current = e.nativeEvent.layout.y)}>
+          <CommentsSection parkingId={id} onComposerFocus={handleComposerFocus} />
+        </View>
       </ScrollView>
 
       {/* Action buttons */}

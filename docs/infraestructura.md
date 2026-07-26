@@ -132,7 +132,20 @@ GOOGLE_SERVICE_ACCOUNT_JSON
 SERVICE_ROLE_KEY                 # auto-disponible
 POSTHOG_API_KEY
 SENTRY_DSN
+DEEPSEEK_API_KEY                 # moderación IA de comentarios (post-comment). Nunca en cliente.
+MODERATION_PROVIDER              # proveedor de moderación: "deepseek" (default) | "off" (bypass/rollback)
 ```
+
+> **Moderación IA de comentarios** (change `ai-comment-moderation`): el proveedor
+> se fija por `MODERATION_PROVIDER` (por defecto `deepseek`). `DEEPSEEK_API_KEY`
+> vive **solo** como secret de Edge Functions; el cuerpo del comentario se envía a
+> DeepSeek (API compatible con OpenAI, servidores fuera de la UE) — decisión de
+> residencia de datos documentada en `arquitectura.md`. `MODERATION_PROVIDER=off`
+> es el interruptor de rollback: aprueba todo sin llamar al proveedor.
+>
+> ```bash
+> supabase secrets set DEEPSEEK_API_KEY=sk-... MODERATION_PROVIDER=deepseek
+> ```
 
 ---
 

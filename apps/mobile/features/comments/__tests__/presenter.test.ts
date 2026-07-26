@@ -15,6 +15,7 @@ const row = (over: Partial<CommentRow> = {}): CommentRow => ({
   body: 'Buen sitio, cabe una custom',
   upvotes_count: 2,
   created_at: '2026-07-20T11:59:30Z',
+  moderation_status: 'approved',
   author: {
     display_name: 'Rider X',
     username: 'riderx',
@@ -68,5 +69,12 @@ describe('toCommentView', () => {
   it('no permite borrar a un invitado (sin sesión)', () => {
     const v = toCommentView(row(), undefined, NOW);
     expect(v.canDelete).toBe(false);
+  });
+  it('marca isPending cuando el comentario está en revisión', () => {
+    const v = toCommentView(row({ moderation_status: 'pending_review' }), undefined, NOW);
+    expect(v.isPending).toBe(true);
+  });
+  it('no marca isPending cuando está aprobado', () => {
+    expect(toCommentView(row(), undefined, NOW).isPending).toBe(false);
   });
 });

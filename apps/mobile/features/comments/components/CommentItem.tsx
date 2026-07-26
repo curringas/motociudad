@@ -30,6 +30,14 @@ export function CommentItem({ comment, onUpvote, onDelete, isVoting = false, isD
         <Text className="text-content-muted text-xs">{comment.timeLabel}</Text>
       </View>
 
+      {comment.isPending && (
+        <View className="bg-surface-2 rounded-pill self-start px-2.5 py-1 mb-2">
+          <Text className="text-content-muted text-[11px] font-semibold">
+            ⏳ En revisión por nuestro agente de IA
+          </Text>
+        </View>
+      )}
+
       <Text className="text-content text-sm mb-3">{comment.body}</Text>
 
       <View className="flex-row items-center gap-4">

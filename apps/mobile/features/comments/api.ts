@@ -16,6 +16,7 @@ export const COMMENT_ERROR_CODES = {
   PARKING_NOT_FOUND: 'PARKING_NOT_FOUND',
   PARKING_ARCHIVED: 'PARKING_ARCHIVED',
   COMMENT_NOT_FOUND: 'COMMENT_NOT_FOUND',
+  COMMENT_REJECTED: 'COMMENT_REJECTED',
   SELF_VOTE_FORBIDDEN: 'SELF_VOTE_FORBIDDEN',
   UNAUTHORIZED: 'UNAUTHORIZED',
 } as const;
@@ -30,7 +31,7 @@ export async function fetchParkingComments(
   const { data, error } = await supabase
     .from('comments')
     .select(
-      'id, parking_id, author_id, body, upvotes_count, created_at, ' +
+      'id, parking_id, author_id, body, upvotes_count, created_at, moderation_status, ' +
         'author:author_id(display_name, username, avatar_url, current_level)',
     )
     .eq('parking_id', parkingId)

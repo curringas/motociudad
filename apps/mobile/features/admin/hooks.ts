@@ -13,6 +13,8 @@ import {
   softDeleteParking,
   listParkingPhotos,
   uploadParkingPhoto,
+  listPendingComments,
+  moderateComment,
 } from './api';
 import type {
   UserFilter,
@@ -30,6 +32,7 @@ export const adminKeys = {
   parkings: (filter: ParkingFilter, actorId: string) =>
     [...adminKeys.all, 'parkings', actorId, filter] as const,
   photos: (parkingId: string) => [...adminKeys.all, 'photos', parkingId] as const,
+  pendingComments: () => [...adminKeys.all, 'pending-comments'] as const,
 };
 
 /** Perfil (con role/suspended) del usuario autenticado. */
@@ -131,6 +134,30 @@ export function useParkingPhotos(parkingId: string | undefined) {
     queryFn: () => listParkingPhotos(parkingId!),
     enabled: !!parkingId,
     staleTime: 15_000,
+  });
+}
+
+/** Comentarios pendientes de moderación (cola admin). */
+export function useAdminPendingComments(enabled = true) {
+  return useQuery({
+    queryKey: adminKeys.pendingComments(),
+    queryFn: () => listPendingComments(),
+    enabled,
+    staleTime: 15_000,
+  });
+}
+
+/** Aprueba/rechaza un comentario pendiente; refresca la cola al terminar. */
+export function useModerateComment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ commentId, action }: { commentId: string; action: 'approve' | 'reject' }) =>
+      moderateComment(commentId, action),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: adminKeys.pendingComments() });
+      // Approving credits Octanos and makes the comment public.
+      void queryClient.invalidateQueries({ queryKey: [...adminKeys.all, 'parkings'] });
+    },
   });
 }
 

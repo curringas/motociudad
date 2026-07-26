@@ -139,6 +139,7 @@ No hay competencia directa consolidada en España. Las apps de parking generalis
 | F14 | POIs secundarios (talleres) | Diferencial competitivo y palanca de monetización futura |
 | F15 | Buscador de ubicaciones sobre el mapa | Centrar el mapa en una calle/ciudad buscada (geocoding nativo) para explorar parkings de otra zona |
 | F16 | Comentarios en parkings (crear, votar, borrar) | Contexto colaborativo sin necesidad de estar en el lugar; gamificado con la escalera de primeros comentarios (`gamificacion.md` §2.3) |
+| F17 | Moderación IA de comentarios | Cada comentario se modera con un agente de IA (DeepSeek) al publicarse: pre-filtros + veredicto `allow`/`reject`/`flag`. Rechaza insultos, spam, datos personales y off-topic; protege la crítica honesta. Los dudosos y los no validables quedan `pending_review` (fail-safe, nunca aprueba por defecto) para una cola de moderación en el panel admin. Octanos diferidos a la aprobación. Change `ai-comment-moderation` |
 
 ### 7.2 Features fuera del MVP (NON-GOALS)
 
