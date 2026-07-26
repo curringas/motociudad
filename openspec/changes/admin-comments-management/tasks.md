@@ -27,10 +27,10 @@
 
 ## 5. Restyle del resto del panel (tema claro)
 
-- [ ] 5.1 `app/admin/_layout.web.tsx`: sidebar + contenido en claro (manteniendo estructura y guardas de rol)
-- [ ] 5.2 `app/admin/parkings.web.tsx`: aplicar el kit claro (sin cambiar lógica)
-- [ ] 5.3 `app/admin/users.web.tsx`: aplicar el kit claro (sin cambiar lógica)
-- [ ] 5.4 Revisar contraste/legibilidad en claro de todas las secciones
+- [x] 5.1 `app/admin/_layout.web.tsx`: sidebar + contenido en claro (manteniendo estructura y guardas de rol)
+- [x] 5.2 `app/admin/parkings.web.tsx`: aplicar el kit claro (sin cambiar lógica)
+- [x] 5.3 `app/admin/users.web.tsx`: aplicar el kit claro (sin cambiar lógica)
+- [x] 5.4 Revisar contraste/legibilidad en claro de todas las secciones
 
 ## 6. Infra y tipos
 
