@@ -8,9 +8,9 @@
 
 ## 2. Edge Functions
 
-- [ ] 2.1 Nueva `admin-delete-comment` (service_role + verificación rol admin): borra 1..N comentarios vía `admin_delete_comments`
-- [ ] 2.2 `admin-moderate-comment`: aceptar `commentIds` (1..N) para **aprobar en bloque** (además del caso individual)
-- [ ] 2.3 Tests Deno de schemas (delete: array de UUIDs; moderate: acción + ids)
+- [x] 2.1 Nueva `admin-delete-comment` (service_role + verificación rol admin): borra 1..N comentarios vía `admin_delete_comments`
+- [x] 2.2 `admin-moderate-comment`: aceptar `commentIds` (1..N) para **aprobar en bloque** (además del caso individual)
+- [x] 2.3 Tests Deno de schemas (delete: array de UUIDs; moderate: acción + ids)
 
 ## 3. Kit visual claro (features/admin/ui.tsx)
 

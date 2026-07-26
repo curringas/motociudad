@@ -16,7 +16,7 @@
 
 import { supabaseAdmin } from "../_shared/supabase.ts";
 import { ERRORS, errorResponse, makeError } from "../_shared/errors.ts";
-import { parseModerateCommentRequest, STATUS_FOR_ACTION } from "./schemas.ts";
+import { idsOf, parseModerateCommentRequest, STATUS_FOR_ACTION } from "./schemas.ts";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -69,33 +69,39 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return errorResponse(makeError("VALIDATION_ERROR", parsed.error));
   }
   const input = parsed.data;
+  const ids = idsOf(input);
+  const newStatus = STATUS_FOR_ACTION[input.action];
 
-  // ── 4. Aplicar la moderación (atómica, acredita al aprobar) ──
-  const { data: txResult, error: txError } = await supabaseAdmin.rpc(
-    "moderate_comment",
-    {
-      p_comment_id: input.commentId,
-      p_new_status: STATUS_FOR_ACTION[input.action],
-    },
-  );
+  // ── 4. Aplicar la moderación a 1..N comentarios ─────────────
+  // Cada moderate_comment es atómico y acredita Octanos al aprobar. Los ids que
+  // ya no están pendientes se ignoran (idempotente en bloque); errores reales
+  // de BD abortan.
+  let processed = 0;
+  let octanos = 0;
+  let internalError = false;
+  for (const id of ids) {
+    const { data: txResult, error: txError } = await supabaseAdmin.rpc(
+      "moderate_comment",
+      { p_comment_id: id, p_new_status: newStatus },
+    );
+    if (txError) {
+      const msg = txError.message ?? "";
+      // NOT_PENDING / COMMENT_NOT_FOUND: se ignora en bloque (ya resuelto/borrado).
+      if (msg.includes("NOT_PENDING") || msg.includes("COMMENT_NOT_FOUND")) continue;
+      console.error(JSON.stringify({
+        code: "DATABASE_ERROR",
+        detail: msg,
+        comment_id: id,
+        timestamp: new Date().toISOString(),
+      }));
+      internalError = true;
+      continue;
+    }
+    processed += 1;
+    octanos += Number(txResult?.octanos_earned ?? 0);
+  }
 
-  if (txError) {
-    const msg = txError.message ?? "";
-    if (msg.includes("COMMENT_NOT_FOUND")) {
-      return errorResponse(ERRORS.COMMENT_NOT_FOUND, 404);
-    }
-    if (msg.includes("NOT_PENDING")) {
-      return errorResponse(
-        makeError("NOT_PENDING", "El comentario no está pendiente de revisión"),
-        409,
-      );
-    }
-    console.error(JSON.stringify({
-      code: "DATABASE_ERROR",
-      detail: msg,
-      comment_id: input.commentId,
-      timestamp: new Date().toISOString(),
-    }));
+  if (internalError && processed === 0) {
     return errorResponse(ERRORS.INTERNAL_ERROR, 500);
   }
 
@@ -103,10 +109,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     JSON.stringify({
       success: true,
       data: {
-        comment_id: txResult?.comment_id ?? input.commentId,
-        moderation_status: txResult?.moderation_status ?? STATUS_FOR_ACTION[input.action],
-        octanos_earned: Number(txResult?.octanos_earned ?? 0),
-        action_type: txResult?.action_type ?? null,
+        processed,
+        moderation_status: newStatus,
+        octanos_earned: octanos,
       },
     }),
     { status: 200, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } },
