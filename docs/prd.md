@@ -240,6 +240,22 @@ build local para evaluación; el hosting público queda fuera de alcance.
     con su propio token/secret. Decisión a fijar en el `design.md` del change.
   - **Dependencias**: requiere que existan primero los reportes y el feedback (**v1.4**);
     los `comments` ya están en el modelo de datos. Sin ese corpus, el RAG no aporta sobre SQL.
+- **v1.8**: **Verificación de fotos con IA (visión)**:
+  - Al subir una foto (al **proponer** o **verificar** un parking), un modelo de **visión**
+    comprueba que la imagen **muestra de verdad un aparcamiento/zona de motos** — descarta
+    fotos no relacionadas (coches, gasolineras, interiores, capturas), imágenes aleatorias
+    u ofensivas y intentos de fraude en la verificación.
+  - **Mismo patrón que la moderación IA de comentarios** (F17): veredicto estructurado
+    `allow`/`reject`/`flag`. Rechazo duro → no se acredita la contribución; dudosos →
+    `pending_review` para la cola del panel. **Fail-safe**: si el proveedor falla, nunca
+    aprueba por defecto.
+  - Se ejecuta en **Edge Function** (nunca en cliente); se envía **solo la imagen**, sin PII
+    ni geolocalización. Refuerza el anti-abuso de propuestas/verificaciones y la **calidad del
+    dataset** (que el mapa sea fiable).
+  - Reutiliza la infra de moderación desacoplada (`MODERATION_PROVIDER`) con un proveedor de
+    **visión**; la elección concreta (Claude con imágenes u otro) se fija en el `design.md`.
+  - **Dependencias**: fotos ya en Storage (MVP) + la escalera de moderación (F17). Coste
+    acotado: una llamada por foto subida.
 - **v2.0**: Monetización — destacados de talleres, plan premium con notificaciones avanzadas.
 
 ---
