@@ -194,16 +194,23 @@ build local para evaluación; el hosting público queda fuera de alcance.
     (sin Octanos); editar (contributor solo los suyos); añadir imágenes; verificar y borrar/archivar
     (solo admin).
   - El panel **nunca** genera Octanos. Detalle de autorización en `modelo-datos.md` §21.
-- **v1.4**: **Sistema de feedback y reportes de parkings** (amplía F13 y el enum
-  `report_status` existente):
+- **v1.4**: **Sistema de feedback, reportes de parkings y reportes de abuso/incidencias**
+  (amplía F13 y el enum `report_status` existente):
   - **Feedback de la app**: cualquier usuario puede enviar feedback general sobre la app.
   - **Reportes sobre parkings**: un usuario solicita un cambio en un parking (dato erróneo,
     cerrado, movido, etc.), con **demostración opcional** (foto/evidencia que justifique el
     cambio).
+  - **Reportes de abuso e incidencias de la app**: cualquier usuario puede **reportar un abuso**
+    (usuario, comentario o foto inapropiada, acoso o comportamiento abusivo que se escape de la
+    moderación IA de comentarios/fotos) o una **incidencia técnica** de la app (bug, error, algo
+    que no funciona). Tipificados con `report_type` (parking / abuso / incidencia) y `report_status`.
   - **Accesibles en el panel de control** (v1.3): admin (y colaboradores para sus parkings)
-    revisan feedback y reportes desde el panel.
-  - **Notificaciones por email**: al **administrador** siempre, y también al **colaborador**
-    si el parking reportado lo creó dicho colaborador.
+    revisan y gestionan feedback, reportes de parkings y **reportes de abuso/incidencias** desde
+    el panel, con acciones (marcar resuelto/descartado, y sobre abusos: enlazar a suspender al
+    usuario o moderar el contenido).
+  - **Notificaciones por email**: al **administrador** siempre (todos los reportes de
+    abuso/incidencia le llegan), y también al **colaborador** si el parking reportado lo creó
+    dicho colaborador.
 - **v1.5**: **Sistema de notificaciones in-app**:
   - Avisar al **usuario** cuando se **verifica** uno de sus parkings propuestos.
   - Avisar al usuario cuando sus **Octanos pasan a definitivos** (`octano_status`
