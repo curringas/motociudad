@@ -1,9 +1,15 @@
 name: EAS Preview Build
 
 on:
-  pull_request:
-    branches:
-      - main
+  # Ahora: manual/on-demand. Lanza el build EAS desde la pestaña "Actions"
+  # (Run workflow) cuando lo necesites. Evita builds (y gasto de cuota) en cada PR.
+  workflow_dispatch:
+
+  # Futuro (cuando la app esté publicada): build EAS en cada merge a main.
+  # Descomentar este bloque para lanzar un build en cada push a main (PR mergeado):
+  # push:
+  #   branches:
+  #     - main
 
 jobs:
   build:
