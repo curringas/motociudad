@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Simple SVG-free icon placeholders — replace with a proper icon library (e.g. @expo/vector-icons)
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +20,10 @@ function TabIcon({
 }
 
 export default function TabsLayout() {
+  // Android (SDK 54, edge-to-edge) draws behind the system nav bar, and iOS has
+  // the home indicator: pad the tab bar by the real bottom inset so its icons
+  // and labels never fall under the system UI.
+  const insets = useSafeAreaInsets();
   return (
     <Tabs
       screenOptions={{
@@ -30,9 +34,9 @@ export default function TabsLayout() {
           backgroundColor: '#1e293b',
           borderTopColor: '#334155',
           borderTopWidth: 1,
-          // Extra padding on iOS for the home indicator
-          paddingBottom: Platform.OS === 'ios' ? 20 : 8,
-          height: Platform.OS === 'ios' ? 84 : 64,
+          paddingTop: 6,
+          paddingBottom: insets.bottom + 8,
+          height: 56 + insets.bottom,
         },
         tabBarActiveTintColor: '#FFD60A',
         tabBarInactiveTintColor: '#94a3b8',

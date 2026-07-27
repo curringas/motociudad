@@ -37,7 +37,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: 'com.motociudad.app',
-    versionCode: 1,
+    versionCode: 2,
     config: {
       googleMaps: {
         // Maps SDK for Android requiere una API key; se lee de .env (gitignored).
