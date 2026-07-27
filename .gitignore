@@ -20,3 +20,6 @@ supabase/functions/*/deno.lock
 
 # Visual brainstorming companion (superpowers)
 .superpowers/
+google-play-service-account.json
+*-service-account.json
+*.serviceaccount.json

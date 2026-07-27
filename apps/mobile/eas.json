@@ -11,8 +11,19 @@
       "android": { "buildType": "apk" }
     },
     "production": {
+      "environment": "production",
+      "autoIncrement": true,
+      "android": { "buildType": "app-bundle" },
       "ios": { "enterpriseProvisioning": "universal" }
     }
   },
-  "submit": {}
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./google-play-service-account.json",
+        "track": "internal",
+        "releaseStatus": "draft"
+      }
+    }
+  }
 }
