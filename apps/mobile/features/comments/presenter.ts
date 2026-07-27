@@ -5,6 +5,7 @@ export type CommentView = {
   id: string;
   authorId: string;
   authorName: string;
+  authorAvatarUrl: string | null;
   authorLevel: number | null;
   body: string;
   upvotes: number;
@@ -55,6 +56,7 @@ export function toCommentView(
     id: row.id,
     authorId: row.author_id,
     authorName: authorDisplayName(row),
+    authorAvatarUrl: row.author?.avatar_url ?? null,
     authorLevel: row.author?.current_level ?? null,
     body: row.body,
     upvotes: row.upvotes_count,

@@ -134,7 +134,8 @@ No hay competencia directa consolidada en España. Las apps de parking generalis
 | F9 | Niveles de usuario (1–7) | Ver `gamificacion.md` |
 | F10 | Insignias | Ver `gamificacion.md` |
 | F11 | Ranking (Global / Por ciudad) | Ver `gamificacion.md` §5 — implementado (Global + Por ciudad). Entre amigos: pendiente v1.2 |
-| F12 | Perfil de usuario | Vitrina de progreso, motivación |
+| F12 | Perfil de usuario | Vitrina de progreso, motivación. Editable en "Mi perfil" (change `edit-profile`): **nick (@handle)** único e insensible a mayúsculas que dirige la identidad pública (ranking y comentarios), **ciudad** "Me suelo mover por…" por buscador con sugerencias "Ciudad, País" (Edge Function `city-search`, alimenta el ranking por ciudad) y **avatar** subido a Storage (restringido a imágenes, re-codificado 512×512, bucket con MIME/tamaño). El email se conserva en solo lectura |
+| F12b | Perfiles públicos + autoría | Ver el perfil público de cualquier usuario (avatar, @nick, ciudad, nivel, Octanos; respeta `ranking_visible`). El detalle del parking muestra al **proponente**, cada comentario a su **autor**, y un modal lista a los **verificadores**; al pulsar cualquier usuario (incl. filas del ranking) se abre su perfil. Change `edit-profile` |
 | F13 | Reportar parking erróneo | Mantener dataset limpio |
 | F14 | POIs secundarios (talleres) | Diferencial competitivo y palanca de monetización futura |
 | F15 | Buscador de ubicaciones sobre el mapa | Centrar el mapa en una calle/ciudad buscada (geocoding nativo) para explorar parkings de otra zona |

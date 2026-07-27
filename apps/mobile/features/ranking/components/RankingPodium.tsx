@@ -1,5 +1,7 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Avatar } from '@/components/Avatar';
 import type { RankingEntryView } from '../presenter';
 
 const MEDALS = ['🥇', '🥈', '🥉'] as const;
@@ -11,8 +13,9 @@ type Props = {
   currentUserId?: string | undefined;
 };
 
-/** Top-3 podium for the ranking. Renders nothing when there are no entries. */
+/** Top-3 podium for the ranking. Renders nothing when there are no entries. Tappable → profile. */
 export function RankingPodium({ entries, currentUserId }: Props) {
+  const router = useRouter();
   const top = entries.slice(0, 3);
   if (top.length === 0) return null;
 
@@ -21,18 +24,22 @@ export function RankingPodium({ entries, currentUserId }: Props) {
       {top.map((entry, index) => {
         const isCurrent = entry.id === currentUserId;
         return (
-          <View
+          <TouchableOpacity
             key={entry.id}
             className={`items-center rounded-card px-3 py-4 mx-1 flex-1 ${
               isCurrent ? 'bg-primary/15 border border-primary' : 'bg-surface'
             } ${index === 0 ? 'pb-6' : ''}`}
+            onPress={() => router.push(`/user/${entry.id}`)}
+            accessibilityRole="button"
+            accessibilityLabel={`${entry.name}, ${entry.octanos} Octanos. Ver perfil`}
           >
             <Text className="text-3xl mb-1">{MEDALS[index]}</Text>
-            <Text className="text-content text-sm font-semibold text-center" numberOfLines={1}>
+            <Avatar url={entry.avatarUrl} name={entry.name} size={44} />
+            <Text className="text-content text-sm font-semibold text-center mt-1" numberOfLines={1}>
               {entry.name}
             </Text>
             <Text className="text-primary text-base font-bold mt-1">⚡ {entry.octanos}</Text>
-          </View>
+          </TouchableOpacity>
         );
       })}
     </View>

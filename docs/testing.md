@@ -292,6 +292,23 @@ La IA **no es determinista**, así que no se llama al proveedor real en tests:
 - **Deno**: schemas de `admin-delete-comment` y `admin-moderate-comment` (bloque).
 - **Componentes** (Vitest + RNW): primitivas del kit claro (`Pagination`, `BulkBar`, `Checkbox`, `SearchInput`, badges) y la fila `CommentRow` (estados y acciones).
 
+### 7.5 Perfil, ciudad y perfiles públicos (change `edit-profile`)
+
+- **Deno** `supabase/functions/city-search/__tests__/handler.test.ts`: validación de entrada
+  (`parseCitySearch`) y normalización de sugerencias de Nominatim (`normalizeNominatim`:
+  filtra a ciudades, etiqueta "Ciudad, País", descarta sin país/coords, de-duplica). Sin red.
+- **pgTAP**:
+  - `supabase/tests/sql/username_unique_ci.test.sql`: unicidad case-insensitive del nick,
+    CHECK de formato, y que el propio usuario puede reguardar su nick.
+  - `supabase/tests/rls/avatars_storage.test.sql`: bucket `avatars` (público, MIME, 2 MB) y
+    policies de carpeta propia (escritura ajena rechazada).
+  - `supabase/tests/rls/octano_cache_guard.test.sql`: el cliente no puede auto-editar
+    `total_octanos`/`current_level`; el servidor sí.
+  - `supabase/tests/rls/verifications_anon_read.test.sql`: `anon` puede leer verificadores.
+- **Componentes/lógica** (Vitest + RNW): `nickSchema`/`citySuggestionSchema`
+  (`features/profile/__tests__/schemas.test.ts`), `Avatar` (fallback + `resolveAvatarUrl`) y
+  `UserChip` (render `@nick` + navegación al perfil), y `CommentItem` mostrando el avatar del autor.
+
 ---
 
 ## 8. Tests de RLS con pgTAP

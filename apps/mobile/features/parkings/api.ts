@@ -37,6 +37,7 @@ export async function getParkingById(id: string) {
       .from('parkings')
       .select(
         `id, name, type, status, city, capacity, features, notes, proposed_by, created_at,
+         proposer:proposed_by(username, display_name, avatar_url),
          parking_verifications(count),
          parking_photos(id, storage_path)`,
       )
