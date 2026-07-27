@@ -150,6 +150,10 @@
 
 **Geocoding (búsqueda de ubicaciones):** el buscador del mapa usa forward geocoding nativo vía `expo-location` (`geocodeAsync`), que delega en el geocoder del sistema operativo. No requiere API key ni billing. Encapsulado en `features/search/`. Si en el futuro se necesita autocompletado en vivo, se migraría a un proveedor con Places API sin rehacer la UI. (En web, donde `expo-location` no geocodifica, el buscador usa Nominatim — ver §11.)
 
+**Buscador de ciudad del perfil (`city-search`):** para el campo "Me suelo mover por…" se necesita un autocompletado con sugerencias estructuradas "Ciudad, País" que funcione **igual en web, iOS y Android** (el geocoder nativo de `expo-location` no opera en web). Se resuelve con la **Edge Function `city-search`** (Deno), que proxea Nominatim/OSM (keyless, con `User-Agent` propio) y devuelve `{ name, region, country, country_code, lat, lng, label }`. Centraliza el proveedor y permite cachear o sustituirlo sin tocar clientes. Cliente en `features/profile/` (`CitySearchInput`).
+
+**Identidad de usuario y perfiles públicos (change `edit-profile`):** la edición del perfil propio (nick/ciudad/avatar) se hace con `UPDATE` directo protegido por RLS (`users_self_update`), sin Edge Function (no hay efectos secundarios; la unicidad del nick la garantiza un índice único funcional). Componentes compartidos **`Avatar`** (resuelve `avatar_url` vía `getPublicUrl` o iniciales) y **`UserChip`** (avatar + @nick pulsable) se reutilizan en comentarios, detalle de parking, ranking y en el modal de verificadores. El perfil público es una **ruta** `app/user/[id]` (deep-linkable, web+nativo).
+
 ### 3.5 Estilizado: ¿NativeWind?
 
 **Decisión**: NativeWind 4 (Tailwind CSS para React Native con Jit y soporte CSS variables).

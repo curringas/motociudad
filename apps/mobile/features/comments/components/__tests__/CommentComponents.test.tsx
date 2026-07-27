@@ -5,6 +5,11 @@ import { CommentItem } from '../CommentItem';
 import { CommentList } from '../CommentList';
 import type { CommentView } from '../../presenter';
 
+// UserChip (rendered inside CommentItem) uses expo-router's useRouter.
+vi.mock('expo-router', () => ({
+  useRouter: () => ({ push: vi.fn() }),
+}));
+
 // Rendered as web via the react-native → react-native-web alias (vitest.config.ts)
 // with @testing-library/react, matching the project's component-test convention.
 
@@ -12,6 +17,7 @@ const view = (over: Partial<CommentView> = {}): CommentView => ({
   id: 'c1',
   authorId: 'u1',
   authorName: 'Rider X',
+  authorAvatarUrl: null,
   authorLevel: 3,
   body: 'Cabe una custom sin problema',
   upvotes: 2,
@@ -24,7 +30,7 @@ const view = (over: Partial<CommentView> = {}): CommentView => ({
 describe('CommentItem', () => {
   it('muestra autor, cuerpo y upvotes', () => {
     render(<CommentItem comment={view()} onUpvote={vi.fn()} onDelete={vi.fn()} />);
-    expect(screen.getByText('Rider X')).toBeTruthy();
+    expect(screen.getByText('@Rider X')).toBeTruthy();
     expect(screen.getByText(/Cabe una custom/)).toBeTruthy();
     expect(screen.getByText('2')).toBeTruthy();
   });

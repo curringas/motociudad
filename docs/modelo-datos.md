@@ -181,15 +181,24 @@ CREATE INDEX idx_users_role ON public.users(role);
 ```
 
 **Notas**:
-- `total_octanos` y `octanos_this_month` son cachés. Fuente de verdad: `octano_events`.
-- `username` es único, inmutable post-registro.
+- `total_octanos`, `octanos_this_month` y `current_level` son cachés. Fuente de verdad:
+  `octano_events`. Desde `edit-profile` el trigger `trg_users_privileged_fields` también
+  **congela estos tres campos** frente a escritura directa del cliente (solo cambian en
+  contexto service_role, `auth.uid()` NULL). Migración `20260727000003_guard_octano_cache_fields`.
+- `username` (@handle) es **editable** desde "Mi perfil" (feature `edit-profile`), único e
+  **insensible a mayúsculas** (índice funcional `users_username_lower_key` sobre `LOWER(username)`)
+  y con CHECK de formato `^[A-Za-z0-9_.-]{3,30}$`. Al guardarlo, la app escribe el mismo valor en
+  `username` y `display_name` (identidad pública única). Migración `20260727000001_profile_username_unique_ci`.
+- `city_primary` se fija eligiendo una sugerencia del buscador de ciudades (Edge Function
+  `city-search`, OSM/Nominatim); se guarda la etiqueta canónica "Ciudad, País" → alimenta el
+  ranking por ciudad.
 - `role` (`user`/`contributor`/`admin`) y `suspended` (+ `suspended_at`/`suspended_reason`) los
   gestiona el **panel de administración** (v1.3). Solo se cambian vía la Edge Function
   `admin-set-role` (service_role): un trigger (`trg_users_privileged_fields`) rechaza cualquier
   `UPDATE` de estos campos desde contexto de usuario (anti-escalada de privilegios).
   Migraciones: `20260718000001_user_roles` … `20260718000007_parkings_admin_read`.
   Detalle completo en §16.
-- `display_name` editable libremente.
+- `display_name` refleja el @handle elegido por el usuario.
 
 ### 5.3 `user_levels` (catálogo)
 
@@ -422,6 +431,11 @@ CREATE TABLE public.parking_verifications (
 CREATE INDEX idx_verifications_parking ON public.parking_verifications(parking_id);
 CREATE INDEX idx_verifications_user ON public.parking_verifications(verified_by);
 ```
+
+> **RLS**: lectura para `authenticated` y también `anon` (policy
+> `parking_verifications_read_anon`, migración `20260727000004`) para que la web pública
+> pueda mostrar la lista de "quién ha verificado" un parking. La escritura sigue siendo
+> exclusiva de la Edge Function `validate-verification` (service_role).
 
 ### 6.5 `parking_reports`
 
@@ -1033,13 +1047,24 @@ CREATE POLICY "verifications_read" ON parking_verifications
 parkings-photos/{parking_id}/{photo_id}.webp
 parkings-photos/{parking_id}/thumbs/{photo_id}.webp
 pois-photos/{poi_id}/{photo_id}.webp
-avatars/{user_id}.webp
+avatars/{user_id}/avatar.jpg
 ```
+
+> `avatars`: un único archivo por usuario (`avatar.jpg`, `upsert`). La imagen se
+> re-codifica y redimensiona a 512×512 en el cliente (descarta EXIF y cualquier
+> carga incrustada). `users.avatar_url` guarda la URL pública versionada
+> (`…/avatar.jpg?v={timestamp}`) para cache-busting. Migración:
+> `20260727000002_avatars_bucket.sql`.
 
 ### 14.3 Policies de storage
 
-- Insert solo si el usuario está autenticado y el path empieza por `{parking_id}` o `{poi_id}` cuyo registro asocia el usuario como contribuidor.
-- Tamaño máximo por archivo: 5 MB.
+- **parkings-photos / pois-photos**: insert solo si el usuario está autenticado y
+  el path empieza por `{parking_id}` o `{poi_id}` cuyo registro asocia el usuario
+  como contribuidor.
+- **avatars**: lectura pública; INSERT/UPDATE/DELETE solo para `authenticated`
+  cuando el primer segmento del path es su `auth.uid()` (carpeta propia). El
+  bucket impone en servidor `file_size_limit = 2 MB` y
+  `allowed_mime_types = {image/jpeg, image/png, image/webp}`.
 - Formatos permitidos: image/jpeg, image/png, image/webp.
 
 ---

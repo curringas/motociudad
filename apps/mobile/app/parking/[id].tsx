@@ -15,6 +15,8 @@ import { CommentsSection } from '@/features/comments/components/CommentsSection'
 import { useSessionStore } from '@/stores/sessionStore';
 import { openInExternalMaps } from '@/lib/deeplinks';
 import { supabase } from '@/lib/supabase';
+import { UserChip } from '@/components/UserChip';
+import { VerifiersModal } from '@/features/profile/components/VerifiersModal';
 
 const FEATURE_LABELS: Record<string, string> = {
   covered: 'Cubierto',
@@ -33,6 +35,7 @@ export default function ParkingDetailScreen() {
 
   const { data: parking, isLoading, error } = useParkingDetail(id ?? '');
   const { data: hasVerified = false } = useHasVerified(id, user?.id);
+  const [showVerifiers, setShowVerifiers] = useState(false);
 
   // Scroll the comments block fully into view when its composer focuses, so the
   // input AND the "Comentar" button clear the on-screen keyboard (iOS).
@@ -87,6 +90,12 @@ export default function ParkingDetailScreen() {
   // y no lo has verificado tú ya (un usuario solo verifica un parking una vez).
   const showVerifyCta = !isProposer && !atMaxVerifications && !hasVerified;
 
+  const proposerRaw = (parking as { proposer?: unknown }).proposer;
+  const proposer = (Array.isArray(proposerRaw) ? proposerRaw[0] : proposerRaw) as
+    | { username: string | null; display_name: string | null; avatar_url: string | null }
+    | null
+    | undefined;
+
   const features = (parking.features ?? {}) as Record<string, boolean>;
   const activeFeatures = Object.entries(features)
     .filter(([, v]) => v)
@@ -121,11 +130,16 @@ export default function ParkingDetailScreen() {
             {parking.name}
           </Text>
           {isVerified && (
-            <View className="bg-verified/20 rounded-pill px-3 py-1.5 mt-1">
+            <TouchableOpacity
+              className="bg-verified/20 rounded-pill px-3 py-1.5 mt-1"
+              onPress={() => setShowVerifiers(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Ver quién ha verificado este parking"
+            >
               <Text className="text-verified text-xs font-bold">
                 ✓ Verificado · {verificationsCount}
               </Text>
-            </View>
+            </TouchableOpacity>
           )}
         </View>
 
@@ -220,11 +234,32 @@ export default function ParkingDetailScreen() {
           </View>
         )}
 
+        {/* Propuesto por */}
+        {parking.proposed_by ? (
+          <View className="bg-surface rounded-card p-4 mb-4">
+            <Text className="text-content-muted text-sm mb-2 font-semibold">
+              Propuesto por
+            </Text>
+            <UserChip
+              userId={parking.proposed_by}
+              name={proposer?.display_name || proposer?.username}
+              avatarUrl={proposer?.avatar_url ?? null}
+              size={36}
+            />
+          </View>
+        ) : null}
+
         {/* Comentarios */}
         <View onLayout={(e) => (commentsY.current = e.nativeEvent.layout.y)}>
           <CommentsSection parkingId={id} onComposerFocus={handleComposerFocus} />
         </View>
       </ScrollView>
+
+      <VerifiersModal
+        parkingId={id}
+        visible={showVerifiers}
+        onClose={() => setShowVerifiers(false)}
+      />
 
       {/* Action buttons */}
       <View className="p-4 border-t border-border gap-3">

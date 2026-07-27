@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
+import { UserChip } from '@/components/UserChip';
 import type { CommentView } from '../presenter';
 
 type Props = {
@@ -16,9 +17,12 @@ export function CommentItem({ comment, onUpvote, onDelete, isVoting = false, isD
     <View className="bg-surface rounded-card p-4 mb-3">
       <View className="flex-row items-center justify-between mb-1">
         <View className="flex-row items-center gap-2 flex-1 mr-2">
-          <Text className="text-content font-semibold text-sm" numberOfLines={1}>
-            {comment.authorName}
-          </Text>
+          <UserChip
+            userId={comment.authorId}
+            name={comment.authorName}
+            avatarUrl={comment.authorAvatarUrl}
+            size={28}
+          />
           {comment.authorLevel != null && (
             <View className="bg-primary/15 rounded-pill px-2 py-0.5">
               <Text className="text-primary text-[10px] font-bold">

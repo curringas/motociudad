@@ -2,7 +2,7 @@
 // (useParkingDetail) but omits the verify CTA: verification is a GPS/on-site action
 // that isn't trustworthy from a browser (photo would be a file upload). A hint points
 // users to the mobile app instead. Centered column on desktop, full-bleed on mobile.
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, Image, Pressable } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,6 +11,8 @@ import { CommentsSection } from '@/features/comments/components/CommentsSection'
 import { openInExternalMaps } from '@/lib/deeplinks';
 import { supabase } from '@/lib/supabase';
 import { useBreakpoint } from '@/lib/responsive';
+import { UserChip } from '@/components/UserChip';
+import { VerifiersModal } from '@/features/profile/components/VerifiersModal';
 
 const FEATURE_LABELS: Record<string, string> = {
   covered: 'Cubierto',
@@ -27,6 +29,7 @@ export default function ParkingDetailScreenWeb() {
   const router = useRouter();
   const bp = useBreakpoint();
   const { data: parking, isLoading, error } = useParkingDetail(id ?? '');
+  const [showVerifiers, setShowVerifiers] = useState(false);
 
   const handleNavigate = useCallback(() => {
     if (!parking) return;
@@ -65,6 +68,14 @@ export default function ParkingDetailScreenWeb() {
     ? supabase.storage.from('parkings-photos').getPublicUrl(photoPath).data.publicUrl
     : null;
 
+  const verificationsCount =
+    (parking.parking_verifications as Array<{ count: number }> | undefined)?.[0]?.count ?? 0;
+  const proposerRaw = (parking as { proposer?: unknown }).proposer;
+  const proposer = (Array.isArray(proposerRaw) ? proposerRaw[0] : proposerRaw) as
+    | { username: string | null; display_name: string | null; avatar_url: string | null }
+    | null
+    | undefined;
+
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: '#0f172a' }}
@@ -84,9 +95,16 @@ export default function ParkingDetailScreenWeb() {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <Text style={{ color: '#f8fafc', fontSize: 24, fontWeight: '800', flex: 1 }}>{parking.name}</Text>
           {isVerified ? (
-            <View style={{ backgroundColor: 'rgba(34,197,94,0.2)', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 }}>
-              <Text style={{ color: '#22c55e', fontSize: 12, fontWeight: '700' }}>Verificado</Text>
-            </View>
+            <Pressable
+              onPress={() => setShowVerifiers(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Ver quién ha verificado este parking"
+              style={{ backgroundColor: 'rgba(34,197,94,0.2)', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 }}
+            >
+              <Text style={{ color: '#22c55e', fontSize: 12, fontWeight: '700' }}>
+                Verificado · {verificationsCount}
+              </Text>
+            </Pressable>
           ) : null}
         </View>
 
@@ -169,9 +187,30 @@ export default function ParkingDetailScreenWeb() {
           </View>
         ) : null}
 
+        {/* Propuesto por */}
+        {parking.proposed_by ? (
+          <View style={{ backgroundColor: '#111827', borderRadius: 12, padding: 16 }}>
+            <Text style={{ color: '#94a3b8', fontSize: 12, fontWeight: '700', marginBottom: 8 }}>
+              Propuesto por
+            </Text>
+            <UserChip
+              userId={parking.proposed_by}
+              name={proposer?.display_name || proposer?.username}
+              avatarUrl={proposer?.avatar_url ?? null}
+              size={36}
+            />
+          </View>
+        ) : null}
+
         {/* Comentarios (funciona igual en web y móvil, no requiere ubicación) */}
         <CommentsSection parkingId={id ?? ''} />
       </View>
+
+      <VerifiersModal
+        parkingId={id ?? ''}
+        visible={showVerifiers}
+        onClose={() => setShowVerifiers(false)}
+      />
     </ScrollView>
   );
 }

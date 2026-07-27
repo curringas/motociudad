@@ -116,6 +116,8 @@ Detalle completo (personas, KPIs, roadmap, out-of-scope): **[`docs/prd.md`](docs
 | Panel de administración web (roles + gestión) — [ver 1.2 Panel admin](#panel-de-administración-web-v13) | ✅ |
 | Moderación IA de comentarios (DeepSeek) al publicar (`allow`/`reject`/`flag`, fail-safe) | ✅ |
 | Gestión de comentarios en el panel admin (listado paginado, buscar, filtrar, aprobar/eliminar en bloque, retirada de Octanos) | ✅ |
+| Perfil editable: nick único (@handle, case-insensitive), ciudad por buscador y avatar (Storage) — [ver 1.2 Perfil](#perfil-de-usuario-y-perfiles-públicos-v15) | ✅ |
+| Perfiles públicos + autoría (creador de parking, autor de comentario, verificadores; pulsa cualquier usuario) | ✅ |
 | CI/CD (GitHub Actions) + tests unitarios, E2E y de base de datos | ✅ |
 
 #### Panel de administración web (v1.3)
@@ -139,6 +141,16 @@ Cada comentario se modera con un **agente de IA** en el momento de publicarlo (E
 - **Octanos diferidos**: solo se acreditan cuando el comentario queda `approved`.
 - **Privacidad**: se envía solo el cuerpo del comentario al proveedor (sin PII de cuenta ni geolocalización); `MODERATION_PROVIDER=off` desactiva la moderación (rollback).
 
+#### Perfil de usuario y perfiles públicos (v1.5)
+
+Edición del perfil propio en "Mi perfil" y **perfiles públicos** navegables por toda la app:
+
+- **Nick (@handle) editable**: un único campo público que escribe `username` y `display_name`, así lo que el usuario elige es lo que se ve en ranking y comentarios. **Único e insensible a mayúsculas** (índice funcional `LOWER(username)` + CHECK de formato); colisión → "Ese nick ya está en uso". El **email** se conserva en **solo lectura**.
+- **Ciudad "Me suelo mover por…"**: buscador con **autocompletado** que devuelve sugerencias "Ciudad, País" (no solo España) vía la Edge Function `city-search` (proxy a Nominatim/OSM, funciona igual en web/iOS/Android). Se guarda una etiqueta canónica → **activa el ranking por ciudad**.
+- **Avatar**: subida desde galería restringida a imágenes, re-codificada y redimensionada (512×512, descarta EXIF/payloads) en cliente + bucket de Storage con MIME/tamaño y escritura solo en la carpeta propia del usuario.
+- **Perfiles públicos**: el detalle del parking muestra al **proponente** (avatar + @nick), cada **comentario** a su autor, y un modal lista a los **verificadores**; al pulsar cualquier usuario (incl. filas del ranking) se abre su perfil (`/user/[id]`) con avatar, @nick, ciudad, nivel y Octanos, respetando `ranking_visible`.
+- **Seguridad**: se cierra la escritura directa de los campos caché de Octanos/nivel (`total_octanos`, `octanos_this_month`, `current_level`) — solo el servidor los actualiza (anti-trampa en el ranking).
+
 #### Gamificación (resumen)
 
 Los **Octanos** premian las contribuciones y desbloquean **7 niveles** (los niveles solo suben):
@@ -157,8 +169,8 @@ Baremo completo, insignias y reglas anti-abuso: **[`docs/gamificacion.md`](docs/
 
 #### Pendiente (roadmap v1.1)
 
-Ranking global/mensual (pantalla "Coming soon"), perfil completo (stats/badges/historial),
-insignias desbloqueables (lógica de BD lista, falta UI) y email transaccional con marca propia.
+Estadísticas e historial de contribuciones en el perfil, insignias desbloqueables
+(lógica de BD lista, falta UI) y email transaccional con marca propia.
 
 ### 1.3 Diseño y experiencia de usuario
 

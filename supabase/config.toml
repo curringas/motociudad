@@ -138,3 +138,7 @@ backend = "postgres"
 [functions.validate-verification]
 verify_jwt = true
 import_map = "./functions/validate-verification/deno.json"
+
+[functions.city-search]
+verify_jwt = true
+import_map = "./functions/city-search/deno.json"
