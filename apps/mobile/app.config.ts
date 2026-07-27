@@ -31,7 +31,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       NSCameraUsageDescription:
         'MotoCiudad necesita la cámara para que puedas fotografiar el parking y verificar su existencia.',
       NSPhotoLibraryUsageDescription:
-        'MotoCiudad necesita acceso a tus fotos para que puedas adjuntar imágenes de parkings.',
+        'MotoCiudad necesita acceso a tus fotos para elegir tu avatar y adjuntar imágenes de parkings.',
     },
   },
   android: {
@@ -77,6 +77,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           'MotoCiudad necesita la cámara para fotografiar parkings.',
         microphonePermission: false,
         recordAudioAndroid: false,
+      },
+    ],
+    [
+      'expo-image-picker',
+      {
+        // Avatar del perfil (y adjuntar fotos de parkings). Solo lectura de la
+        // galería; el config plugin inyecta NSPhotoLibraryUsageDescription (iOS)
+        // y READ_MEDIA_IMAGES (Android) en builds de EAS/prebuild.
+        photosPermission:
+          'MotoCiudad necesita acceso a tus fotos para elegir tu avatar y adjuntar imágenes de parkings.',
       },
     ],
   ],
