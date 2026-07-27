@@ -7,11 +7,13 @@
     },
     "preview": {
       "distribution": "internal",
+      "channel": "preview",
       "ios": { "simulator": false },
       "android": { "buildType": "apk" }
     },
     "production": {
       "environment": "production",
+      "channel": "production",
       "android": { "buildType": "app-bundle" },
       "ios": { "enterpriseProvisioning": "universal" }
     }

@@ -15,7 +15,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     resizeMode: 'contain',
     backgroundColor: '#0f172a',
   },
+  // OTA (EAS Update): la app descarga updates de JS/assets sin recompilar.
+  // 'fingerprint' hace que un update solo llegue a builds con el mismo binario
+  // nativo (evita empujar JS incompatible con el nativo instalado).
+  runtimeVersion: { policy: 'fingerprint' },
   updates: {
+    url: 'https://u.expo.dev/5cc7b479-4623-4025-ad5d-47aaff80bec2',
     fallbackToCacheTimeout: 0,
   },
   assetBundlePatterns: ['**/*'],
