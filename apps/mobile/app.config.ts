@@ -21,7 +21,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   assetBundlePatterns: ['**/*'],
   ios: {
     supportsTablet: false,
-    bundleIdentifier: 'es.motociudad.app',
+    bundleIdentifier: 'com.motociudad.app',
     infoPlist: {
       LSApplicationQueriesSchemes: ['comgooglemaps', 'googlemaps'],
       NSLocationWhenInUseUsageDescription:
@@ -35,7 +35,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
   },
   android: {
-    package: 'es.motociudad.app',
+    package: 'com.motociudad.app',
     config: {
       googleMaps: {
         // Maps SDK for Android requiere una API key; se lee de .env (gitignored).

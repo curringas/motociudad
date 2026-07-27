@@ -57,9 +57,9 @@ curl -s --retry 40 --retry-delay 2 --retry-connrefused -m 8 http://localhost:808
 ```bash
 adb devices                         # emulador arrancado (emulator-5554)
 adb reverse tcp:8081 tcp:8081       # device:8081 -> Metro del host
-adb shell am force-stop es.motociudad.app
+adb shell am force-stop com.motociudad.app
 adb shell am start -a android.intent.action.VIEW \
-  -d "motociudad://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081" es.motociudad.app
+  -d "motociudad://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081" com.motociudad.app
 adb exec-out screencap -p > /tmp/shot.png     # capturas
 adb shell input tap X Y | input text "a%sb" | input swipe X1 Y1 X2 Y2 | keyevent 4
 ```
@@ -94,7 +94,7 @@ tap / swipe / type_text          # (solo si ui-automation está activo)
 - **Sin `ui-automation`**: limítate a build+launch+deep-link+`snapshot_ui` (verifica que
   los textos/botones existen en el árbol) + `screenshot`; el flujo con tecleo/scroll
   necesita el workflow activo o al humano. Dilo claramente en el informe.
-- Relanzar tras cambios: `xcrun simctl terminate <UDID> es.motociudad.app` + `launch`.
+- Relanzar tras cambios: `xcrun simctl terminate <UDID> com.motociudad.app` + `launch`.
   Ojo: relanzar **cierra la sesión** → vuelve a loguear si el test lo necesita.
 
 ## 7. Limpieza OBLIGATORIA (Supabase MCP)
