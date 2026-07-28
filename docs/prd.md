@@ -182,6 +182,10 @@ build local para evaluación; el hosting público queda fuera de alcance.
   vacío hasta que el usuario define su ciudad. Pedir la ciudad al registrarse (o en el primer uso)
   poblará el ranking por ciudad de forma natural. Relacionado: UI de ajustes para el toggle
   `ranking_visible` (ocultarse del ranking público).
+- **Próximo (near-term)**: **Enlace "Eliminar cuenta" en "Mi perfil"** → abre el proceso de
+  borrado (hoy: página `motociudad.com/eliminar-cuenta.html` + solicitud por email; a futuro:
+  borrado in-app con la Edge Function `delete-account`). Cumple la exigencia de Play (Data
+  Safety) de ofrecer el borrado desde la propia app.
 - **v1.1**: Multi-idioma (EN), insignias temáticas estacionales.
 - **v1.2**: Sistema de amigos completo (invitaciones, ranking entre amigos).
 - **v1.3** ✅ **Implementado** (change OpenSpec `admin-panel`): **Panel de administración web**
@@ -204,6 +208,10 @@ build local para evaluación; el hosting público queda fuera de alcance.
     (usuario, comentario o foto inapropiada, acoso o comportamiento abusivo que se escape de la
     moderación IA de comentarios/fotos) o una **incidencia técnica** de la app (bug, error, algo
     que no funciona). Tipificados con `report_type` (parking / abuso / incidencia) y `report_status`.
+  - **Puntos de entrada en la app (UI)** — desde donde el usuario dispara cada reporte:
+    - **"Mi perfil"** → *"Reportar un problema o incidencia"* (incidencia técnica de la app).
+    - **Perfil público de otro usuario** → *"Reportar abuso"* (usuario/contenido).
+    - **Detalle de un parking** → *"Reportar que no existe"* / dato erróneo (reporte de parking).
   - **Accesibles en el panel de control** (v1.3): admin (y colaboradores para sus parkings)
     revisan y gestionan feedback, reportes de parkings y **reportes de abuso/incidencias** desde
     el panel, con acciones (marcar resuelto/descartado, y sobre abusos: enlazar a suspender al
