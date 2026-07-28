@@ -199,6 +199,11 @@ CREATE INDEX idx_users_role ON public.users(role);
   Migraciones: `20260718000001_user_roles` … `20260718000007_parkings_admin_read`.
   Detalle completo en §16.
 - `display_name` refleja el @handle elegido por el usuario.
+- **Usuario de sistema `@motociudad`** (UUID fijo `d1000000-0000-0000-0000-000000000001`,
+  `ranking_visible=false`): autor (`proposed_by`) de los parkings sembrados desde
+  OpenStreetMap y `uploaded_by` de sus fotos. Se crea de forma idempotente en la
+  migración `20260729000001_system_user_motociudad.sql`. Al tener `ranking_visible=false`
+  no aparece en `mv_ranking_global`/`mv_ranking_by_city`. Change `import-osm-parkings`.
 
 ### 5.3 `user_levels` (catálogo)
 
@@ -387,6 +392,13 @@ CREATE INDEX idx_parkings_proposer  ON public.parkings(proposed_by);
 | `free` | bool | Gratuito (false implica privado de pago) |
 | `h24` | bool | Acceso 24h |
 | `battery_layout` | bool | Plazas en batería (vs. cordón) |
+
+**Trazabilidad de origen (seeding OSM)**: los parkings importados desde OpenStreetMap
+(change `import-osm-parkings`) añaden a `features` las claves `source` (`"osm"`),
+`osm_id` (id del elemento OSM, p. ej. `"node/123"`) y, si se importó foto de Wikimedia
+Commons, `source_photo` (`{commons, author, license}`). Además `notes` guarda la
+atribución ODbL. Estas claves son informativas (no imponen constraints) y permiten
+identificar/revertir el seeding filtrando por `proposed_by = @motociudad`.
 
 ### 6.3 `parking_photos`
 

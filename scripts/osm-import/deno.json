@@ -1,0 +1,7 @@
+{
+  "tasks": {
+    "import": "deno run --allow-net --allow-env --allow-read import-osm-parkings.ts",
+    "test": "deno test"
+  },
+  "lock": false
+}

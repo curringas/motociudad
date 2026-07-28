@@ -38,6 +38,7 @@ export default function ProfileScreen() {
               Iniciar sesión / Registrarse
             </Text>
           </TouchableOpacity>
+          <OsmAttribution />
         </View>
       </SafeAreaView>
     );
@@ -111,9 +112,26 @@ export default function ProfileScreen() {
             >
               <Text className="text-rejected font-semibold">Cerrar sesión</Text>
             </TouchableOpacity>
+
+            <OsmAttribution />
           </>
         )}
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+/**
+ * ODbL attribution for the parking data seeded from OpenStreetMap. Required by
+ * the OSM licence and shown wherever the user reaches settings (mobile + web).
+ */
+function OsmAttribution() {
+  return (
+    <Text
+      className="text-content-muted text-xs text-center mt-8"
+      accessibilityRole="text"
+    >
+      Datos de parkings © OpenStreetMap contributors
+    </Text>
   );
 }
