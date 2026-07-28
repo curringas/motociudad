@@ -39,5 +39,5 @@
 
 ## 7. Verificación de cierre (obligatoria)
 
-- [ ] 7.1 Ejecutar `verify-all-platforms` vía subagente `e2e-verifier`: app móvil en web (Playwright) + Android (emulador) + iOS (simulador), logueado como usuario, comprobando que los parkings importados aparecen en mapa/lista como `pending` y son verificables.
-- [ ] 7.2 Limpiar cualquier dato de prueba generado durante la verificación y dejar evidencia en `.claude/verify-runs/import-osm-parkings.md`.
+- [x] 7.1 Ejecutar `verify-all-platforms` vía subagente `e2e-verifier`: app móvil en web (Playwright) + Android (emulador) + iOS (simulador), logueado como usuario, comprobando que los parkings importados aparecen en mapa/lista como `pending` y son verificables.
+- [x] 7.2 Limpiar cualquier dato de prueba generado durante la verificación y dejar evidencia en `.claude/verify-runs/import-osm-parkings.md`.
