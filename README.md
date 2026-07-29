@@ -56,7 +56,7 @@ moderación por nivel), sin scraping ni bases de datos comerciales.
 |---|---|
 | Repositorio de código | https://github.com/curringas/motociudad |
 | Demo web pública (consulta) | https://motociudad.com |
-| App móvil (iOS/Android) | Build EAS / TestFlight bajo petición (requiere registrar dispositivo) |
+| App móvil (iOS/Android) | En distribución: **iOS** en App Store Connect (TestFlight activo + envío a revisión), **Android** en prueba abierta de Google Play. Build EAS / TestFlight bajo petición |
 | Contacto para credenciales de evaluación | curromartinez@tallerempresarial.es |
 
 > La app móvil usa cámara, GPS y mapas nativos, por lo que **no funciona con Expo Go**; se
