@@ -56,7 +56,8 @@ moderación por nivel), sin scraping ni bases de datos comerciales.
 |---|---|
 | Repositorio de código | https://github.com/curringas/motociudad |
 | Demo web pública (consulta) | https://motociudad.com |
-| App móvil (iOS/Android) | En distribución: **iOS** en App Store Connect (TestFlight activo + envío a revisión), **Android** en prueba abierta de Google Play. Build EAS / TestFlight bajo petición |
+| App Android (Google Play) | ✅ https://play.google.com/store/apps/details?id=com.motociudad.app |
+| App iOS | En App Store Connect (en revisión) · TestFlight bajo petición |
 | Contacto para credenciales de evaluación | curromartinez@tallerempresarial.es |
 
 > La app móvil usa cámara, GPS y mapas nativos, por lo que **no funciona con Expo Go**; se
@@ -85,7 +86,7 @@ MotoCiudad está **desplegada en las tres plataformas**:
 |---|---|---|---|
 | **Web** | https://motociudad.com | ✅ **En vivo** (público) | Abrir la URL en cualquier navegador. Despliegue continuo por FTP a ISPConfig en cada cambio. |
 | **iOS** | App Store Connect / TestFlight | 🟠 **Waiting for Review** (build `0.1.0 (2)`) | Ficha y capturas nativas en [`applestore/`](applestore/); acceso a TestFlight bajo petición. |
-| **Android** | Google Play (prueba abierta) | 🟠 En revisión (`versionCode 4`) | Ficha y recursos en [`googleplay/`](googleplay/); enlace de prueba abierta bajo petición. |
+| **Android** | [Google Play](https://play.google.com/store/apps/details?id=com.motociudad.app) | ✅ **Disponible en la tienda** (`versionCode 4`) | Instalar desde Google Play. Ficha y recursos en [`googleplay/`](googleplay/). |
 
 - **Vía más rápida de evaluar**: la **web en vivo** (https://motociudad.com) no requiere instalar nada.
 - **Móvil**: al usar cámara/GPS/mapas nativos **no** funciona con Expo Go; se distribuye por las tiendas o por build EAS/TestFlight bajo petición (contacto en §0.4 URLs).
