@@ -77,6 +77,21 @@ MotoCiudad es una única base de código (React Native + Expo) que se sirve en *
 > ¹ Aportar y verificar exigen estar físicamente en el sitio (GPS + foto tomada en el momento),
 > algo que un navegador no puede garantizar; en web se remite a la app móvil.
 
+### 0.6 Despliegue y evidencia
+
+MotoCiudad está **desplegada en las tres plataformas**:
+
+| Plataforma | Dónde | Estado (2026-07-29) | Evidencia |
+|---|---|---|---|
+| **Web** | https://motociudad.com | ✅ **En vivo** (público) | Abrir la URL en cualquier navegador. Despliegue continuo por FTP a ISPConfig en cada cambio. |
+| **iOS** | App Store Connect / TestFlight | 🟠 **Waiting for Review** (build `0.1.0 (2)`) | Ficha y capturas nativas en [`applestore/`](applestore/); acceso a TestFlight bajo petición. |
+| **Android** | Google Play (prueba abierta) | 🟠 En revisión (`versionCode 4`) | Ficha y recursos en [`googleplay/`](googleplay/); enlace de prueba abierta bajo petición. |
+
+- **Vía más rápida de evaluar**: la **web en vivo** (https://motociudad.com) no requiere instalar nada.
+- **Móvil**: al usar cámara/GPS/mapas nativos **no** funciona con Expo Go; se distribuye por las tiendas o por build EAS/TestFlight bajo petición (contacto en §0.4 URLs).
+- **CI/CD**: GitHub Actions (tests + typecheck por PR) + EAS Build/Update (OTA) para móvil + CD por FTP para la web. Detalle en [`docs/infraestructura.md`](docs/infraestructura.md).
+- **Recursos de tienda** (prueba del envío): iconos, capturas y textos de ficha en [`applestore/`](applestore/) (iOS) y [`googleplay/`](googleplay/) (Android).
+
 ---
 
 ## 1. Descripción general del producto
