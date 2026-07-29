@@ -28,13 +28,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: false,
     bundleIdentifier: 'com.motociudad.app',
-    buildNumber: '1',
+    buildNumber: '2',
     infoPlist: {
       LSApplicationQueriesSchemes: ['comgooglemaps', 'googlemaps'],
+      // Solo usamos ubicación con la app en primer plano (centrar mapa + verificar
+      // parking). Sin navegación ni background → declaramos únicamente WhenInUse.
       NSLocationWhenInUseUsageDescription:
         'MotoCiudad necesita tu ubicación para mostrarte parkings cercanos y verificar que estás en el lugar correcto.',
-      NSLocationAlwaysAndWhenInUseUsageDescription:
-        'MotoCiudad necesita tu ubicación para mostrarte parkings cercanos y verificar que estás en el lugar correcto.',
+      // Sin cifrado no exento (solo HTTPS estándar): evita el prompt de export
+      // compliance en cada subida a App Store Connect / TestFlight.
+      ITSAppUsesNonExemptEncryption: false,
       NSCameraUsageDescription:
         'MotoCiudad necesita la cámara para que puedas fotografiar el parking y verificar su existencia.',
       NSPhotoLibraryUsageDescription:
@@ -80,8 +83,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       'expo-location',
       {
-        locationAlwaysAndWhenInUsePermission:
-          'MotoCiudad necesita tu ubicación para mostrarte parkings cercanos.',
+        // Solo primer plano: sin locationAlwaysAndWhenInUsePermission para no
+        // declarar background location que no usamos (rechazo Apple 5.1.1).
         locationWhenInUsePermission:
           'MotoCiudad necesita tu ubicación para mostrarte parkings cercanos.',
       },
