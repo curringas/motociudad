@@ -157,7 +157,7 @@ Lista explícita para que ningún agente de IA las infiera como necesarias:
 - ❌ Dashboard de admin público.
 - ❌ Soporte multi-idioma en MVP (solo castellano; inglés post-launch).
 - ❌ Notificaciones push de marketing (solo transaccionales: nivel, insignia, verificación).
-- ❌ Importación masiva desde CSV o APIs externas.
+- ❌ Importación masiva desde CSV o APIs externas por parte de usuarios. **Excepción intencionada**: el *seeding* administrado de parkings desde **OpenStreetMap** (Overpass, `amenity=motorcycle_parking`) ejecutado por admin/ops mediante una herramienta interna (`scripts/osm-import/`). Los parkings así importados nacen en estado `pending` —los verifica la comunidad como cualquier propuesta—, se atribuyen al usuario de sistema `@motociudad` y muestran la atribución ODbL "© OpenStreetMap contributors". No es una importación abierta a usuarios ni un flujo de la app. Change `import-osm-parkings`.
 - ❌ Gamificación con dinero / canjeables / NFTs.
 
 ### 7.2b Versión web (companion de consulta)
