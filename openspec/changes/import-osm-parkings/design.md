@@ -51,7 +51,7 @@ El tag `image` genérico apunta a fotos externas de copyright desconocido → **
 2. Descargar bytes (`Special:FilePath` o `imageinfo.url`), validar `content-type` imagen y tamaño (<5 MB).
 3. Subir a `parkings-photos/{parking_id}/{photo_id}.<ext>` vía Storage API (`service_role`).
 4. Insertar `parking_photos` con `is_primary=true`, `is_verification=false`, `uploaded_by=@motociudad`.
-5. Guardar atribución (`author`, `license`) en `parkings.features.source_photo` para trazabilidad.
+5. Anexar la atribución (`author`, `license`, "Wikimedia Commons") a `parkings.notes` para trazabilidad (no a `features`, que es boolean-only).
 Si cualquier paso falla, se omite la foto y el parking se inserta igual.
 
 ### D7 — Mapeo de tags OSM → `parkings`
@@ -65,10 +65,14 @@ Si cualquier paso falla, se omite la foto y el parking se inserta igual.
 | `capacity` | `tags.capacity` | solo si parsea a entero > 0 |
 | `features.covered` | `tags.covered` | `=== 'yes'` |
 | `features.free` | `tags.fee` | `=== 'no'` |
-| `features.source` | — | `'osm'` (trazabilidad) |
-| `features.osm_id` | id del elemento | trazabilidad (dato, no constraint) |
-| `notes` | — | `"Importado de OpenStreetMap (© OpenStreetMap contributors, ODbL)."` |
-Solo se escriben claves de `features` conocidas por el modelo (`covered`, `free`) más las de trazabilidad (`source`, `osm_id`, `source_photo`).
+| `notes` | — | `"Importado de OpenStreetMap (© OpenStreetMap contributors, ODbL). · osm:{osm_id}"` (+ atribución de foto si la hay) |
+| `proposed_by` | — | usuario de sistema @motociudad |
+
+**`features` es SOLO booleanos.** El cliente valida `features` con `z.record(z.boolean())`
+(`apps/mobile/features/parkings/schemas.ts`), así que cualquier valor de texto rompe el
+parseo en la lista/mapa. Por eso la trazabilidad (id OSM, atribución de foto) vive en `notes`
+(texto libre), no en `features`. La identificación/reversión del seeding se hace por
+`proposed_by = @motociudad`.
 
 ### D8 — Atribución ODbL en la app
 Añadir el crédito "© OpenStreetMap contributors" en la pantalla de información/ajustes de la app (donde ya se muestran créditos), cubriendo tanto móvil como web. La atribución de fotos CC viaja en `features.source_photo`.

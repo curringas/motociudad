@@ -393,12 +393,12 @@ CREATE INDEX idx_parkings_proposer  ON public.parkings(proposed_by);
 | `h24` | bool | Acceso 24h |
 | `battery_layout` | bool | Plazas en batería (vs. cordón) |
 
-**Trazabilidad de origen (seeding OSM)**: los parkings importados desde OpenStreetMap
-(change `import-osm-parkings`) añaden a `features` las claves `source` (`"osm"`),
-`osm_id` (id del elemento OSM, p. ej. `"node/123"`) y, si se importó foto de Wikimedia
-Commons, `source_photo` (`{commons, author, license}`). Además `notes` guarda la
-atribución ODbL. Estas claves son informativas (no imponen constraints) y permiten
-identificar/revertir el seeding filtrando por `proposed_by = @motociudad`.
+**Trazabilidad de origen (seeding OSM)**: `features` es **solo booleanos** (el cliente lo
+valida con `z.record(z.boolean())`), así que los parkings importados desde OpenStreetMap
+(change `import-osm-parkings`) guardan la trazabilidad en `notes` (texto): la atribución
+ODbL, el id del elemento OSM (`· osm:node/123`) y, si se importó foto de Wikimedia Commons,
+su autor/licencia. La identificación/reversión del seeding se hace filtrando por
+`proposed_by = @motociudad`.
 
 ### 6.3 `parking_photos`
 

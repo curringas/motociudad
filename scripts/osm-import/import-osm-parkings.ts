@@ -118,12 +118,11 @@ async function main(): Promise<void> {
     const photo = commonsFile ? await resolveCommonsPhoto(commonsFile) : null;
 
     const parking = mapToParking(osm, { city: city.city, name });
-    if (photo && commonsFile) {
-      parking.features.source_photo = {
-        commons: commonsFile,
-        author: photo.attribution.author,
-        license: photo.attribution.license,
-      };
+    if (photo) {
+      // Photo attribution lives in notes (features is boolean-only for the client).
+      const author = photo.attribution.author ?? "autor desconocido";
+      const license = photo.attribution.license ?? "CC";
+      parking.notes += ` · Foto: ${author} — ${license} (Wikimedia Commons)`;
     }
 
     if (dryRun) {

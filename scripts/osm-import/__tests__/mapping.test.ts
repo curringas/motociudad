@@ -1,5 +1,5 @@
 import { assertEquals } from "jsr:@std/assert";
-import { buildFeatures, mapToParking, parseCapacity } from "../mapping.ts";
+import { buildFeatures, buildNotes, mapToParking, parseCapacity } from "../mapping.ts";
 import { normalizeOverpass } from "../osm.ts";
 import { OSM_ATTRIBUTION, SYSTEM_USER_ID } from "../constants.ts";
 import type { OsmParking } from "../osm.ts";
@@ -19,14 +19,21 @@ Deno.test("parseCapacity: entero positivo, ausente o no numérico", () => {
   assertEquals(parseCapacity("-3"), null);
 });
 
-Deno.test("buildFeatures: solo claves conocidas + trazabilidad", () => {
+Deno.test("buildFeatures: solo booleanos conocidos (sin claves de texto)", () => {
   const f = buildFeatures(node({ covered: "yes", fee: "no", amenity: "motorcycle_parking" }));
-  assertEquals(f, { source: "osm", osm_id: "node/1", covered: true, free: true });
+  assertEquals(f, { covered: true, free: true });
 });
 
-Deno.test("buildFeatures: covered!=yes y fee!=no no añaden claves", () => {
+Deno.test("buildFeatures: covered!=yes y fee!=no → objeto vacío", () => {
   const f = buildFeatures(node({ covered: "no", fee: "yes" }));
-  assertEquals(f, { source: "osm", osm_id: "node/1" });
+  assertEquals(f, {});
+});
+
+Deno.test("buildNotes: atribución ODbL + osm_id (trazabilidad en notes)", () => {
+  assertEquals(
+    buildNotes(node({})),
+    `${OSM_ATTRIBUTION} · osm:node/1`,
+  );
 });
 
 Deno.test("mapToParking: defaults type/status, location WKT, autor sistema", () => {
@@ -39,8 +46,10 @@ Deno.test("mapToParking: defaults type/status, location WKT, autor sistema", () 
   assertEquals(p.city, "Córdoba");
   assertEquals(p.capacity, 5);
   assertEquals(p.proposed_by, SYSTEM_USER_ID);
-  assertEquals(p.notes, OSM_ATTRIBUTION);
-  assertEquals(p.features.covered, true);
+  assertEquals(p.notes, `${OSM_ATTRIBUTION} · osm:node/1`);
+  assertEquals(p.features, { covered: true });
+  // features es SOLO booleanos (el cliente valida z.record(z.boolean())).
+  for (const v of Object.values(p.features)) assertEquals(typeof v, "boolean");
   // status NO se fija: lo pone el default 'pending' de la BD.
   assertEquals("status" in p, false);
 });

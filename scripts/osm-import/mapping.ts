@@ -1,7 +1,8 @@
 /**
- * Pure mapping of an OSM element to a `parkings` insert payload. Only writes
- * feature keys known to the data model (`covered`, `free`) plus traceability
- * keys (`source`, `osm_id`). `status` is intentionally omitted so the DB
+ * Pure mapping of an OSM element to a `parkings` insert payload. `features` only
+ * ever holds booleans (`covered`, `free`) because the client validates it as
+ * `z.record(z.boolean())`; traceability (OSM id, photo attribution) lives in
+ * `notes` (free text) instead. `status` is intentionally omitted so the DB
  * default ('pending') applies. Location uses the WKT form proven by the
  * propose-parking Edge Function: `POINT(lng lat)`.
  */
@@ -9,16 +10,10 @@
 import type { OsmParking } from "./osm.ts";
 import { OSM_ATTRIBUTION, SYSTEM_USER_ID } from "./constants.ts";
 
+/** Only boolean keys known to the data model — never strings. */
 export type ParkingFeatures = {
   covered?: boolean;
   free?: boolean;
-  source: "osm";
-  osm_id: string;
-  source_photo?: {
-    commons: string;
-    author: string | null;
-    license: string | null;
-  };
 };
 
 export type ParkingInsert = {
@@ -39,10 +34,18 @@ export function parseCapacity(raw: string | undefined): number | null {
 }
 
 export function buildFeatures(osm: OsmParking): ParkingFeatures {
-  const features: ParkingFeatures = { source: "osm", osm_id: osm.osmId };
+  const features: ParkingFeatures = {};
   if (osm.tags.covered === "yes") features.covered = true;
   if (osm.tags.fee === "no") features.free = true;
   return features;
+}
+
+/**
+ * Attribution note stored in `parkings.notes`: ODbL credit + the OSM element id
+ * for traceability (used to identify/revert the seeding alongside proposed_by).
+ */
+export function buildNotes(osm: OsmParking): string {
+  return `${OSM_ATTRIBUTION} · osm:${osm.osmId}`;
 }
 
 export function mapToParking(
@@ -56,7 +59,7 @@ export function mapToParking(
     city: opts.city,
     capacity: parseCapacity(osm.tags.capacity),
     features: buildFeatures(osm),
-    notes: OSM_ATTRIBUTION,
+    notes: buildNotes(osm),
     proposed_by: SYSTEM_USER_ID,
   };
 }

@@ -30,11 +30,16 @@ El sistema SHALL definir las ciudades importables en un catálogo `cities.ts` co
 - **AND** no consulta Overpass ni escribe datos
 
 ### Requirement: Mapeo de datos OSM al modelo de parkings
-El sistema SHALL mapear cada elemento OSM al modelo `parkings` usando: coordenadas → `location` (`geography(Point,4326)`); `type='public'`; `status='pending'`; `city` = etiqueta canónica del catálogo; `capacity` = `tags.capacity` solo si es un entero positivo; y `features` con solo las claves conocidas del modelo (`covered` desde `tags.covered='yes'`, `free` desde `tags.fee='no'`) más claves de trazabilidad (`source='osm'`, `osm_id`).
+El sistema SHALL mapear cada elemento OSM al modelo `parkings` usando: coordenadas → `location` (`geography(Point,4326)`); `type='public'`; `status='pending'`; `city` = etiqueta canónica del catálogo; `capacity` = `tags.capacity` solo si es un entero positivo; y `features` con **solo valores booleanos** conocidos del modelo (`covered` desde `tags.covered='yes'`, `free` desde `tags.fee='no'`). La trazabilidad (id del elemento OSM y atribución) NO va en `features` —que el cliente valida como `z.record(z.boolean())`— sino en `notes` (texto).
 
 #### Scenario: Parking con capacidad y cubierta declaradas
 - **WHEN** un elemento OSM tiene `capacity=10`, `covered=yes` y `fee=no`
 - **THEN** el parking resultante tiene `capacity=10` y `features` con `covered=true` y `free=true`
+
+#### Scenario: features contiene únicamente booleanos
+- **WHEN** se mapea cualquier elemento OSM
+- **THEN** todos los valores de `features` son booleanos (nunca texto)
+- **AND** el id OSM se registra en `notes` (p. ej. `· osm:node/123`), no en `features`
 
 #### Scenario: Tags ausentes o no numéricos
 - **WHEN** un elemento OSM no tiene `capacity` o tiene un `capacity` no numérico
@@ -97,7 +102,7 @@ El sistema SHALL importar una foto para un parking únicamente cuando el element
 - **THEN** el sistema resuelve la URL, autor y licencia vía la Commons API
 - **AND** descarga la imagen, la sube al bucket `parkings-photos/{parking_id}/{photo_id}` con `service_role`
 - **AND** inserta una fila en `parking_photos` con `is_primary=true`, `is_verification=false` y `uploaded_by=@motociudad`
-- **AND** guarda la atribución (autor, licencia) en `features.source_photo`
+- **AND** anexa la atribución (autor, licencia, Wikimedia Commons) a `notes`
 
 #### Scenario: Elemento con solo tag image genérico
 - **WHEN** un elemento OSM tiene `image=<URL>` pero no `wikimedia_commons`
@@ -117,11 +122,11 @@ El sistema SHALL soportar un flag `--dry-run` que imprima los parkings que se in
 - **AND** no realiza ninguna escritura en `parkings`, `parking_photos` ni Storage
 
 ### Requirement: Atribución de datos OSM
-El sistema SHALL atribuir los datos importados a OpenStreetMap: cada parking importado SHALL registrar su origen (`features.source='osm'` y una nota de atribución), y la app SHALL mostrar el crédito "© OpenStreetMap contributors" en una pantalla visible tanto en móvil como en web.
+El sistema SHALL atribuir los datos importados a OpenStreetMap: cada parking importado SHALL registrar su origen en `notes` (atribución ODbL + id del elemento OSM), y la app SHALL mostrar el crédito "© OpenStreetMap contributors" en una pantalla visible tanto en móvil como en web.
 
 #### Scenario: Trazabilidad de origen en el parking
 - **WHEN** se inserta un parking importado
-- **THEN** `features.source` es `'osm'` y `notes` incluye la atribución ODbL
+- **THEN** `notes` incluye la atribución ODbL y el id OSM (`· osm:{id}`)
 
 #### Scenario: Crédito visible en la app
 - **WHEN** el usuario abre la pantalla de información/ajustes de la app (móvil o web)
