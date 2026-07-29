@@ -15,7 +15,7 @@
       "environment": "production",
       "channel": "production",
       "android": { "buildType": "app-bundle" },
-      "ios": { "enterpriseProvisioning": "universal" }
+      "ios": {}
     }
   },
   "submit": {
@@ -24,6 +24,11 @@
         "serviceAccountKeyPath": "./google-play-service-account.json",
         "track": "beta",
         "releaseStatus": "draft"
+      },
+      "ios": {
+        "appleId": "apple@pfagot.com",
+        "ascAppId": "6795799534",
+        "appleTeamId": "CR6CKJ247R"
       }
     }
   }

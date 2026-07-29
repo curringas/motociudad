@@ -18,15 +18,9 @@ export function AvatarPicker({ userId, url, name }: Props) {
   const upload = useUploadAvatar(userId);
 
   const handlePick = useCallback(async () => {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      Alert.alert(
-        'Permiso necesario',
-        'Necesitamos acceso a tus fotos para cambiar el avatar.',
-      );
-      return;
-    }
-
+    // System photo picker (Android 13+ PickVisualMedia / iOS PHPicker) needs no
+    // media permission — requesting READ_MEDIA_IMAGES violates Play policy and
+    // the permission is stripped in app.config, so launch the picker directly.
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
