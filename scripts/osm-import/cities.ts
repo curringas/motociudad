@@ -27,6 +27,24 @@ export const CITIES: City[] = [
     // Casco urbano de Córdoba (medido: la consulta por area[name] da 504).
     bbox: { south: 37.83, west: -4.85, north: 37.92, east: -4.70 },
   },
+  {
+    slug: "sevilla",
+    city: "Sevilla",
+    // Casco urbano de Sevilla.
+    bbox: { south: 37.32, west: -6.05, north: 37.45, east: -5.90 },
+  },
+  {
+    slug: "madrid",
+    city: "Madrid",
+    // Madrid capital (aprox. dentro de la M-40).
+    bbox: { south: 40.33, west: -3.84, north: 40.52, east: -3.58 },
+  },
+  {
+    slug: "barcelona",
+    city: "Barcelona",
+    // Barcelona ciudad (del puerto al Carmel/Horta).
+    bbox: { south: 41.32, west: 2.05, north: 41.47, east: 2.23 },
+  },
 ];
 
 export function findCity(slug: string): City | undefined {
