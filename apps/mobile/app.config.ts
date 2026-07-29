@@ -43,7 +43,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: 'com.motociudad.app',
-    versionCode: 3,
+    versionCode: 4,
     config: {
       googleMaps: {
         // Maps SDK for Android requiere una API key; se lee de .env (gitignored).
@@ -58,8 +58,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       'ACCESS_FINE_LOCATION',
       'ACCESS_COARSE_LOCATION',
       'CAMERA',
-      'READ_EXTERNAL_STORAGE',
-      'READ_MEDIA_IMAGES',
+    ],
+    // Google Play policy: apps targeting Android 13+ (API 33+) must use the
+    // system photo picker instead of broad media permissions. expo-image-picker
+    // already uses the picker (launchImageLibraryAsync → PickVisualMedia), so we
+    // strip the media/storage permissions its plugin/legacy path would merge in.
+    blockedPermissions: [
+      'android.permission.READ_MEDIA_IMAGES',
+      'android.permission.READ_MEDIA_VIDEO',
+      'android.permission.READ_EXTERNAL_STORAGE',
+      'android.permission.WRITE_EXTERNAL_STORAGE',
     ],
   },
   web: {
@@ -90,9 +98,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       'expo-image-picker',
       {
-        // Avatar del perfil (y adjuntar fotos de parkings). Solo lectura de la
-        // galería; el config plugin inyecta NSPhotoLibraryUsageDescription (iOS)
-        // y READ_MEDIA_IMAGES (Android) en builds de EAS/prebuild.
+        // Avatar del perfil. Usa el selector de fotos del sistema (Android 13+
+        // / iOS PHPicker), que NO requiere permisos de media; en Android los
+        // permisos amplios se bloquean arriba (blockedPermissions). En iOS el
+        // config plugin añade NSPhotoLibraryUsageDescription (inofensivo).
         photosPermission:
           'MotoCiudad necesita acceso a tus fotos para elegir tu avatar y adjuntar imágenes de parkings.',
       },
