@@ -15,21 +15,23 @@ checklist maestro y los recursos gráficos.
 | Fichero | Uso | Tamaño |
 |---|---|---|
 | `icon-1024.png` | Icono de la App Store | 1024×1024 |
-| `screenshots/iphone-6.5/01-mapa.png` | Captura: mapa con parkings | 1242×2688 |
-| `screenshots/iphone-6.5/02-detalle-parking.png` | Captura: detalle de un parking | 1242×2688 |
-| `screenshots/iphone-6.5/03-perfil.png` | Captura: perfil de usuario | 1242×2688 |
-| `screenshots/iphone-6.5/04-buscar-ciudad.png` | Captura: buscador de ciudad | 1242×2688 |
+| `screenshots/iphone-6.5/01-mapa.png` | Mapa con parkings de moto (Córdoba) | 1284×2778 |
+| `screenshots/iphone-6.5/02-lista.png` | Lista de parkings cercanos | 1284×2778 |
+| `screenshots/iphone-6.5/03-ranking.png` | Ranking de Octanos (gamificación) | 1284×2778 |
+| `screenshots/iphone-6.5/04-perfil.png` | Perfil: nivel y Octanos | 1284×2778 |
+| `screenshots/iphone-6.5/05-verificar.png` | Verificar parking (GPS + foto) | 1284×2778 |
 
-### ⚠️ Sobre las capturas
-- Son las capturas de **Android reescaladas** a lienzo iPhone 6.5" (1242×2688), con
-  relleno en el color de fondo de la app (#0f172a) para que el marco sea invisible.
-  **Sirven para pasar la revisión.**
-- Muestran la cuenta de prueba (`@e2e_user`). Para una ficha más pulida conviene
-  **regenerarlas desde el simulador de iOS** con una cuenta "de escaparate". Ver
-  "Regenerar capturas" abajo.
+### Sobre las capturas
+- Son **capturas nativas de iPhone** hechas en el simulador de iOS (iPhone 14 Plus,
+  1284×2778 — tamaño exacto que acepta el hueco de 6.5"). No hace falta procesarlas.
+- Muestran datos reales de la cuenta de prueba (`@e2e_user`) sobre los parkings de moto
+  importados de OpenStreetMap en Córdoba.
+- **Nota**: Ranking y Perfil salen con **0 Octanos** (los datos de gamificación se
+  purgaron); es lo que hay en la BD ahora mismo. Si en el futuro hay actividad real,
+  conviene regenerarlas para que luzcan con números.
 - **Solo se necesita iPhone 6.5"**. La app tiene `supportsTablet: false`, así que
   **NO hacen falta capturas de iPad**. Solo se usan las 3 primeras en la hoja de
-  instalación.
+  instalación (orden actual: Mapa · Lista · Ranking).
 
 ---
 
