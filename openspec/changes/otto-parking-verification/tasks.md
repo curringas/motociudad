@@ -10,10 +10,10 @@
 
 ## 2. Proveedor de visión y SMTP (`_shared`)
 
-- [ ] 2.1 Añadir cliente de visión OpenAI-compatible en `supabase/functions/_shared/` (reutilizar el estilo de `moderation.ts`), con selector tipo `OTTO_PROVIDER`/`off` y timeout corto
-- [ ] 2.2 Definir el prompt versionado de Otto en `docs/prompts/otto-parking-verification.md` y cargarlo desde el shared
-- [ ] 2.3 Implementar pre-filtros deterministas (nombre/notas mínimamente coherentes) antes de llamar al proveedor
-- [ ] 2.4 Helper SMTP (Deno, p.ej. `denomailer`) en `_shared/` para enviar el aviso al admin, best-effort (try/catch)
+- [x] 2.1 Añadir cliente de visión OpenAI-compatible en `supabase/functions/_shared/` (reutilizar el estilo de `moderation.ts`), con selector tipo `OTTO_PROVIDER`/`off` y timeout corto
+- [x] 2.2 Definir el prompt versionado de Otto en `docs/prompts/otto-parking-verification.md` y cargarlo desde el shared
+- [x] 2.3 Implementar pre-filtros deterministas (nombre/notas mínimamente coherentes) antes de llamar al proveedor
+- [x] 2.4 Helper SMTP (Deno, p.ej. `denomailer`) en `_shared/` para enviar el aviso al admin, best-effort (try/catch)
 - [ ] 2.5 Declarar secrets nuevos en Supabase (proveedor visión + SMTP host/puerto/usuario/clave + email admin) y documentarlos
 
 ## 3. Edge Function: gate de Otto en `propose-parking`
