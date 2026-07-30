@@ -65,9 +65,18 @@ export async function getParkingById(id: string) {
  * que inserta el parking y registra el evento Octanos con service_role.
  * Devuelve el id del parking creado y los Octanos ganados.
  */
+export type AiReviewStatus = 'approved' | 'flagged' | 'rejected';
+
+export interface ProposeParkingResult {
+  id: string;
+  ai_review_status: AiReviewStatus;
+  octanos_earned: number;
+  review_reason: string;
+}
+
 export async function proposeParking(
   payload: ProposeParkingInput & { photo_storage_path?: string },
-): Promise<{ id: string; octanos_earned: number }> {
+): Promise<ProposeParkingResult> {
   const { data: sessionData } = await supabase.auth.getSession();
   const jwt = sessionData.session?.access_token;
 
@@ -75,7 +84,7 @@ export async function proposeParking(
 
   const { data, error } = await supabase.functions.invoke<{
     success: boolean;
-    data: { id: string; octanos_earned: number };
+    data: ProposeParkingResult;
   }>('propose-parking', {
     body: payload,
     headers: { Authorization: `Bearer ${jwt}` },

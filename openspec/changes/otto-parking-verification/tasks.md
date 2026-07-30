@@ -32,10 +32,10 @@
 
 ## 5. Móvil (`features/parkings`)
 
-- [ ] 5.1 Spinner "Nuestro agente motero de IA Otto está verificando tu aportación…" durante el invoke de propuesta
-- [ ] 5.2 Mostrar el mensaje de veredicto (approved/rejected/flagged) según la respuesta, con los textos acordados
-- [ ] 5.3 Presenter: mapear `ai_review_status` para el estado visible al proponente (p.ej. badge "en revisión")
-- [ ] 5.4 Tests de componente (Vitest + @testing-library/react + RNW) de los tres veredictos y el estado de carga
+- [x] 5.1 Spinner "Nuestro agente motero de IA Otto está verificando tu aportación…" durante el invoke de propuesta
+- [x] 5.2 Mostrar el mensaje de veredicto (approved/rejected/flagged) según la respuesta, con los textos acordados
+- [x] 5.3 Presenter: mapear `ai_review_status` para el estado visible al proponente (p.ej. badge "en revisión")
+- [x] 5.4 Tests de componente (Vitest + @testing-library/react + RNW) de los tres veredictos y el estado de carga
 
 ## 6. Panel admin web (`features/admin`)
 

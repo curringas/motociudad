@@ -28,6 +28,8 @@ import { useUserLocation } from '@/hooks/useUserLocation';
 import { useUiStore } from '@/stores/uiStore';
 import { useSessionStore } from '@/stores/sessionStore';
 import { useProposeParking, useCheckDuplicates, useNearbyParkings } from '@/features/parkings/hooks';
+import type { AiReviewStatus } from '@/features/parkings/api';
+import { ottoVerdictView } from '@/features/parkings/ottoPresenter';
 import { ParkingMapPin } from '@/features/parkings/components/ParkingMapPin';
 import { supabase } from '@/lib/supabase';
 import type { ParkingFeatures } from '@/types/domain';
@@ -63,6 +65,7 @@ export default function ContributeScreen() {
   const [step, setStep] = useState<Step>(0);
   const [submitted, setSubmitted] = useState(false);
   const [pendingOctanos, setPendingOctanos] = useState(0);
+  const [reviewStatus, setReviewStatus] = useState<AiReviewStatus>('approved');
 
   // Step 1: Location — GPS first, mapCenter as fallback (avoids centering on last-viewed parking)
   const [markerCoords, setMarkerCoords] = useState({
@@ -206,6 +209,7 @@ export default function ContributeScreen() {
       });
 
       setPendingOctanos(result.octanos_earned);
+      setReviewStatus(result.ai_review_status);
       setSubmitted(true);
     } catch (err) {
       console.error('[proposeParking]', err);
@@ -253,21 +257,24 @@ export default function ContributeScreen() {
     );
   }
 
-  // --- Confirmation screen ---
+  // --- Confirmation screen (Otto's verdict) ---
   if (submitted) {
+    const verdict = ottoVerdictView(reviewStatus, pendingOctanos);
     return (
       <SafeAreaView className="flex-1 bg-background items-center justify-center p-8">
-        <Text className="text-primary text-5xl mb-4">⭐</Text>
+        <Text className="text-5xl mb-4">{verdict.icon}</Text>
         <Text className="text-content text-2xl font-bold text-center">
-          ¡Parking aportado!
+          {verdict.title}
         </Text>
-        <Text className="text-content text-base font-semibold text-center mt-4">
-          Has ganado{' '}
-          <Text className="text-primary">{pendingOctanos} Octanos</Text>
-        </Text>
+        {verdict.showOctanos && (
+          <Text className="text-content text-base font-semibold text-center mt-4">
+            Has ganado{' '}
+            <Text className="text-primary">{pendingOctanos} Octanos</Text>
+          </Text>
+        )}
         <View className="bg-surface border border-border rounded-card p-4 mt-3 mb-6">
           <Text className="text-content-muted text-sm text-center leading-5">
-            Tu parking está pendiente de verificación. En cuanto otro usuario compruebe que el aparcamiento existe, tus Octanos quedarán confirmados y se sumarán a tu cuenta.
+            {verdict.message}
           </Text>
         </View>
         <TouchableOpacity
@@ -576,7 +583,12 @@ export default function ContributeScreen() {
               disabled={proposeMutation.isPending}
             >
               {proposeMutation.isPending ? (
-                <ActivityIndicator color="#0f172a" />
+                <View className="flex-row items-center gap-2">
+                  <ActivityIndicator color="#0f172a" />
+                  <Text className="text-background font-semibold text-xs">
+                    Otto está verificando…
+                  </Text>
+                </View>
               ) : (
                 <Text className="text-background font-bold">
                   {photoUri ? 'Enviar con foto' : 'Enviar sin foto'}
