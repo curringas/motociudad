@@ -18,11 +18,11 @@
 
 ## 3. Edge Function: gate de Otto en `propose-parking`
 
-- [ ] 3.1 Tras subir la foto/insertar, generar URL firmada de la imagen (si hay foto) y llamar a Otto (texto+visión; solo texto si no hay foto)
-- [ ] 3.2 Fijar `ai_review_status`/`ai_review_reason`/`ai_reviewed_at`/`ai_review_source` según el veredicto (con failsafe a `flagged` en error/timeout)
-- [ ] 3.3 Mover la creación del `octano_event` (+50 pending) para que solo ocurra cuando el veredicto es `approved`
-- [ ] 3.4 En `flagged`/`rejected`, enviar email best-effort al admin (no debe afectar al veredicto ni a la respuesta)
-- [ ] 3.5 Devolver al cliente el veredicto + mensaje (approved/flagged/rejected)
+- [x] 3.1 Tras subir la foto/insertar, generar URL firmada de la imagen (si hay foto) y llamar a Otto (texto+visión; solo texto si no hay foto)
+- [x] 3.2 Fijar `ai_review_status`/`ai_review_reason`/`ai_reviewed_at`/`ai_review_source` según el veredicto (con failsafe a `flagged` en error/timeout)
+- [x] 3.3 Mover la creación del `octano_event` (+50 pending) para que solo ocurra cuando el veredicto es `approved`
+- [x] 3.4 En `flagged`/`rejected`, enviar email best-effort al admin (no debe afectar al veredicto ni a la respuesta)
+- [x] 3.5 Devolver al cliente el veredicto + mensaje (approved/flagged/rejected)
 - [ ] 3.6 Test Deno de la función (approved/flagged/rejected, sin-foto, failsafe por timeout, email no bloqueante)
 
 ## 4. Edge Function admin: aprobar dudoso

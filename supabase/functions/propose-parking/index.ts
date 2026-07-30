@@ -1,21 +1,27 @@
 /**
  * Edge Function: propose-parking
- * Crea un parking nuevo y registra el evento Octanos correspondiente.
+ * Crea un parking nuevo, lo verifica con el agente de IA "Otto" y registra los
+ * Octanos correspondientes.
  *
  * Flujo:
  * 1. Autenticar usuario (JWT)
  * 2. Validar body con Zod
- * 3. Insertar parking con service_role
- * 4. Insertar octano_event propose_parking (+50 pts, status=pending)
- * 5. Si se aportó photo_storage_path, insertar parking_photos
- * 6. Devolver { id, octanos_earned }
+ * 3. Otto revisa la aportación (nombre + notas + foto) -> approved|flagged|rejected
+ * 4. Insertar parking con service_role fijando ai_review_status
+ * 5. Solo si Otto aprueba: insertar octano_event propose_parking (+50, pending)
+ * 6. Si se aportó photo_storage_path, insertar parking_photos
+ * 7. Si flagged/rejected: avisar al admin por email (best-effort)
+ * 8. Devolver { id, ai_review_status, octanos_earned, review_reason }
  *
  * NUNCA loguear tokens ni service_role_key.
+ * OpenSpec: changes/otto-parking-verification · spec propose-parking / otto-parking-verification
  */
 
 import { supabaseAdmin } from "../_shared/supabase.ts";
 import { errorResponse, makeError, ERRORS } from "../_shared/errors.ts";
 import { parseProposeParkingRequest } from "./schemas.ts";
+import { reviewParking } from "../_shared/otto.ts";
+import { sendOttoAdminEmail } from "../_shared/email.ts";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -23,6 +29,7 @@ const CORS_HEADERS = {
 };
 
 const OCTANOS_PROPOSE_PARKING = 50;
+const PHOTO_BUCKET = "parkings-photos";
 
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
@@ -81,7 +88,21 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const input = parsed.data;
 
-  // ── 3. Insertar parking ──────────────────────────────────────
+  // ── 3. Revisión de Otto (visión + texto) ────────────────────
+  // La foto (si la hay) ya está subida al bucket público; le pasamos su URL.
+  const photoUrl = input.photo_storage_path
+    ? supabaseAdmin.storage.from(PHOTO_BUCKET).getPublicUrl(input.photo_storage_path)
+        .data.publicUrl
+    : null;
+
+  // reviewParking nunca lanza: ante fallo devuelve failsafe -> flagged.
+  const review = await reviewParking({
+    name: input.name,
+    notes: input.notes ?? null,
+    photoUrl,
+  });
+
+  // ── 4. Insertar parking fijando el veredicto de Otto ────────
   const { data: parking, error: parkingError } = await supabaseAdmin
     .from("parkings")
     .insert({
@@ -93,6 +114,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
       features: input.features ?? {},
       notes: input.notes ?? null,
       proposed_by: userId,
+      ai_review_status: review.status,
+      ai_review_reason: review.reason_es || null,
+      ai_reviewed_at: new Date().toISOString(),
+      ai_review_source: review.source === "bypass" ? null : review.source,
     } as never)
     .select("id")
     .single();
@@ -109,30 +134,33 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const parkingId: string = parking.id;
 
-  // ── 4. Registrar evento Octanos (propose_parking, pending) ──
-  const { error: octanoError } = await supabaseAdmin
-    .from("octano_events")
-    .insert({
-      user_id: userId,
-      action_type: "propose_parking",
-      points: OCTANOS_PROPOSE_PARKING,
-      reference_id: parkingId,
-      reference_type: "parking",
-      status: "pending",
-    });
+  // ── 5. Octanos SOLO si Otto aprueba (entra al pipeline público) ──
+  const approved = review.status === "approved";
+  if (approved) {
+    const { error: octanoError } = await supabaseAdmin
+      .from("octano_events")
+      .insert({
+        user_id: userId,
+        action_type: "propose_parking",
+        points: OCTANOS_PROPOSE_PARKING,
+        reference_id: parkingId,
+        reference_type: "parking",
+        status: "pending",
+      });
 
-  if (octanoError) {
-    // El parking ya fue creado; logamos el fallo pero no revertimos
-    console.error(JSON.stringify({
-      code: "DATABASE_ERROR",
-      detail: `octano_event insert failed: ${octanoError.message}`,
-      user_id: userId,
-      parking_id: parkingId,
-      timestamp: new Date().toISOString(),
-    }));
+    if (octanoError) {
+      // El parking ya fue creado; logamos el fallo pero no revertimos
+      console.error(JSON.stringify({
+        code: "DATABASE_ERROR",
+        detail: `octano_event insert failed: ${octanoError.message}`,
+        user_id: userId,
+        parking_id: parkingId,
+        timestamp: new Date().toISOString(),
+      }));
+    }
   }
 
-  // ── 5. Insertar foto si se proporcionó ──────────────────────
+  // ── 6. Insertar foto si se proporcionó ──────────────────────
   if (input.photo_storage_path) {
     const { error: photoError } = await supabaseAdmin
       .from("parking_photos")
@@ -155,13 +183,28 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
   }
 
-  // ── 6. Respuesta ────────────────────────────────────────────
+  // ── 7. Aviso al admin por email en dudosos/rechazados (best-effort) ──
+  if (review.status === "flagged" || review.status === "rejected") {
+    // No rompe la respuesta ni el veredicto: sendOttoAdminEmail nunca lanza.
+    await sendOttoAdminEmail({
+      parkingId,
+      name: input.name,
+      city: input.city,
+      status: review.status,
+      reason: review.reason_es,
+      proposedBy: userId,
+    });
+  }
+
+  // ── 8. Respuesta con el veredicto de Otto ───────────────────
   return new Response(
     JSON.stringify({
       success: true,
       data: {
         id: parkingId,
-        octanos_earned: OCTANOS_PROPOSE_PARKING,
+        ai_review_status: review.status,
+        octanos_earned: approved ? OCTANOS_PROPOSE_PARKING : 0,
+        review_reason: review.reason_es,
       },
     }),
     {
