@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image } from 'react-native';
 import { useDebounce } from '@/hooks/useDebounce';
-import { useCurrentProfile, useAdminParkings, useCreateParking, useUpdateParking, useSetParkingStatus, useSoftDeleteParking, useParkingPhotos, useUploadParkingPhoto } from '@/features/admin/hooks';
+import { useCurrentProfile, useAdminParkings, useCreateParking, useUpdateParking, useSetParkingStatus, useApproveParking, useSoftDeleteParking, useParkingPhotos, useUploadParkingPhoto } from '@/features/admin/hooks';
 import { ADMIN_PAGE_SIZE } from '@/features/admin/api';
 import {
   canEditParking,
@@ -28,6 +28,19 @@ const TYPE_OPTIONS = [
   { value: 'private', label: 'Privado' },
 ] as const;
 
+const AI_REVIEW_OPTIONS = [
+  { value: 'all', label: 'Todas' },
+  { value: 'flagged', label: '🤔 Dudosos' },
+  { value: 'rejected', label: '🚫 Rechazados' },
+  { value: 'unverified', label: '👀 Sin verificar' },
+] as const;
+
+const AI_REVIEW_BADGE: Record<AdminParking['ai_review_status'], { label: string; color: string }> = {
+  approved: { label: 'IA ✓', color: '#15803d' },
+  flagged: { label: 'IA dudoso', color: '#b45309' },
+  rejected: { label: 'IA rechazado', color: '#b91c1c' },
+};
+
 function pickImageFile(onPick: (file: File) => void) {
   const input = document.createElement('input');
   input.type = 'file';
@@ -44,12 +57,13 @@ export default function AdminParkingsWeb() {
   const [city, setCity] = useState('');
   const [status, setStatus] = useState<ParkingFilter['status']>('all');
   const [scope, setScope] = useState<ParkingFilter['scope']>('all');
+  const [aiReview, setAiReview] = useState<ParkingFilter['aiReview']>('all');
   const [creating, setCreating] = useState(false);
   const [page, setPage] = useState(0);
 
   const debouncedCity = useDebounce(city, 400);
-  useEffect(() => setPage(0), [debouncedCity, status, scope]);
-  const filter: ParkingFilter = { city: debouncedCity, status, scope };
+  useEffect(() => setPage(0), [debouncedCity, status, scope, aiReview]);
+  const filter: ParkingFilter = { city: debouncedCity, status, scope, aiReview };
   const { data, isLoading, isError, error } = useAdminParkings(filter, profile?.id, page);
   const parkings = data?.rows ?? [];
   const total = data?.total ?? 0;
@@ -77,6 +91,10 @@ export default function AdminParkingsWeb() {
           <View style={{ gap: 6 }}>
             <Text style={{ color: C.muted, fontSize: 12, fontWeight: '600' }}>Estado</Text>
             <Chips options={STATUS_OPTIONS} value={status} onChange={setStatus} />
+          </View>
+          <View style={{ gap: 6 }}>
+            <Text style={{ color: C.muted, fontSize: 12, fontWeight: '600' }}>Revisión de Otto (IA)</Text>
+            <Chips options={AI_REVIEW_OPTIONS} value={aiReview} onChange={setAiReview} />
           </View>
           {!isAdmin ? (
             <View style={{ gap: 6 }}>
@@ -164,6 +182,7 @@ function CreateParkingForm({ onDone }: { onDone: () => void }) {
 function ParkingRow({ parking, profile }: { parking: AdminParking; profile: AdminProfile | null }) {
   const [mode, setMode] = useState<'view' | 'edit' | 'photos'>('view');
   const statusMut = useSetParkingStatus();
+  const approveMut = useApproveParking();
   const deleteMut = useSoftDeleteParking();
 
   const canEdit = canEditParking(profile, parking);
@@ -181,11 +200,19 @@ function ParkingRow({ parking, profile }: { parking: AdminParking; profile: Admi
               {parking.city} · {parking.type === 'public' ? 'Público' : 'Privado'} · {parking.verifications_count} verif.
             </Text>
           </View>
-          <StatusBadge status={parking.status} deleted={isDeleted} />
+          <View style={{ alignItems: 'flex-end', gap: 4 }}>
+            <StatusBadge status={parking.status} deleted={isDeleted} />
+            <Text style={{ color: AI_REVIEW_BADGE[parking.ai_review_status].color, fontSize: 11, fontWeight: '700' }}>
+              {AI_REVIEW_BADGE[parking.ai_review_status].label}
+            </Text>
+          </View>
         </View>
 
         {/* Acciones */}
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          {canStatus && !isDeleted && parking.ai_review_status === 'flagged' ? (
+            <Button label="✓ Aprobar (Otto)" onPress={() => approveMut.mutate(parking.id)} loading={approveMut.isPending} />
+          ) : null}
           {canEdit && !isDeleted ? (
             <Button label={mode === 'edit' ? 'Cerrar edición' : 'Editar'} variant="secondary" onPress={() => setMode(mode === 'edit' ? 'view' : 'edit')} />
           ) : null}

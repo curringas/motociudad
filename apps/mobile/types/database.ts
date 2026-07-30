@@ -363,6 +363,10 @@ export type Database = {
       parkings: {
         Row: {
           address: string | null
+          ai_review_reason: string | null
+          ai_review_source: string | null
+          ai_review_status: Database["public"]["Enums"]["parking_ai_review_status"]
+          ai_reviewed_at: string | null
           capacity: number | null
           city: string
           created_at: string
@@ -384,6 +388,10 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          ai_review_reason?: string | null
+          ai_review_source?: string | null
+          ai_review_status?: Database["public"]["Enums"]["parking_ai_review_status"]
+          ai_reviewed_at?: string | null
           capacity?: number | null
           city: string
           created_at?: string
@@ -405,6 +413,10 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          ai_review_reason?: string | null
+          ai_review_source?: string | null
+          ai_review_status?: Database["public"]["Enums"]["parking_ai_review_status"]
+          ai_reviewed_at?: string | null
           capacity?: number | null
           city?: string
           created_at?: string
@@ -1761,6 +1773,7 @@ export type Database = {
         | "first_comment"
         | "second_comment"
       octano_status: "pending" | "confirmed" | "reverted"
+      parking_ai_review_status: "approved" | "flagged" | "rejected"
       parking_status: "pending" | "verified" | "rejected" | "archived"
       parking_type: "public" | "private"
       poi_type: "workshop" | "itv" | "gas_station" | "shop"
@@ -1926,6 +1939,7 @@ export const Constants = {
         "second_comment",
       ],
       octano_status: ["pending", "confirmed", "reverted"],
+      parking_ai_review_status: ["approved", "flagged", "rejected"],
       parking_status: ["pending", "verified", "rejected", "archived"],
       parking_type: ["public", "private"],
       poi_type: ["workshop", "itv", "gas_station", "shop"],

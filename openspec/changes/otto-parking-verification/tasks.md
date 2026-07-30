@@ -39,9 +39,9 @@
 
 ## 6. Panel admin web (`features/admin`)
 
-- [ ] 6.1 Filtros nuevos en Parkings: "dudosos" (`flagged`), "rechazados" (`rejected`), "no verificados por usuarios" (`approved`+`pending`)
-- [ ] 6.2 Acción "Aprobar" en un parking `flagged` que llama a la función admin (4.1) y refresca el listado
-- [ ] 6.3 Usar tokens de tema válidos (tema claro del panel); estado de revisión visible en la fila
+- [x] 6.1 Filtros nuevos en Parkings: "dudosos" (`flagged`), "rechazados" (`rejected`), "no verificados por usuarios" (`approved`+`pending`)
+- [x] 6.2 Acción "Aprobar" en un parking `flagged` que llama a la función admin (4.1) y refresca el listado
+- [x] 6.3 Usar tokens de tema válidos (tema claro del panel); estado de revisión visible en la fila
 - [ ] 6.4 Tests de componente del filtro y de la acción aprobar
 
 ## 7. Documentación canónica

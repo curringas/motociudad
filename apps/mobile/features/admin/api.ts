@@ -22,7 +22,7 @@ const PROFILE_COLUMNS =
 
 // Columnas del listado de parkings del panel.
 const PARKING_COLUMNS =
-  'id, name, type, status, city, address, district, capacity, notes, features, proposed_by, verifications_count, deleted_at, created_at';
+  'id, name, type, status, city, address, district, capacity, notes, features, proposed_by, verifications_count, ai_review_status, deleted_at, created_at';
 
 const STORAGE_BUCKET = 'parkings-photos';
 
@@ -123,6 +123,13 @@ export async function listParkings(
   if (filter.status !== 'all') {
     query = query.eq('status', filter.status);
   }
+  // Filtro por revisión de Otto (independiente del status comunitario).
+  if (filter.aiReview === 'flagged' || filter.aiReview === 'rejected') {
+    query = query.eq('ai_review_status', filter.aiReview);
+  } else if (filter.aiReview === 'unverified') {
+    // Aprobados por Otto pero aún sin verificar por la comunidad.
+    query = query.eq('ai_review_status', 'approved').eq('status', 'pending');
+  }
 
   const from = page * ADMIN_PAGE_SIZE;
   const { data, error, count } = await query.range(from, from + ADMIN_PAGE_SIZE - 1);
@@ -213,6 +220,14 @@ async function invokeAdmin(fn: string, body: Record<string, unknown>): Promise<v
     }
     throw new Error(error.message);
   }
+}
+
+/**
+ * Aprueba un parking que Otto marcó 'flagged'. Vía Edge Function admin-approve-parking
+ * (publica el parking y otorga los +50 Octanos pendientes, idempotente).
+ */
+export async function approveParking(parkingId: string): Promise<void> {
+  await invokeAdmin('admin-approve-parking', { parkingId });
 }
 
 export type AdminCommentFilter = {

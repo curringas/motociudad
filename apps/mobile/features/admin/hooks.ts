@@ -6,6 +6,7 @@ import {
   getLevelName,
   listUsers,
   setUserRole,
+  approveParking,
   listParkings,
   createParking,
   updateParking,
@@ -120,6 +121,14 @@ export function useSetParkingStatus() {
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: 'verified' | 'rejected' | 'archived' | 'pending' }) =>
       setParkingStatus(id, status),
+    onSuccess: () => invalidateParkings(queryClient),
+  });
+}
+
+export function useApproveParking() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (parkingId: string) => approveParking(parkingId),
     onSuccess: () => invalidateParkings(queryClient),
   });
 }

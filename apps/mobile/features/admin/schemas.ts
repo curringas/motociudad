@@ -33,6 +33,9 @@ export const adminParkingSchema = z.object({
   features: z.record(z.boolean()).nullable().optional(),
   proposed_by: z.string().uuid(),
   verifications_count: z.number().int(),
+  // Veredicto de Otto (IA). Default 'approved' por si la columna aún no existe
+  // en un despliegue previo a la migración (transición segura).
+  ai_review_status: z.enum(['approved', 'flagged', 'rejected']).default('approved'),
   deleted_at: z.string().nullable(),
   created_at: z.string(),
 });
@@ -71,10 +74,16 @@ export const userFilterSchema = z.object({
 });
 export type UserFilter = z.infer<typeof userFilterSchema>;
 
+// Filtro por revisión de Otto: dudosos, rechazados, o aprobados-pero-no-verificados
+// por la comunidad (approved + status pending).
+export const aiReviewFilterSchema = z.enum(['all', 'flagged', 'rejected', 'unverified']);
+export type AiReviewFilter = z.infer<typeof aiReviewFilterSchema>;
+
 export const parkingFilterSchema = z.object({
   city: z.string().default(''),
   status: z.union([parkingStatusSchema, z.literal('all')]).default('all'),
   scope: z.enum(['all', 'mine']).default('all'),
+  aiReview: aiReviewFilterSchema.default('all'),
 });
 export type ParkingFilter = z.infer<typeof parkingFilterSchema>;
 
