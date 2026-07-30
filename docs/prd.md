@@ -225,6 +225,15 @@ build local para evaluación; el hosting público queda fuera de alcance.
     pending → confirmed).
   - Para **administradores y colaboradores**: replicar in-app las mismas notificaciones
     que reciben por email (feedback y reportes de la v1.4).
+> **Nota sobre "Otto"**: Otto es el **agente de IA de MotoCiudad** y tiene dos roles.
+> El **primero ya está implementado** (change `otto-parking-verification`): **verifica
+> las aportaciones de parkings de los usuarios** (visión + texto) para que solo entren
+> a la comunidad las que realmente son aparcamientos de moto — estado `ai_review_status`
+> (approved/flagged/rejected), síncrono en `propose-parking`, con panel de dudosos y
+> aviso por email al admin. El **segundo rol (v1.6, abajo)** amplía a Otto para
+> **descubrir** parkings proactivamente. Verificar (reactivo, ya en producción) y
+> descubrir (proactivo, roadmap) son facetas del mismo agente.
+
 - **v1.6**: **Otto — agente scout de parkings con IA** (solo admins, en el panel):
   - **Botón "Buscar parkings con IA"** que lanza a **Otto** a descubrir posibles parkings
     de motos en una zona y proponerlos; el admin revisa y **acepta uno o varios**.

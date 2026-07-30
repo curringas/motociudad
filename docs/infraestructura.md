@@ -134,7 +134,31 @@ POSTHOG_API_KEY
 SENTRY_DSN
 DEEPSEEK_API_KEY                 # moderación IA de comentarios (post-comment). Nunca en cliente.
 MODERATION_PROVIDER              # proveedor de moderación: "deepseek" (default) | "off" (bypass/rollback)
+# ── Otto: verificación IA de parkings (propose-parking / admin-approve-parking) ──
+OTTO_PROVIDER                    # "openai" (default, visión) | "off" (bypass → aprueba todo, rollback)
+OPENAI_API_KEY                   # key del proveedor de visión (OpenAI-compatible). Nunca en cliente.
+OTTO_VISION_MODEL                # modelo con visión (p.ej. gpt-4o-mini); vacío = default del código
+OTTO_VISION_URL                  # opcional; default https://api.openai.com/v1/chat/completions
+SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASSWORD  # SMTP propio para avisos de Otto
+OTTO_EMAIL_FROM / OTTO_EMAIL_TO  # remitente y destinatario (otto@motociudad.com)
 ```
+
+> **Verificación IA de parkings — "Otto"** (change `otto-parking-verification`): al
+> proponer un parking, Otto revisa nombre + notas + foto con un modelo de visión
+> (OpenAI-compatible) y fija `ai_review_status` (approved/flagged/rejected). El
+> proveedor se fija por `OTTO_PROVIDER` (`off` = rollback, aprueba todo). La key de
+> OpenAI (permiso mínimo: **Chat completions: Write**) y las credenciales SMTP
+> viven **solo** como secrets de Edge Functions. En dudosos/rechazados, Otto envía
+> un aviso por SMTP a `otto@motociudad.com` (best-effort). Solo se envía al
+> proveedor el nombre, las notas y la URL de la foto (contenido de la propia
+> aportación); nunca PII de cuenta ni geolocalización.
+>
+> ```bash
+> supabase secrets set OTTO_PROVIDER=openai OPENAI_API_KEY=sk-... \
+>   OTTO_VISION_MODEL=gpt-4o-mini \
+>   SMTP_HOST=... SMTP_PORT=465 SMTP_USER=otto@motociudad.com SMTP_PASSWORD=... \
+>   OTTO_EMAIL_FROM=otto@motociudad.com OTTO_EMAIL_TO=otto@motociudad.com
+> ```
 
 > **Moderación IA de comentarios** (change `ai-comment-moderation`): el proveedor
 > se fija por `MODERATION_PROVIDER` (por defecto `deepseek`). `DEEPSEEK_API_KEY`

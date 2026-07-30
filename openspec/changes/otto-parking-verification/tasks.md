@@ -46,11 +46,11 @@
 
 ## 7. Documentación canónica
 
-- [ ] 7.1 `docs/prd.md`: describir el rol verificador de Otto y reconciliar con el "Otto scout" de descubrimiento (v1.6)
-- [ ] 7.2 `docs/modelo-datos.md`: nuevas columnas/enum y la relación ortogonal con `parking_status`
-- [ ] 7.3 `docs/gamificacion.md`: nuevo momento de otorgamiento de los +50 Octanos (al entrar a `pending`)
-- [ ] 7.4 `docs/infraestructura.md`: secrets nuevos (visión + SMTP)
-- [ ] 7.5 `docs/testing.md`: si aplica, notas de los tests nuevos
+- [x] 7.1 `docs/prd.md`: describir el rol verificador de Otto y reconciliar con el "Otto scout" de descubrimiento (v1.6)
+- [x] 7.2 `docs/modelo-datos.md`: nuevas columnas/enum y la relación ortogonal con `parking_status`
+- [x] 7.3 `docs/gamificacion.md`: nuevo momento de otorgamiento de los +50 Octanos (al entrar a `pending`)
+- [x] 7.4 `docs/infraestructura.md`: secrets nuevos (visión + SMTP)
+- [x] 7.5 `docs/testing.md`: si aplica, notas de los tests nuevos
 
 ## 8. Verificación de cierre (regla obligatoria)
 

@@ -82,6 +82,7 @@ CREATE EXTENSION IF NOT EXISTS "pg_cron";         -- Tareas programadas
 ```sql
 CREATE TYPE parking_type      AS ENUM ('public', 'private');
 CREATE TYPE parking_status    AS ENUM ('pending', 'verified', 'rejected', 'archived');
+CREATE TYPE parking_ai_review_status AS ENUM ('approved', 'flagged', 'rejected'); -- veredicto de Otto (IA)
 CREATE TYPE poi_type          AS ENUM ('workshop', 'itv', 'gas_station', 'shop');  -- workshop = taller
 CREATE TYPE report_reason     AS ENUM ('not_exists', 'wrong_location', 'closed', 'private_now', 'duplicate', 'other');
 CREATE TYPE report_status     AS ENUM ('pending', 'confirmed', 'dismissed');
@@ -367,6 +368,14 @@ CREATE TABLE public.parkings (
   -- features ej.: {"covered": true, "cameras": true, "anchors": false, "lit": true,
   --                "free": true, "h24": true, "battery_layout": true}
   notes               TEXT,                              -- comentario libre del proponente
+  -- Verificación IA de Otto (change otto-parking-verification). INDEPENDIENTE de
+  -- status/verificación comunitaria: 'approved' es visible/verificable; 'flagged'
+  -- (dudoso) espera aprobación admin; 'rejected' no se publica. Default 'flagged'
+  -- como salvaguarda (nada público por accidente).
+  ai_review_status    parking_ai_review_status NOT NULL DEFAULT 'flagged',
+  ai_review_reason    TEXT,                              -- motivo del veredicto de Otto
+  ai_reviewed_at      TIMESTAMPTZ,
+  ai_review_source    TEXT,                              -- 'prefilter' | 'provider' | 'failsafe'
   verifications_count INTEGER NOT NULL DEFAULT 0,        -- caché derivado
   reports_count       INTEGER NOT NULL DEFAULT 0,        -- caché derivado
   last_verified_at    TIMESTAMPTZ,

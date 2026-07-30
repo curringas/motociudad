@@ -286,6 +286,16 @@ La IA **no es determinista**, así que no se llama al proveedor real en tests:
 - El **fail-safe** se prueba sin red: sin `DEEPSEEK_API_KEY`, `moderateComment` de un comentario limpio resuelve a `pending_review` (nunca aprueba por defecto).
 - El diferido de Octanos (pending no acredita; aprobación admin acredita en su momento; sin doble pago) se cubre en pgTAP: `supabase/tests/sql/comment_moderation.test.sql`. La visibilidad por estado (RLS) en `supabase/tests/rls/comment_moderation.test.sql`.
 
+### 7.3b Verificación IA de parkings — Otto (change `otto-parking-verification`)
+
+Mismo enfoque que la moderación de comentarios (no se llama al proveedor real):
+
+- Lógica pura de Otto (mapeo veredicto→`ai_review_status`, degradación conservadora de `reject` de baja confianza, pre-filtro): `supabase/functions/_shared/__tests__/otto.test.ts`.
+- **Fail-safe**: ante error/timeout del proveedor, `reviewParking` resuelve a `flagged` (nunca aprueba por defecto).
+- Visibilidad por `ai_review_status` (flagged/rejected ocultos al público, visibles al proponente) y bloqueo de verificar un parking no aprobado: pgTAP `supabase/tests/rls/otto_parking_ai_review.test.sql`.
+- Presenter de veredicto en el móvil (3 mensajes): `apps/mobile/features/parkings/__tests__/ottoPresenter.test.ts`.
+- El **email** a Otto es best-effort: su fallo no cambia el veredicto ni rompe la respuesta.
+
 ### 7.4 Gestión de comentarios en el panel (change `admin-comments-management`)
 
 - **pgTAP** `supabase/tests/sql/admin_comment_management.test.sql`: `admin_delete_comments` retira Octanos (borra eventos + recalcula, libera puesto de escalera) y `admin_list_comments` aplica guard admin, filtros (estado/ciudad/búsqueda) y paginación.

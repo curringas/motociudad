@@ -27,7 +27,7 @@ Esta separación permite que un usuario de nivel medio pueda destacar por insign
 
 | Acción | Octanos | Notas |
 |---|---|---|
-| Proponer un parking nuevo | **+50** | Quedan **pendientes** hasta la 1ª verificación de la comunidad; entonces pasan a fijos |
+| Proponer un parking nuevo | **+50** | Se otorgan (pendientes) **solo cuando Otto aprueba** la aportación —o cuando un admin aprueba un «dudoso»— es decir, al entrar al pipeline público. Un parking `rejected` por Otto **no** otorga Octanos. Siguen pendientes hasta la 1ª verificación de la comunidad; entonces pasan a fijos |
 | Tu parking propuesto queda verificado | **+30** | Bonus diferido, se otorga al proponente en la 1ª verificación de su parking |
 | Verificar un parking (con foto in situ) | **+40 / +25 / +10** | Según el orden: **1ª verificación +40** (incluye el bonus de 1er verificador), **2ª +25**, **3ª +10** |
 | Ser el 1er verificador de un parking | **+15** | Bonus incluido en los +40 de la 1ª verificación |
