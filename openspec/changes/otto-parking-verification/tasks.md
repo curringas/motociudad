@@ -1,11 +1,11 @@
 ## 1. Base de datos (migración + RLS + pgTAP)
 
-- [ ] 1.1 Migración: crear enum `parking_ai_review_status` (`approved`|`flagged`|`rejected`)
-- [ ] 1.2 Migración: añadir a `parkings` las columnas `ai_review_status` (NOT NULL default `'flagged'`), `ai_review_reason TEXT`, `ai_reviewed_at TIMESTAMPTZ`, `ai_review_source` (`prefilter`|`provider`|`failsafe`)
-- [ ] 1.3 Migración: backfill de las filas existentes (incluidos los importados de OSM y ya verificados) a `ai_review_status='approved'` para que no desaparezcan
-- [ ] 1.4 Migración: gatear visibilidad pública por `ai_review_status='approved'` en la vista `parkings_with_stats`/RPC `nearby_parkings` y/o RLS de lectura; mantener acceso del proponente a los suyos y del admin a todos
-- [ ] 1.5 Migración: gatear la verificación comunitaria (`verify-parking`) para que solo actúe sobre parkings `approved`
-- [ ] 1.6 Test pgTAP: RLS de visibilidad (`flagged`/`rejected` ocultos al público, visibles a proponente/admin) y que la verificación rechaza no-`approved`
+- [x] 1.1 Migración: crear enum `parking_ai_review_status` (`approved`|`flagged`|`rejected`)
+- [x] 1.2 Migración: añadir a `parkings` las columnas `ai_review_status` (NOT NULL default `'flagged'`), `ai_review_reason TEXT`, `ai_reviewed_at TIMESTAMPTZ`, `ai_review_source` (`prefilter`|`provider`|`failsafe`)
+- [x] 1.3 Migración: backfill de las filas existentes (incluidos los importados de OSM y ya verificados) a `ai_review_status='approved'` para que no desaparezcan
+- [x] 1.4 Migración: gatear visibilidad pública por `ai_review_status='approved'` en la vista `parkings_with_stats`/RPC `nearby_parkings` y/o RLS de lectura; mantener acceso del proponente a los suyos y del admin a todos
+- [x] 1.5 Migración: gatear la verificación comunitaria (`verify-parking`) para que solo actúe sobre parkings `approved`
+- [x] 1.6 Test pgTAP: RLS de visibilidad (`flagged`/`rejected` ocultos al público, visibles a proponente/admin) y que la verificación rechaza no-`approved`
 - [ ] 1.7 Regenerar tipos TS (`pnpm gen:types`)
 
 ## 2. Proveedor de visión y SMTP (`_shared`)
