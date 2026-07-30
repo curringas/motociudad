@@ -27,7 +27,7 @@
 
 ## 4. Edge Function admin: aprobar dudoso
 
-- [ ] 4.1 Nueva función (solo rol admin vía JWT/RLS) que sobre un `flagged`: pone `ai_review_status='approved'`, deja `parking_status='pending'` y crea el `octano_event` (+50 pending) de forma idempotente
+- [x] 4.1 Nueva función (solo rol admin vía JWT/RLS) que sobre un `flagged`: pone `ai_review_status='approved'`, deja `parking_status='pending'` y crea el `octano_event` (+50 pending) de forma idempotente
 - [ ] 4.2 Test Deno: aprobación otorga Octanos una sola vez; contributor/user no pueden; parking pasa a visible/verificable
 
 ## 5. Móvil (`features/parkings`)
