@@ -21,7 +21,14 @@
 - **Qué**: agente de IA "Otto" que, al proponer un parking, verifica con visión+texto que nombre/notas/foto correspondan a un aparcamiento de motos. Estado `ai_review_status` (approved/flagged/rejected) **independiente** de la verificación comunitaria (`parking_status`). Síncrono en `propose-parking`. Panel admin con filtros (dudosos/rechazados/no-verificados). Email SMTP al admin por dudosos y rechazados. Mensajes al proponente (spinner + 3 veredictos). Octanos al entrar a `pending` (Otto-approved o admin-approved tras dudoso).
 - **Por qué**: filtrar morralla antes de que entre a la cola pública, manteniendo intacta la verificación comunitaria.
 - **Cómo**: change OpenSpec `otto-parking-verification`. Visión vía proveedor OpenAI-compatible (el más económico; reutiliza el patrón de `_shared/moderation.ts`). DeepSeek descartado para visión (su API pública es solo texto).
-- **Estado**: 📋 propuesta OpenSpec **completa y válida** (proposal + design + 5 specs + tasks). Pendiente implementar con `/opsx:apply`.
+- **Estado**: 🔧 implementación en curso. Grupos 1–7 (backend + móvil + panel + docs) escritos y commiteados en `feat/otto-parking-verification`; tests unitarios verdes; typecheck verde. **Verificado end-to-end en un entorno dev cloud nuevo** (ver abajo). Pendiente: E2E de app multiplataforma + deploy a prod con OK.
+
+### Entorno dev/prod en Supabase (nuevo estándar permanente)
+- **Qué**: segundo proyecto Supabase **`motociudad-dev`** (free, `iefyrpgcyptntnjwiajt`, eu-west-1) como staging cloud. Prod = `Motociudad` (`rhuqwcpmdhwzkexpqdcp`).
+- **Por qué**: las branches de Supabase piden plan Pro; un 2º proyecto free ($0) da staging real y reutilizable, sin tocar prod. Encaja con el convenio de ramas (feature → dev, main → prod).
+- **Cómo**: esquema aplicado con `supabase db push` (39 migraciones). App conmuta por entorno: `apps/mobile/.env.development` (dev, lo carga `expo start`) vs `.env` (prod). Migración/función → dev primero → prod con OK.
+- **Verificación de Otto en dev (OpenAI real)**: coherente-sin-foto→`flagged` (0 Octanos), gibberish→`rejected` (0), admin aprueba dudoso→`approved` +50 (1 solo evento), re-aprobar→409 idempotente, rechazado→0 eventos. Pipeline auth→función→IA→BD→RLS/Octanos OK. La migración corre limpia sobre esquema tipo-prod (de-riesga el deploy).
+- **Estado**: ✅ backend verificado en dev. Pendiente E2E de app (web/Android/iOS) y deploy a prod.
 
 ### Automatización: rama dedicada por cambio de OpenSpec (hook)
 - **Qué**: hook `PreToolUse` sobre la tool `Skill` que, al ejecutar `opsx:propose` u `opsx:apply`, obliga a trabajar en una rama dedicada `<tipo>/<change-id>` creada desde `main`. El `<tipo>` sigue Conventional Commits según lo explorado (`feat` por defecto para mejoras, `fix` para correcciones, `chore|docs|test|refactor|perf` según toque). `opsx:explore` queda excluido (es reflexión de solo-lectura).

@@ -6,7 +6,7 @@
 - [x] 1.4 Migración: gatear visibilidad pública por `ai_review_status='approved'` en la vista `parkings_with_stats`/RPC `nearby_parkings` y/o RLS de lectura; mantener acceso del proponente a los suyos y del admin a todos
 - [x] 1.5 Migración: gatear la verificación comunitaria (`verify-parking`) para que solo actúe sobre parkings `approved`
 - [x] 1.6 Test pgTAP: RLS de visibilidad (`flagged`/`rejected` ocultos al público, visibles a proponente/admin) y que la verificación rechaza no-`approved`
-- [ ] 1.7 Regenerar tipos TS (`pnpm gen:types`)
+- [x] 1.7 Regenerar tipos TS (`pnpm gen:types`)
 
 ## 2. Proveedor de visión y SMTP (`_shared`)
 
@@ -14,7 +14,7 @@
 - [x] 2.2 Definir el prompt versionado de Otto en `docs/prompts/otto-parking-verification.md` y cargarlo desde el shared
 - [x] 2.3 Implementar pre-filtros deterministas (nombre/notas mínimamente coherentes) antes de llamar al proveedor
 - [x] 2.4 Helper SMTP (Deno, p.ej. `denomailer`) en `_shared/` para enviar el aviso al admin, best-effort (try/catch)
-- [ ] 2.5 Declarar secrets nuevos en Supabase (proveedor visión + SMTP host/puerto/usuario/clave + email admin) y documentarlos
+- [x] 2.5 Declarar secrets nuevos en Supabase (proveedor visión + SMTP host/puerto/usuario/clave + email admin) y documentarlos
 
 ## 3. Edge Function: gate de Otto en `propose-parking`
 
@@ -23,12 +23,12 @@
 - [x] 3.3 Mover la creación del `octano_event` (+50 pending) para que solo ocurra cuando el veredicto es `approved`
 - [x] 3.4 En `flagged`/`rejected`, enviar email best-effort al admin (no debe afectar al veredicto ni a la respuesta)
 - [x] 3.5 Devolver al cliente el veredicto + mensaje (approved/flagged/rejected)
-- [ ] 3.6 Test Deno de la función (approved/flagged/rejected, sin-foto, failsafe por timeout, email no bloqueante)
+- [x] 3.6 Test Deno de la función (approved/flagged/rejected, sin-foto, failsafe por timeout, email no bloqueante)
 
 ## 4. Edge Function admin: aprobar dudoso
 
 - [x] 4.1 Nueva función (solo rol admin vía JWT/RLS) que sobre un `flagged`: pone `ai_review_status='approved'`, deja `parking_status='pending'` y crea el `octano_event` (+50 pending) de forma idempotente
-- [ ] 4.2 Test Deno: aprobación otorga Octanos una sola vez; contributor/user no pueden; parking pasa a visible/verificable
+- [x] 4.2 Test Deno: aprobación otorga Octanos una sola vez; contributor/user no pueden; parking pasa a visible/verificable
 
 ## 5. Móvil (`features/parkings`)
 
@@ -54,7 +54,7 @@
 
 ## 8. Verificación de cierre (regla obligatoria)
 
-- [ ] 8.1 `pnpm typecheck` + `pnpm test` verdes
+- [x] 8.1 `pnpm typecheck` + `pnpm test` verdes
 - [ ] 8.2 `supabase test db` (pgTAP) y `deno test` de las funciones verdes
 - [ ] 8.3 Desplegar a Supabase Cloud (migración + funciones + secrets)
 - [ ] 8.4 Verificación E2E multiplataforma vía `verify-all-platforms` (subagente `e2e-verifier`): app móvil = web (Playwright) + Android + iOS como usuario; panel admin = web como admin; con limpieza de datos de prueba y evidencia en `.claude/verify-runs/otto-parking-verification.md`
