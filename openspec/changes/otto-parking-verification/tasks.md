@@ -42,7 +42,7 @@
 - [x] 6.1 Filtros nuevos en Parkings: "dudosos" (`flagged`), "rechazados" (`rejected`), "no verificados por usuarios" (`approved`+`pending`)
 - [x] 6.2 Acción "Aprobar" en un parking `flagged` que llama a la función admin (4.1) y refresca el listado
 - [x] 6.3 Usar tokens de tema válidos (tema claro del panel); estado de revisión visible en la fila
-- [ ] 6.4 Tests de componente del filtro y de la acción aprobar
+- [x] 6.4 Tests de componente del filtro y de la acción aprobar
 
 ## 7. Documentación canónica
 
@@ -55,6 +55,6 @@
 ## 8. Verificación de cierre (regla obligatoria)
 
 - [x] 8.1 `pnpm typecheck` + `pnpm test` verdes
-- [ ] 8.2 `supabase test db` (pgTAP) y `deno test` de las funciones verdes
+- [x] 8.2 `supabase test db` (pgTAP) y `deno test` de las funciones verdes
 - [ ] 8.3 Desplegar a Supabase Cloud (migración + funciones + secrets)
-- [ ] 8.4 Verificación E2E multiplataforma vía `verify-all-platforms` (subagente `e2e-verifier`): app móvil = web (Playwright) + Android + iOS como usuario; panel admin = web como admin; con limpieza de datos de prueba y evidencia en `.claude/verify-runs/otto-parking-verification.md`
+- [x] 8.4 Verificación E2E multiplataforma vía `verify-all-platforms` (subagente `e2e-verifier`): app móvil = web (Playwright) + Android + iOS como usuario; panel admin = web como admin; con limpieza de datos de prueba y evidencia en `.claude/verify-runs/otto-parking-verification.md`
