@@ -1,7 +1,7 @@
 # Prompt de Otto — verificación de aportaciones de parkings
 
 - **Agente**: Otto (verificador de MotoCiudad).
-- **Versión**: `2026-07-30.1` (sincronizada con `OTTO_PROMPT_VERSION` en `supabase/functions/_shared/otto-prompt.ts`).
+- **Versión**: `2026-08-11.1` (sincronizada con `OTTO_PROMPT_VERSION` en `supabase/functions/_shared/otto-prompt.ts`).
 - **Dónde vive el prompt real**: `supabase/functions/_shared/otto-prompt.ts` (fuente de verdad). Este documento es la copia legible y el registro de versiones.
 - **Proveedor**: intercambiable vía `OTTO_PROVIDER` (arranque con un modelo con visión OpenAI-compatible). El prompt no depende del proveedor.
 - **Privacidad**: al proveedor se envía solo el nombre, las notas y —si la hay— una URL firmada de la foto de la aportación (contenido de la propia propuesta). No se envía PII de cuenta ni geolocalización del usuario.
@@ -30,8 +30,9 @@ Mapeo a `ai_review_status`:
 - **reject**: claramente NO es un aparcamiento de motos (comida, personas, interiores sin relación, texto sin sentido, troll).
 - **flag**: duda razonable, foto que no confirma, incoherencia texto-foto, o falta de información. **Ante la duda, `flag`, nunca `reject`.**
 
-Sin foto → Otto valora solo el texto.
+**La foto es OPCIONAL.** Su ausencia NUNCA es motivo de `flag`/`reject`: sin foto, Otto valora solo el nombre y las notas y aprueba si son plausibles.
 
 ## Notas de versión
 
+- `2026-08-11.1`: la foto es explícitamente opcional; se prohíbe marcar `flag`/`reject` por falta de imagen (con solo texto coherente basta para aprobar). `flag` solo por duda del contenido en sí (texto vago/ambiguo o foto que contradice al texto).
 - `2026-07-30.1`: versión inicial. Prompt conservador (preferencia por `flag` sobre `reject`); salida JSON forzada; visión opcional según haya foto.

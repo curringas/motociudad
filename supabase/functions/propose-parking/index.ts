@@ -66,7 +66,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // ── 1b. La cuenta no debe estar suspendida ──────────────────
   const { data: proposer } = await supabaseAdmin
     .from("users")
-    .select("suspended")
+    .select("suspended, username, display_name")
     .eq("id", userId)
     .single();
   if (proposer?.suspended) {
@@ -193,6 +193,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
       status: review.status,
       reason: review.reason_es,
       proposedBy: userId,
+      proposerName: proposer?.display_name ?? null,
+      proposerUsername: proposer?.username ?? null,
     });
   }
 

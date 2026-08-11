@@ -25,6 +25,8 @@ export interface OttoEmailInput {
   status: Extract<AiReviewStatus, "flagged" | "rejected">;
   reason: string;
   proposedBy: string;
+  proposerName?: string | null;
+  proposerUsername?: string | null;
 }
 
 /**
@@ -40,14 +42,22 @@ export async function sendOttoAdminEmail(input: OttoEmailInput): Promise<boolean
 
   const label = input.status === "flagged" ? "DUDOSO (revisión manual)" : "RECHAZADO";
   const subject = `[Otto] Parking ${label}: ${input.name}`;
+  const proposer = input.proposerName
+    ? `${input.proposerName}${input.proposerUsername ? ` (@${input.proposerUsername})` : ""}`
+    : input.proposerUsername
+    ? `@${input.proposerUsername}`
+    : "(sin nombre)";
   const body = [
     `Otto ha marcado una aportación como ${input.status}.`,
     "",
     `Parking: ${input.name}`,
     `Ciudad: ${input.city ?? "(desconocida)"}`,
-    `Propuesto por (id): ${input.proposedBy}`,
-    `ID parking: ${input.parkingId}`,
+    `Propuesto por: ${proposer}`,
     `Motivo: ${input.reason}`,
+    "",
+    `— Referencias técnicas —`,
+    `ID parking: ${input.parkingId}`,
+    `ID usuario: ${input.proposedBy}`,
     "",
     input.status === "flagged"
       ? "Revísalo en el panel de administración (filtro «dudosos») para aprobarlo o descartarlo."
