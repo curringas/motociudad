@@ -64,6 +64,17 @@ moderación por nivel), sin scraping ni bases de datos comerciales.
 > distribuye por build EAS / TestFlight. La **versión web de consulta** es el entorno "en vivo"
 > accesible desde navegador.
 
+**Credenciales de evaluación (cuenta de administración):** para poder revisar la app y el
+panel de gestión con permisos completos, se facilita una cuenta admin dedicada:
+
+| Rol | Email | Contraseña | Dónde usarla |
+|---|---|---|---|
+| Administrador | `eval-admin@motociudad.com` | `EvalAdmin-Moto2026!` | Panel web de administración en https://motociudad.com/admin (y login en la app móvil) |
+
+> Cuenta creada exclusivamente para la evaluación; se rotará o eliminará tras el proceso. El
+> panel de administración es solo web. Para cualquier otra credencial, contacto en
+> curromartinez@tallerempresarial.es.
+
 ### 0.5 Plataformas
 
 MotoCiudad es una única base de código (React Native + Expo) que se sirve en **cuatro frentes**:
