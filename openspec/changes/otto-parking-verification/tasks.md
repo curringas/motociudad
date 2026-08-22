@@ -56,5 +56,5 @@
 
 - [x] 8.1 `pnpm typecheck` + `pnpm test` verdes
 - [x] 8.2 `supabase test db` (pgTAP) y `deno test` de las funciones verdes
-- [ ] 8.3 Desplegar a Supabase Cloud (migración + funciones + secrets)
+- [x] 8.3 Desplegar a Supabase Cloud (migración + funciones + secrets)
 - [x] 8.4 Verificación E2E multiplataforma vía `verify-all-platforms` (subagente `e2e-verifier`): app móvil = web (Playwright) + Android + iOS como usuario; panel admin = web como admin; con limpieza de datos de prueba y evidencia en `.claude/verify-runs/otto-parking-verification.md`

@@ -29,7 +29,12 @@
 - **Cómo**: esquema aplicado con `supabase db push` (39 migraciones). App conmuta por entorno: `apps/mobile/.env.development` (dev, lo carga `expo start`) vs `.env` (prod). Migración/función → dev primero → prod con OK.
 - **Verificación de Otto en dev (OpenAI real)**: coherente-sin-foto→`flagged` (0 Octanos), gibberish→`rejected` (0), admin aprueba dudoso→`approved` +50 (1 solo evento), re-aprobar→409 idempotente, rechazado→0 eventos. Pipeline auth→función→IA→BD→RLS/Octanos OK. La migración corre limpia sobre esquema tipo-prod (de-riesga el deploy).
 - **Re-verificación (2026-08-22)**: tras el parón, backend dev vivo y E2E Android **PASS** — propuesta sin foto → **aprobado + 50 Octanos** (fix de foto opcional confirmado en app real). Prod sigue intacta; solo falta el deploy (8.3), en pausa hasta fin de evaluación.
-- **Estado**: ✅ backend verificado en dev + E2E de app (web admin PASS, Android propuesta PASS). **36/37 tareas.** ⏸️ **Deploy a producción EN PAUSA a propósito**: el proyecto está en evaluación y no queremos cambiar nada en prod. Otto queda listo en `feat/otto-parking-verification` (sin fusionar) y en dev. Producción y `finalproject-CMH` intactos. Reanudar el deploy (backend + web + OTA móvil, sin revisión de tiendas) cuando pase la evaluación.
+- **Estado**: ✅ **DESPLEGADO A PRODUCCIÓN (2026-08-22).** 37/37 tareas. Tras la evaluación:
+  - **Backend prod**: secrets (Otto/OpenAI/SMTP, sin tocar MODERATION_PROVIDER) + migración (backfill → 1288/1288 parkings `approved`, cero desaparecidos) + funciones `propose-parking` + `admin-approve-parking`, vía MCP/CLI.
+  - **Web**: desplegada por CI (Deploy Web SUCCESS) → panel admin con filtros/aprobar.
+  - **Móvil**: OTA `eas update` a `production` (runtime `0.1.0`, iOS+Android) — sin revisión de tiendas (Otto es JS-only). Fix necesario: `babel-preset-expo` declarado como dep directa (pnpm no lo resolvía al empaquetar nativo). Nuevo workflow `eas-update.yml` para futuras OTA.
+  - **Compatibilidad**: cambios de BD retrocompatibles (backfill + RPC mismas columnas + respuesta superconjunto) → apps instaladas no fallan; cogen la UI nueva al llegar la OTA.
+  - `feat/otto-parking-verification` fusionada a `main` (fast-forward).
 
 ### Automatización: rama dedicada por cambio de OpenSpec (hook)
 - **Qué**: hook `PreToolUse` sobre la tool `Skill` que, al ejecutar `opsx:propose` u `opsx:apply`, obliga a trabajar en una rama dedicada `<tipo>/<change-id>` creada desde `main`. El `<tipo>` sigue Conventional Commits según lo explorado (`feat` por defecto para mejoras, `fix` para correcciones, `chore|docs|test|refactor|perf` según toque). `opsx:explore` queda excluido (es reflexión de solo-lectura).
