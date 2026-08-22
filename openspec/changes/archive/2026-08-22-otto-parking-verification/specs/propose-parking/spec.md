@@ -26,6 +26,8 @@ The system SHALL guide the user through a 3-step form (location, details, photo)
 - **THEN** Otto SHALL review name and notes only (text-only) and assign a verdict
 - **AND** the parking SHALL be saved with `parking_status='pending'` only if Otto returns `approved`
 
+## ADDED Requirements
+
 ### Requirement: Deferred Octanos award on admin approval of flagged proposals
 The system SHALL award the +50 pending Octanos when an administrator approves a previously `flagged` proposal, mirroring the direct-approval path. This complements the existing "Deferred Octanos confirmation on proposal verification" requirement (which converts the pending award to confirmed once a real motorcyclist verifies).
 
