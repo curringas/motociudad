@@ -1,0 +1,53 @@
+name: EAS Update (OTA)
+
+# Publica una actualización OTA (JS/assets) a las apps ya instaladas, sin pasar
+# por revisión de tiendas. Manual/on-demand desde la pestaña "Actions".
+# Corre en el mismo entorno que Deploy Web (pnpm install + bundling de Expo),
+# donde el bundling funciona (en local pnpm no resuelve babel-preset-expo).
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch de EAS Update (canal)"
+        required: true
+        default: production
+      message:
+        description: "Mensaje del update"
+        required: true
+        default: "OTA update"
+
+jobs:
+  update:
+    name: Publish OTA update
+    runs-on: ubuntu-latest
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup EAS CLI
+        if: ${{ env.EXPO_TOKEN != '' }}
+        run: npm install --global eas-cli
+
+      - name: Publish OTA update
+        if: ${{ env.EXPO_TOKEN != '' }}
+        working-directory: apps/mobile
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+        run: eas update --branch "${{ inputs.branch }}" --message "${{ inputs.message }}"
