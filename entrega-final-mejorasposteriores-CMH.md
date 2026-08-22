@@ -28,6 +28,7 @@
 - **Por qué**: las branches de Supabase piden plan Pro; un 2º proyecto free ($0) da staging real y reutilizable, sin tocar prod. Encaja con el convenio de ramas (feature → dev, main → prod).
 - **Cómo**: esquema aplicado con `supabase db push` (39 migraciones). App conmuta por entorno: `apps/mobile/.env.development` (dev, lo carga `expo start`) vs `.env` (prod). Migración/función → dev primero → prod con OK.
 - **Verificación de Otto en dev (OpenAI real)**: coherente-sin-foto→`flagged` (0 Octanos), gibberish→`rejected` (0), admin aprueba dudoso→`approved` +50 (1 solo evento), re-aprobar→409 idempotente, rechazado→0 eventos. Pipeline auth→función→IA→BD→RLS/Octanos OK. La migración corre limpia sobre esquema tipo-prod (de-riesga el deploy).
+- **Re-verificación (2026-08-22)**: tras el parón, backend dev vivo y E2E Android **PASS** — propuesta sin foto → **aprobado + 50 Octanos** (fix de foto opcional confirmado en app real). Prod sigue intacta; solo falta el deploy (8.3), en pausa hasta fin de evaluación.
 - **Estado**: ✅ backend verificado en dev + E2E de app (web admin PASS, Android propuesta PASS). **36/37 tareas.** ⏸️ **Deploy a producción EN PAUSA a propósito**: el proyecto está en evaluación y no queremos cambiar nada en prod. Otto queda listo en `feat/otto-parking-verification` (sin fusionar) y en dev. Producción y `finalproject-CMH` intactos. Reanudar el deploy (backend + web + OTA móvil, sin revisión de tiendas) cuando pase la evaluación.
 
 ### Automatización: rama dedicada por cambio de OpenSpec (hook)
