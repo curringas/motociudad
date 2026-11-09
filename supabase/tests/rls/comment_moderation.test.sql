@@ -27,11 +27,13 @@ INSERT INTO auth.users (
    'authenticated', 'authenticated')
 ON CONFLICT (id) DO NOTHING;
 
+-- handle_new_user autocrea public.users (role='user') al insertar en auth.users,
+-- por eso DO UPDATE para fijar el role='admin' (si no, el "admin" no sería admin).
 INSERT INTO public.users (id, username, display_name, role) VALUES
   ('d0000000-a15a-0000-0000-000000000001'::uuid, 'd_author', 'D Author', 'user'),
   ('d0000000-a15a-0000-0000-000000000002'::uuid, 'd_other', 'D Other', 'user'),
   ('d0000000-a15a-0000-0000-000000000003'::uuid, 'd_admin', 'D Admin', 'admin')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET role = EXCLUDED.role;
 
 INSERT INTO public.parkings (id, proposed_by, name, type, status, location, city)
 VALUES (
