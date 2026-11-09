@@ -6,7 +6,7 @@
 
 BEGIN;
 
-SELECT plan(13);
+SELECT plan(12);
 
 -- ============================================================
 -- Setup: proponente P(user1), externo E1(user2), admin A(user3)
