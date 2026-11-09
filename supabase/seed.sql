@@ -82,7 +82,7 @@ ON CONFLICT (id) DO UPDATE SET
 -- ============================================================
 
 INSERT INTO public.parkings (
-  id, proposed_by, name, type, status, location, address, city, district,
+  id, proposed_by, name, type, status, ai_review_status, location, address, city, district,
   capacity, features, notes, verifications_count, last_verified_at
 ) VALUES
 
@@ -93,6 +93,7 @@ INSERT INTO public.parkings (
     'Motos Puerta del Sol - Calle Correo',
     'public',
     'verified',
+    'approved',
     ST_SetSRID(ST_MakePoint(-3.70325, 40.41668), 4326)::geography,
     'Calle del Correo, 4, 28012 Madrid',
     'Madrid',
@@ -111,6 +112,7 @@ INSERT INTO public.parkings (
     'Zona Motos Calle San Vicente Ferrer',
     'public',
     'verified',
+    'approved',
     ST_SetSRID(ST_MakePoint(-3.70652, 40.42401), 4326)::geography,
     'Calle de San Vicente Ferrer, 28, 28004 Madrid',
     'Madrid',
@@ -129,6 +131,7 @@ INSERT INTO public.parkings (
     'Garaje Privado Comunidad Alonso Martínez',
     'private',
     'verified',
+    'approved',
     ST_SetSRID(ST_MakePoint(-3.69897, 40.42798), 4326)::geography,
     'Calle de Génova, 5, 28004 Madrid',
     'Madrid',
@@ -147,6 +150,7 @@ INSERT INTO public.parkings (
     'Plaza Lavapiés - Motos junto a escaleras',
     'public',
     'pending',
+    'approved',
     ST_SetSRID(ST_MakePoint(-3.70277, 40.40887), 4326)::geography,
     'Plaza de Lavapiés, s/n, 28012 Madrid',
     'Madrid',
@@ -165,6 +169,7 @@ INSERT INTO public.parkings (
     'Aparcamiento Motos Paseo del Retiro',
     'public',
     'verified',
+    'approved',
     ST_SetSRID(ST_MakePoint(-3.68256, 40.41439), 4326)::geography,
     'Paseo del Retiro, 1, 28009 Madrid',
     'Madrid',
