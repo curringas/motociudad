@@ -20,11 +20,13 @@ SELECT ('f0000000-a15a-0000-0000-00000000000' || n)::uuid,
 FROM generate_series(1, 3) AS n
 ON CONFLICT (id) DO NOTHING;
 
+-- handle_new_user autocrea public.users (role='user') al insertar en auth.users,
+-- por eso DO UPDATE para fijar el role='admin' del usuario administrador.
 INSERT INTO public.users (id, username, display_name, role) VALUES
   ('f0000000-a15a-0000-0000-000000000001'::uuid, 'f_prop', 'F Prop', 'user'),
   ('f0000000-a15a-0000-0000-000000000002'::uuid, 'f_ext',  'F Ext',  'user'),
   ('f0000000-a15a-0000-0000-000000000003'::uuid, 'f_admin','F Admin','admin')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET role = EXCLUDED.role;
 
 INSERT INTO public.parkings (id, proposed_by, name, type, status, location, city) VALUES
   ('f0000000-a15a-0001-0000-000000000001'::uuid, 'f0000000-a15a-0000-0000-000000000001'::uuid,

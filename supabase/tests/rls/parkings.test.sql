@@ -1,9 +1,9 @@
 -- pgTAP tests for parkings RLS policies
 -- Run with: supabase test db
 -- Framework: pgTAP (https://pgtap.org/)
--- Nota: la lectura de parkings es pública desde 20260705000001_rls_public_parkings
--- (policies parkings_read / parkings_read_anon). admin-panel añadió
--- parkings_update_admin y parkings_update_contributor_own → 6 policies en total.
+-- Nota: la lectura pública de parkings exige ai_review_status='approved' desde Otto
+-- (20260730000001). admin-panel añadió update_admin/update_contributor_own y Otto
+-- añadió parkings_read_own (el proponente ve los suyos flagged/rejected) → 8 policies.
 
 BEGIN;
 
@@ -79,6 +79,11 @@ INSERT INTO public.parkings (
   ST_SetSRID(ST_MakePoint(-3.72, 40.42), 4326)::geography,
   'Madrid'
 ) ON CONFLICT (id) DO NOTHING;
+
+-- Otto: tras Otto el DEFAULT de ai_review_status pasó a 'flagged'. Los parkings
+-- de prueba deben estar AI-approved para ser visibles al público (tests 1-3, 14).
+UPDATE public.parkings SET ai_review_status = 'approved'
+WHERE id::text LIKE 'e0000000-a15a-0001-%';
 
 -- ============================================================
 -- Helper: set_auth_user simula auth.uid() (ejecutable por authenticated).
@@ -296,7 +301,7 @@ SELECT ok(
 );
 
 -- ============================================================
--- TEST 12: Existen exactamente 7 policies en parkings (tras admin-panel)
+-- TEST 12: Existen exactamente 8 policies en parkings (admin-panel + Otto read_own)
 -- ============================================================
 SELECT is(
   (
@@ -304,8 +309,8 @@ SELECT is(
     FROM pg_policies
     WHERE schemaname = 'public' AND tablename = 'parkings'
   ),
-  7,
-  'La tabla parkings tiene exactamente 7 políticas RLS'
+  8,
+  'La tabla parkings tiene exactamente 8 políticas RLS'
 );
 
 -- ============================================================
@@ -313,7 +318,7 @@ SELECT is(
 -- ============================================================
 SELECT ok(
   (
-    SELECT COUNT(*) = 7
+    SELECT COUNT(*) = 8
     FROM pg_policies
     WHERE schemaname = 'public'
       AND tablename = 'parkings'
@@ -321,13 +326,14 @@ SELECT ok(
         'parkings_read',
         'parkings_read_anon',
         'parkings_read_admin',
+        'parkings_read_own',
         'parkings_insert',
         'parkings_update_own_pending',
         'parkings_update_admin',
         'parkings_update_contributor_own'
       )
   ),
-  'Las 7 políticas RLS tienen los nombres correctos'
+  'Las 8 políticas RLS tienen los nombres correctos'
 );
 
 -- ============================================================

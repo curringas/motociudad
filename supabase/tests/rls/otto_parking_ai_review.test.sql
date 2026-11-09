@@ -42,6 +42,18 @@ VALUES
 -- ============================================================
 -- Otro usuario (B): solo debe ver el parking approved
 -- ============================================================
+-- Helper: set_auth_user simula auth.uid() (ejecutable por authenticated).
+GRANT USAGE ON SCHEMA tests TO authenticated, anon;
+CREATE OR REPLACE FUNCTION tests.set_auth_user(user_id UUID)
+RETURNS VOID LANGUAGE plpgsql AS $$
+BEGIN
+  PERFORM set_config('request.jwt.claims',
+    json_build_object('sub', user_id::text, 'role', 'authenticated')::text, true);
+  PERFORM set_config('role', 'authenticated', true);
+END;
+$$;
+GRANT EXECUTE ON FUNCTION tests.set_auth_user(UUID) TO authenticated, anon;
+
 SELECT tests.set_auth_user('f0000000-0770-0000-0000-000000000002'::uuid);
 
 SELECT is(

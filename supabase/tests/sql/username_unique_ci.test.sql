@@ -23,10 +23,12 @@ INSERT INTO auth.users (
    'authenticated', 'authenticated')
 ON CONFLICT (id) DO NOTHING;
 
+-- handle_new_user autocrea public.users con un username derivado del email, por
+-- eso DO UPDATE para fijar los nicks exactos que exige el test de unicidad.
 INSERT INTO public.users (id, username, display_name) VALUES
   ('d0000000-1234-0000-0000-000000000001'::uuid, 'Curro', 'Curro'),
   ('d0000000-1234-0000-0000-000000000002'::uuid, 'otro_nick', 'Otro')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET username = EXCLUDED.username, display_name = EXCLUDED.display_name;
 
 -- ============================================================
 -- T1: el índice único LOWER(username) existe

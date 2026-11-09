@@ -183,11 +183,11 @@ RESET ROLE; SELECT set_config('request.jwt.claims', '{}', true);
 -- Metadatos de policies
 -- ============================================================
 
--- TEST 13: parkings tiene 7 policies (3 read [+admin] + insert + update_own_pending + update_admin + update_contributor_own)
+-- TEST 13: parkings tiene 8 policies (3 read [+admin] + read_own + insert + update_own_pending + update_admin + update_contributor_own)
 SELECT is(
   (SELECT COUNT(*)::integer FROM pg_policies WHERE schemaname = 'public' AND tablename = 'parkings'),
-  7,
-  'parkings tiene 7 policies RLS tras admin-panel'
+  8,
+  'parkings tiene 8 policies RLS tras admin-panel + Otto (parkings_read_own)'
 );
 
 -- TEST 14: parking_photos tiene 6 policies (2 read + insert + insert_admin + update_admin + delete_admin)

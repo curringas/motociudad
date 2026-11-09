@@ -38,6 +38,10 @@ INSERT INTO public.parkings (id, proposed_by, name, type, status, location, city
    'Parking ARCH', 'public', 'archived', ST_SetSRID(ST_MakePoint(-3.73, 40.42), 4326)::geography, 'Madrid')
 ON CONFLICT (id) DO NOTHING;
 
+-- Otto: los parkings deben estar AI-approved para poder recibir verificaciones.
+UPDATE public.parkings SET ai_review_status = 'approved'
+WHERE id::text LIKE 'd0000000-a15a-0001-%';
+
 -- V (user2) es verificador de A -> inelegible
 INSERT INTO public.parking_verifications (parking_id, verified_by)
 VALUES ('d0000000-a15a-0001-0000-000000000001'::uuid, 'd0000000-a15a-0000-0000-000000000002'::uuid)

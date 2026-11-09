@@ -27,6 +27,10 @@ VALUES (
   ST_SetSRID(ST_MakePoint(-3.70, 40.42), 4326)::geography, 'Madrid'
 ) ON CONFLICT (id) DO NOTHING;
 
+-- Otto: el parking debe estar AI-approved para poder recibir verificaciones.
+UPDATE public.parkings SET ai_review_status = 'approved'
+WHERE id = 'a1000000-3e21-0001-0000-000000000001'::uuid;
+
 INSERT INTO public.parking_verifications (id, parking_id, verified_by)
 VALUES (
   'a1000000-3e21-0002-0000-000000000001'::uuid,

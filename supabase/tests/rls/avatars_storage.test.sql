@@ -99,8 +99,8 @@ SELECT ok(
   'RLS habilitada en storage.objects'
 );
 
--- Limpieza
-DELETE FROM storage.objects WHERE name LIKE 'e0000000-a7a7-%';
+-- Limpieza (el objeto de storage lo deshace el ROLLBACK; el borrado directo de
+-- storage.objects está prohibido por la imagen de Storage: "Use the Storage API").
 DELETE FROM auth.users WHERE id::text LIKE 'e0000000-a7a7%';
 DROP FUNCTION IF EXISTS tests.set_auth_user(UUID);
 
