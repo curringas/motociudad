@@ -37,7 +37,7 @@ documentación canónica en [`docs/`](docs/) (donde vive el detalle exhaustivo).
 ## 0. Ficha del proyecto
 
 ### 0.1 Autor
-**Curro Martínez Hidalgo (CMH)** — 📧 curromartinez@tallerempresarial.es
+**Curro Martínez Hidalgo (CMH)** — 📧 curro@martinezhidalgo.com
 
 ### 0.2 Nombre del proyecto
 **MotoCiudad** — el "Waze de los parkings de moto".
@@ -58,7 +58,7 @@ moderación por nivel), sin scraping ni bases de datos comerciales.
 | Demo web pública (consulta) | https://motociudad.com |
 | App Android (Google Play) | ✅ https://play.google.com/store/apps/details?id=com.motociudad.app |
 | App iOS | En App Store Connect (en revisión) · TestFlight bajo petición |
-| Contacto para credenciales de evaluación | curromartinez@tallerempresarial.es |
+| Contacto para credenciales de evaluación | curro@martinezhidalgo.com |
 
 > La app móvil usa cámara, GPS y mapas nativos, por lo que **no funciona con Expo Go**; se
 > distribuye por build EAS / TestFlight. La **versión web de consulta** es el entorno "en vivo"
@@ -613,4 +613,4 @@ motociudad/
 
 ## Autor
 
-**Curro Martínez Hidalgo (CMH)** · Máster AI4Devs · 📧 curromartinez@tallerempresarial.es
+**Curro Martínez Hidalgo (CMH)** · Máster AI4Devs · 📧 curro@martinezhidalgo.com
